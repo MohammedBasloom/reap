@@ -56,7 +56,7 @@
     "Saleable": "للبيع", "Leasable": "للتأجير",
     "Sales revenue": "إيرادات البيع", "Annual NOI": "صافي الدخل السنوي",
     "Retail (Strata)": "تجزئة (للبيع)", "Retail sold per m²": "تجزئة تُباع بالمتر",
-    "Mohammed Basloom": "محمد بصلوم",
+    "Mohammed Basloom": "محمد باسلوم",
     "What happens next": "ما الخطوة التالية",
     "Pick components": "اختر المكوّنات",
     "From the sidebar tiles. Each adds an instance to your program.": "من بطاقات القائمة الجانبية؛ كل بطاقة تضيف مكوّنًا لبرنامجك.",
