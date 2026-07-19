@@ -1145,14 +1145,17 @@ function formatCurrency(v, opts = {}) {
   if (v === null || v === undefined || isNaN(v)) return "—";
   const abs = Math.abs(v);
   const sign = v < 0 ? "−" : "";
+  const ar = typeof window !== "undefined" && window.I18N && window.I18N.lang === "ar";
   const compact = opts.compact !== false;
+  // Arabic: value first, currency after (‏−367.5M ر.س)
+  const wrap = (body) => (ar ? `${sign}${body} ر.س` : `${sign}SAR ${body}`);
   if (compact) {
-    if (abs >= 1e9) return `${sign}SAR ${(abs / 1e9).toFixed(2)}B`;
-    if (abs >= 1e6) return `${sign}SAR ${(abs / 1e6).toFixed(1)}M`;
-    if (abs >= 1e3) return `${sign}SAR ${(abs / 1e3).toFixed(0)}K`;
-    return `${sign}SAR ${abs.toFixed(0)}`;
+    if (abs >= 1e9) return wrap(`${(abs / 1e9).toFixed(2)}B`);
+    if (abs >= 1e6) return wrap(`${(abs / 1e6).toFixed(1)}M`);
+    if (abs >= 1e3) return wrap(`${(abs / 1e3).toFixed(0)}K`);
+    return wrap(abs.toFixed(0));
   }
-  return `${sign}SAR ${abs.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+  return wrap(abs.toLocaleString("en-US", { maximumFractionDigits: 0 }));
 }
 
 function formatPct(v, digits = 1) {
