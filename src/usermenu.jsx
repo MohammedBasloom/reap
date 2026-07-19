@@ -69,7 +69,7 @@ function UserMenu({ table, itemNoun, currentName, getCurrent, onLoad }) {
     : null;
 
   const panelStyle = {
-    position: "absolute", top: "calc(100% + 10px)", right: 0, zIndex: 60,
+    position: "absolute", top: "calc(100% + 10px)", insetInlineEnd: 0, zIndex: 60,
     width: 300, background: "var(--bg-1)", color: "var(--fg-1)",
     border: "1px solid var(--border-1)", boxShadow: "var(--shadow-lg)",
     padding: "18px 20px", textAlign: "left",
