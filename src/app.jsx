@@ -75,6 +75,8 @@ function App() {
     return SAMPLE_INPUT;
   });
   const [tab, setTab] = useState("summary");
+  const tabRef = useRef(tab);
+  useEffect(() => { tabRef.current = tab; }, [tab]);
 
   // Persist
   useEffect(() => {
@@ -92,7 +94,14 @@ function App() {
       if (confirm(I18N.t("Reset all inputs and clear program components?"))) setInput(SAMPLE_INPUT);
     };
     const onExport = () => {
-      window.print();
+      // The PDF report is always the Summary view — switch to it, print,
+      // then return the user to the tab they were on.
+      const prev = tabRef.current;
+      setTab("summary");
+      setTimeout(() => {
+        window.print();
+        setTab(prev);
+      }, 350);
     };
     window.addEventListener("feas:reset", onReset);
     window.addEventListener("feas:export", onExport);
