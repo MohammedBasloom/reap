@@ -222,6 +222,8 @@ function runValuation(input) {
   }
   if (cost && cost.physicalDep >= 0.85)
     flag("warning", "Building nearly fully depreciated", "At this effective age the structure contributes little value — the valuation is essentially the land.");
+  if (cost && typeDef.usesLand && num(p.landArea) <= 0)
+    flag("warning", "Land area missing", "The cost approach needs the plot size. Enter the land area (m²) in step 01, or the land value stays 0.");
   if (divergence > 0.30)
     flag("warning", "Approaches disagree by more than 30%", "A large gap between approaches usually means one set of inputs is off. Compare the per-m² results and revisit the weakest one.");
   if (!isLand && num(p.builtArea) <= 0)

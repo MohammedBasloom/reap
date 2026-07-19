@@ -338,8 +338,16 @@ function ValApp() {
         {!isLand && (
           <Section n="04" title="Rebuild cost" sub="The cost approach — land plus what it would cost to rebuild, minus wear." defaultOpen={false}>
             <Row cols={2}>
-              <Field label="Land price" suffix="SAR/m²" hint="What similar empty plots sell for in this district.">
-                <NumInput value={input.cost.landPricePerSqm} onChange={(v) => upd("cost.landPricePerSqm", v)} /></Field>
+              {typeDef.usesLand ? (
+                <Field label="Land price" suffix="SAR/m²"
+                  hint={(+input.property.landArea > 0)
+                    ? "What similar empty plots sell for in this district."
+                    : "Set the land area in step 01 — land value = plot size × this price."}>
+                  <NumInput value={input.cost.landPricePerSqm} onChange={(v) => upd("cost.landPricePerSqm", v)} /></Field>
+              ) : (
+                <Field label="Land share" hint="Apartments don't own a plot — a land share (~15% of building value) is included automatically.">
+                  <input className="field-input" value="~15%" disabled /></Field>
+              )}
               <Field label="Build cost" suffix="SAR/m²" hint={`Typical for a ${typeDef.label.toLowerCase()}: ~${fn(typeDef.defaults.buildCostPerSqm)} SAR/m².`}>
                 <NumInput value={input.cost.buildCostPerSqm} onChange={(v) => upd("cost.buildCostPerSqm", v)} /></Field>
             </Row>
