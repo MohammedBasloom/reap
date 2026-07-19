@@ -240,3 +240,6 @@ html[lang="ar"] p.lede, html[lang="ar"] .card p, html[lang="ar"] .step p { font-
 html[dir="rtl"] * { letter-spacing: 0 !important; }
 /* Keep numerals/latin fragments readable inside RTL text */
 html[dir="rtl"] .tabnum { direction: ltr; unicode-bidi: embed; }
+/* SVG charts draw in absolute coordinates — RTL direction flips text-anchor
+   semantics and makes labels overlap the marks. Charts stay LTR. */
+html[dir="rtl"] svg { direction: ltr; }

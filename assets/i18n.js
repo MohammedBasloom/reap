@@ -165,6 +165,37 @@
     "Diligence": "الفحص النافي", "Risk register & red flags": "سجل المخاطر والتنبيهات",
     "Red flags": "تنبيهات حرجة", "Watch items": "نقاط للمتابعة", "OK signals": "مؤشرات سليمة",
     "Quick diagnostics": "تشخيص سريع",
+    "Red flag": "تنبيه حرج", "Red Flag": "تنبيه حرج", "RED FLAG": "تنبيه حرج", "Watch": "للمتابعة", "WATCH": "للمتابعة", "OK": "سليم",
+    /* Risk register — titles */
+    "Land allocation exceeds 100%": "توزيع الأرض يتجاوز 100%",
+    "No components allocated to land": "لا توجد مكوّنات موزعة على الأرض",
+    "Add at least one component.": "أضف مكوّنًا واحدًا على الأقل.",
+    "Land allocation balanced": "توزيع الأرض متوازن",
+    "IRR could not be computed": "تعذّر حساب معدل العائد الداخلي IRR",
+    "Cashflow does not change sign — revenue may not cover costs.": "التدفق النقدي لا يغيّر إشارته — قد لا تغطي الإيرادات التكاليف.",
+    "Equity IRR well below hurdle": "IRR الملكية أدنى بكثير من المستهدف",
+    "Equity IRR below hurdle": "IRR الملكية أدنى من المستهدف",
+    "Equity IRR clears hurdle": "IRR الملكية يتجاوز المستهدف",
+    "Project shows a loss": "المشروع يُظهر خسارة",
+    "Leverage above 70% LTC": "الرافعة التمويلية تتجاوز 70%",
+    "High debt exposure — sensitivity to rate moves will be material.": "انكشاف مرتفع على الدين — الحساسية لتحركات الفائدة ستكون جوهرية.",
+    "Contingency below 5%": "الاحتياطي أقل من 5%",
+    "Limited buffer for construction overruns.": "هامش محدود لتجاوزات تكاليف الإنشاء.",
+    "Soft costs look low": "التكاليف غير المباشرة تبدو منخفضة",
+    "Typical design + consultants + PM is 10–15% of construction.": "المعتاد للتصميم والاستشاريين وإدارة المشروع 10–15% من تكلفة الإنشاء.",
+    "Aggressive construction timeline": "جدول إنشاء متفائل جدًا",
+    "Long construction window": "فترة إنشاء طويلة",
+    "Carry costs and market risk grow significantly past 5 years.": "تكاليف التمويل ومخاطر السوق تتعاظم بعد 5 سنوات.",
+    "Peak debt at facility limit": "ذروة الدين عند حد التسهيلات",
+    "Little headroom — consider larger facility or staged equity.": "هامش ضئيل — فكّر في تسهيلات أكبر أو ضخ ملكية على مراحل.",
+    "Unallocated land may represent public realm or future-phase reserve — confirm intent.": "الأرض غير الموزعة قد تمثل مرافق عامة أو احتياطي مراحل مستقبلية — تأكد من القصد.",
+    /* Quick diagnostics labels */
+    "Land as % of dev cost": "الأرض كنسبة من تكلفة التطوير",
+    "Construction as % of dev cost": "الإنشاء كنسبة من تكلفة التطوير",
+    "Profit margin (on revenue)": "هامش الربح (على الإيراد)",
+    "ROI on cost": "العائد على التكلفة",
+    "Interest / dev cost": "الفوائد / تكلفة التطوير",
+    "Selling cost / revenue": "تكاليف البيع / الإيراد",
     "Equity · Levered": "الملكية · بعد التمويل", "Project · Unlevered": "المشروع · قبل التمويل",
     "IRR": "IRR", "Multiple": "المضاعف", "Payback": "فترة الاسترداد",
     "Cumulative cashflow — equity vs project": "التدفق التراكمي — الملكية مقابل المشروع",
@@ -332,6 +363,17 @@
     "Price / Rent": "السعر / الإيجار", "Gross / NOI": "الإجمالي / الصافي", "Units / Keys": "وحدات / مفاتيح",
   };
 
+  /* Pattern rules for dynamically composed strings (numbers baked in). */
+  const RULES = [
+    [/^(\d+(?:\.\d+)?)% of land unallocated$/, "$1% من الأرض غير موزعة"],
+    [/^(\d+(?:\.\d+)?)% allocated across components\.$/, "$1% موزعة على المكوّنات."],
+    [/^Components allocate (.+)% of the land area — over by (.+) pts\. Reduce one or more component allocations\.$/, "المكوّنات توزّع $1% من مساحة الأرض — بزيادة $2 نقطة. قلّل توزيع مكوّن أو أكثر."],
+    [/^Net profit SAR (.+)M\.$/, "صافي الربح $1 مليون ريال."],
+    [/^Equity IRR (.+)% vs hurdle (.+)%\.$/, "IRR الملكية $1% مقابل المستهدف $2%."],
+    [/^(.+)% vs target (.+)%\.$/, "$1% مقابل المستهدف $2%."],
+    [/^(\d+) months may not reflect typical procurement\.$/, "$1 شهرًا قد لا تعكس مدد التوريد المعتادة."],
+  ];
+
   const t = (s) => {
     if (typeof s !== "string") return s;
     if (lang === "en") return s;
@@ -340,6 +382,9 @@
     if (D[trimmed] !== undefined) {
       // preserve leading/trailing whitespace around the translated core
       return s.replace(trimmed, D[trimmed]);
+    }
+    for (const [re, tpl] of RULES) {
+      if (re.test(trimmed)) return trimmed.replace(re, tpl);
     }
     return s;
   };
