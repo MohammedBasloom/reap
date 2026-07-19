@@ -141,9 +141,33 @@
     .modal .guest { margin-top: 16px; text-align: center; font-size: 12px; color: var(--fg-3); }
     .modal .guest a { cursor: pointer; text-decoration: underline; color: var(--fg-2); }
 
-    /* Signed-in chip */
-    .userchip { display: none; align-items: center; gap: 12px; font-size: 12px; color: rgba(255,255,255,0.75); }
-    .userchip .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ad-success); }
+    /* Signed-in avatar + dropdown (matches the platform pages) */
+    .userchip { display: none; position: relative; }
+    .avatar {
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.35); background: var(--ad-gold-500);
+      color: var(--ad-navy-900); font-weight: 700; font-size: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-body);
+    }
+    .avatar-menu {
+      display: none; position: absolute; top: calc(100% + 10px); z-index: 60;
+      inset-inline-end: 0; width: 260px; background: var(--bg-1); color: var(--fg-1);
+      border: 1px solid var(--border-1); box-shadow: var(--shadow-lg);
+      padding: 16px 18px; text-align: start;
+    }
+    .avatar-menu.open { display: block; }
+    .avatar-menu .mlabel { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+    .avatar-menu .mname { font-size: 14px; font-weight: 600; margin-top: 4px; }
+    .avatar-menu .memail { font-size: 12px; color: var(--fg-3); margin-top: 2px; word-break: break-all; }
+    .avatar-menu .mdivider { border-top: 1px solid var(--border-1); margin: 12px 0; }
+    .avatar-menu .mbtn {
+      display: block; width: 100%; text-align: center; padding: 9px 12px; cursor: pointer;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+      border: 1px solid var(--ad-navy-800); background: transparent; color: var(--ad-navy-800);
+      border-radius: 2px; text-decoration: none; margin-top: 8px; font-family: var(--font-body);
+    }
+    .avatar-menu .mbtn.primary { background: var(--ad-navy-800); color: white; }
 
     @media (max-width: 860px) {
       .hero { grid-template-columns: 1fr; padding: 48px 24px; }
@@ -163,8 +187,16 @@
     <div class="brand"><b>REAP</b><span data-ar="منصة تقييم العقارات">Real Estate Assessment Platform</span></div>
     <div class="actions">
       <div class="userchip" id="userChip">
-        <span class="dot"></span><span id="userEmail"></span>
-        <button class="btn-land" id="btnLogout" data-ar="تسجيل الخروج">Log out</button>
+        <button class="avatar" id="btnAvatar" aria-label="Account menu">?</button>
+        <div class="avatar-menu" id="avatarMenu">
+          <div class="mlabel" data-ar="مسجّل الدخول باسم">Signed in as</div>
+          <div class="mname" id="userName"></div>
+          <div class="memail" id="userEmail"></div>
+          <div class="mdivider"></div>
+          <a class="mbtn primary" href="model.html" data-ar="افتح النمذجة المالية">Open Financial Modeling</a>
+          <a class="mbtn primary" href="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</a>
+          <button class="mbtn" id="btnLogout" data-ar="تسجيل الخروج">Log out</button>
+        </div>
       </div>
       <button class="btn-land" id="btnLang" title="Switch language">EN</button>
       <button class="btn-land" id="btnLogin" data-ar="تسجيل الدخول">Log in</button>
@@ -346,15 +378,29 @@
   async function refreshSessionUI() {
     const user = await reapAuth.getUser();
     const signedIn = !!user;
-    $("userChip").style.display = signedIn ? "flex" : "none";
+    $("userChip").style.display = signedIn ? "block" : "none";
     $("btnLogin").style.display = signedIn ? "none" : "";
     $("btnSignup").style.display = signedIn ? "none" : "";
     if (signedIn) {
       $("userEmail").textContent = user.email;
       $("btnStart").textContent = L("Continue to your workspace", "تابع إلى مساحة عملك");
+      // Avatar initial + full name from the profile (same as the platform pages)
+      let name = "";
+      try {
+        const { data } = await sb.from("profiles").select("full_name").eq("id", user.id).single();
+        name = (data && data.full_name) || "";
+      } catch (e) {}
+      $("userName").textContent = name || L("My account", "حسابي");
+      $("btnAvatar").textContent = ((name || user.email || "?").trim()[0] || "?").toUpperCase();
     }
     return signedIn;
   }
+
+  // Avatar dropdown open/close
+  $("btnAvatar").onclick = (e) => { e.stopPropagation(); $("avatarMenu").classList.toggle("open"); };
+  document.addEventListener("click", (e) => {
+    if (!$("userChip").contains(e.target)) $("avatarMenu").classList.remove("open");
+  });
 
   async function launch(app) {
     const user = await reapAuth.getUser();
