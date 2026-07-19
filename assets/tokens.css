@@ -230,6 +230,12 @@ html[lang="ar"] body { font-family: var(--font-body); }
 html[lang="ar"] .tabnum { font-family: "Thmanyah Sans", "IBM Plex Sans Arabic", system-ui, sans-serif !important; }
 /* Long-form paragraphs read in Serif Text per the guide */
 html[lang="ar"] p.lede, html[lang="ar"] .card p, html[lang="ar"] .step p { font-family: var(--font-serif); }
+/* الأحرف المرسلة — stylistic alternates. Per the guide: a display flourish
+   for a single word / two adjacent words, never body text. Applied to the
+   hero highlight; reuse .thm-alt anywhere else deliberately. */
+.thm-alt, html[lang="ar"] .hero h1 em {
+  font-feature-settings: "ss01" 1, "salt" 1;
+}
 /* Arabic never tracks — kill letter-spacing everywhere (incl. inline styles) */
 html[dir="rtl"] * { letter-spacing: 0 !important; }
 /* Keep numerals/latin fragments readable inside RTL text */
