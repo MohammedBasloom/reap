@@ -1,0 +1,1146 @@
+/* =============================================================
+   Sidebar — v2 input flow.
+   1. Project & Land  →  total land cost, transfer fees, total
+   2. Components (each: allocation %, FAR, costs, efficiency,
+      sale/lease, revenue basis sqm|unit|key, timing, cap rate)
+   3. Project timing (predesign, construction, pre-sales start)
+   4. General costs (project-level %s)
+   5. Financing
+   ============================================================= */
+const { useState: useStateS } = React;
+
+/* ---------- Display helpers ---------- */
+const fmtPct = (v) => `${Math.round(((+v) || 0) * 100)}%`;
+const fmtYrs = (v) => {
+  const n = (+v) || 0;
+  if (n < 0.05) return "instant";
+  return n === Math.round(n) ? `${n} yr${n === 1 ? "" : "s"}` : `${n.toFixed(2)} yrs`;
+};
+
+/* ---------- Atoms ---------- */
+
+function Eyebrow({ children, n }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+      {n !== undefined && <span style={{
+        fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ad-gold-600)",
+        letterSpacing: "0.06em",
+      }}>{String(n).padStart(2, "0")}</span>}
+      <div className="ad-eyebrow">{children}</div>
+    </div>
+  );
+}
+
+function Field({ label, suffix, value, onChange, type = "number", step = 1, min, max, hint, mono = true, disabled = false, placeholder }) {
+  return (
+    <label style={{ display: "block" }}>
+      <div style={{
+        fontSize: 11, color: "var(--fg-2)", marginBottom: 4,
+        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+      }}>
+        <span>{label}</span>
+        {suffix && <span style={{ color: "var(--fg-4)", fontSize: 10 }}>{suffix}</span>}
+      </div>
+      <FieldInput
+        type={type}
+        step={step}
+        min={min}
+        max={max}
+        value={value}
+        disabled={disabled}
+        mono={mono}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
+      {hint && <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>{hint}</div>}
+    </label>
+  );
+}
+
+/* Numeric input with thousand separators. Renders as a text input showing
+   "125,000,000"; commas are display-only — the parsed number flows out
+   through onChange. While focused, the user's raw typing is kept as-is (no
+   caret jumps); the value re-formats on blur. */
+function FieldInput({ type, step, min, max, value, disabled, mono, placeholder, onChange }) {
+  const isNum = type === "number";
+  const [draft, setDraft] = useStateS(null); // null = not editing
+  const fmt = (v) => (v === null || v === undefined || v === "" || isNaN(+v))
+    ? ""
+    : (+v).toLocaleString("en-US", { maximumFractionDigits: 6 });
+  return (
+    <input
+      className={`field-input ${mono ? "mono" : ""}`}
+      type={isNum ? "text" : type}
+      inputMode={isNum ? "decimal" : undefined}
+      step={step}
+      min={min}
+      max={max}
+      value={isNum ? (draft !== null ? draft : fmt(value)) : (value === null || value === undefined ? "" : value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      onChange={(e) => {
+        if (!isNum) { onChange(e.target.value); return; }
+        const raw = e.target.value;
+        if (!/^[-\d.,\s]*$/.test(raw)) return; // digits, comma, dot, minus only
+        setDraft(raw);
+        const parsed = parseFloat(raw.replace(/[,\s]/g, ""));
+        onChange(isNaN(parsed) ? 0 : parsed);
+      }}
+      onFocus={() => { if (isNum) setDraft(fmt(value)); }}
+      onBlur={() => setDraft(null)}
+    />
+  );
+}
+
+function PctField({ label, value, onChange, hint, suffix = "%", step = 0.5 }) {
+  return (
+    <Field
+      label={label}
+      suffix={suffix}
+      value={value === null || value === undefined ? "" : +(+value * 100).toFixed(4)}
+      onChange={(v) => onChange(+v / 100)}
+      hint={hint}
+      type="number"
+      step={step}
+    />
+  );
+}
+
+function AutoHorizonDisplay({ input }) {
+  const predesign = Math.max(0, input.predesignMonths | 0);
+  const construction = Math.max(1, input.constructionMonths | 0);
+  const preSalesStart = input.preSalesStartMonth !== undefined
+    ? Math.max(0, input.preSalesStartMonth | 0)
+    : predesign;
+  const conEnd = predesign + construction;
+  let endMonth = conEnd;
+  (input.components || []).forEach((c) => {
+    if (!c || !c.enabled) return;
+    if (c.mode === "sale") {
+      const e = preSalesStart + Math.max(1, c.salesPeriodMonths | 0);
+      if (e > endMonth) endMonth = e;
+    } else if (c.mode === "lease") {
+      const e = conEnd + Math.max(1, c.operatingPeriodMonths | 0);
+      if (e > endMonth) endMonth = e;
+    }
+  });
+  const tailMonths = 3;
+  const horizon = Math.max(12, endMonth + tailMonths);
+  const years = (horizon / 12);
+  return (
+    <div>
+      <div style={{
+        fontSize: 11, color: "var(--fg-2)", marginBottom: 4,
+        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+      }}>
+        <span>Horizon</span>
+        <span style={{ color: "var(--ad-gold-600)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase" }}>Auto</span>
+      </div>
+      <div style={{
+        height: 32, padding: "0 10px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        border: "1px solid var(--border-1)", background: "var(--bg-2)",
+        fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-1)",
+        fontVariantNumeric: "tabular-nums",
+      }}>
+        <span>{horizon} mo</span>
+        <span style={{ color: "var(--fg-3)", fontSize: 11 }}>{years.toFixed(1)} yrs</span>
+      </div>
+      <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>
+        Predesign + construction + hold / sell-down + tail
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, n, children, defaultOpen = true, alarm }) {
+  const [open, setOpen] = useStateS(defaultOpen);
+  return (
+    <div style={{ borderTop: "1px solid var(--border-1)" }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 24px", background: "transparent", border: "none", cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <Eyebrow n={n}>{title}</Eyebrow>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {alarm && (
+            <span style={{
+              fontSize: 9, padding: "2px 8px", textTransform: "uppercase", letterSpacing: "0.14em",
+              background: "var(--ad-danger)", color: "white", fontWeight: 600,
+            }}>{alarm}</span>
+          )}
+          <span style={{
+            fontSize: 12, color: "var(--fg-3)",
+            transition: "transform 200ms var(--ease-out)",
+            transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+          }}>▾</span>
+        </div>
+      </button>
+      {open && (
+        <div style={{ padding: "0 24px 24px" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Row({ children, cols = 2 }) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12, marginBottom: 12 }}>
+      {children}
+    </div>
+  );
+}
+
+function Segmented({ value, onChange, options }) {
+  return (
+    <div style={{ display: "flex", border: "1px solid var(--border-1)" }}>
+      {options.map((o, i) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          style={{
+            flex: 1, padding: "6px 10px",
+            background: value === o.value ? "var(--ad-navy-800)" : "transparent",
+            color: value === o.value ? "white" : "var(--fg-2)",
+            border: "none",
+            borderLeft: i > 0 ? "1px solid var(--border-1)" : "none",
+            cursor: "pointer",
+            fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
+            fontWeight: 500,
+          }}
+        >{o.label}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Component presets ---------- */
+
+const COMPONENT_PRESETS = {
+  "villa":     { mode: "sale",  label: "Villa",            blurb: "Detached homes for sale", icon: "▱", basis: "unit", far: 0.6,  landCoveragePct: 0.45, maxFloors: 2, upperFloorCoveragePct: 0.30, lastFloorPct: 0.85, costPerSqmGFA: 4200, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.85, avgUnitSize: 380, pricePerUnit: 3200000, salesPeriodMonths: 48 },
+  "townhouse": { mode: "sale",  label: "Townhouse",        blurb: "Attached homes for sale", icon: "▤", basis: "unit", far: 0.9,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 3600, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.82, avgUnitSize: 260, pricePerUnit: 1850000, salesPeriodMonths: 42 },
+  "apartment": { mode: "sale",  label: "Apartment",        blurb: "Strata residences", icon: "▣", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 3400, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
+  "btr":       { mode: "lease", label: "Build-to-Rent",    blurb: "Residential rental", icon: "◫", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 3400, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 100, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+  "retail":    { mode: "lease", label: "Retail",           blurb: "Leasable retail GLA", icon: "◰", basis: "sqm",  far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 4200, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+  "office":    { mode: "lease", label: "Office",           blurb: "Leasable office NLA", icon: "◳", basis: "sqm",  far: 4.0,  landCoveragePct: 0.50, maxFloors: 12, upperFloorCoveragePct: 0.50, lastFloorPct: 0.85, costPerSqmGFA: 4000, siteWorkPct: 0.07, basementCostPerSqm: 2300, efficiency: 0.78, rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.08 },
+  "hotel":     { mode: "lease", label: "Hotel",            blurb: "Keyed hospitality", icon: "◧", basis: "key",  far: 3.0,  landCoveragePct: 0.45, maxFloors: 10, upperFloorCoveragePct: 0.40, lastFloorPct: 0.75, costPerSqmGFA: 5800, siteWorkPct: 0.10, basementCostPerSqm: 2800, efficiency: 0.65, keys: 220, adr: 1050, occupancy: 0.68, opexPct: 0.58, operatingPeriodMonths: 60, exitCapRate: 0.08 },
+  "serviced":  { mode: "lease", label: "Serviced Apartment", blurb: "Long-stay keyed", icon: "◨", basis: "key",  far: 2.5,  landCoveragePct: 0.50, maxFloors: 8, upperFloorCoveragePct: 0.45, lastFloorPct: 0.80, costPerSqmGFA: 4800, siteWorkPct: 0.08, basementCostPerSqm: 2400, efficiency: 0.70, keys: 96,  adr: 720,  occupancy: 0.74, opexPct: 0.50, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+  "retail-sale": { mode: "sale", label: "Retail (Strata)", blurb: "Retail sold per m²", icon: "▦", basis: "sqm", far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 4200, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, pricePerSqm: 11500, salesPeriodMonths: 36 },
+  "custom":    { mode: "sale",  label: "Custom",           blurb: "Blank — define your own", icon: "◇", basis: "sqm", far: 1.0,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 3500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.80, pricePerSqm: 6000, salesPeriodMonths: 36 },
+};
+
+/* ---------- Floor-by-floor breakdown (coverage mode) ---------- */
+
+function FloorBreakdown({ comp, land }) {
+  const landCov = +comp.landCoveragePct || 0;
+  const upperCov = +comp.upperFloorCoveragePct || 0;
+  const lastPct = +comp.lastFloorPct || 0;
+  const maxFloors = Math.max(0, +comp.maxFloors || 0);
+  if (maxFloors === 0 || land === 0) {
+    return (
+      <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: -6, marginBottom: 10, fontStyle: "italic" }}>
+        Enter a land allocation and max floors to see the floor-by-floor breakdown.
+      </div>
+    );
+  }
+
+  const groundArea = land * landCov;
+  const typicalUpper = land * upperCov;
+  const lastArea = maxFloors >= 2 ? typicalUpper * lastPct : 0;
+
+  // Build per-floor rows: floor 1 = ground; floors 2..N-1 = typical upper; floor N = last
+  const rows = [];
+  for (let f = 1; f <= maxFloors; f++) {
+    let label, area, calc;
+    if (f === 1) {
+      label = "Ground"; area = groundArea;
+      calc = `land × ${(landCov * 100).toFixed(0)}%`;
+    } else if (f === maxFloors && maxFloors >= 2) {
+      label = "Last"; area = lastArea;
+      calc = `floor ${f - 1} × ${(lastPct * 100).toFixed(0)}%`;
+    } else {
+      label = "Upper"; area = typicalUpper;
+      calc = `land × ${(upperCov * 100).toFixed(0)}%`;
+    }
+    rows.push({ f, label, area, calc });
+  }
+  const total = rows.reduce((s, r) => s + r.area, 0);
+  const maxArea = Math.max(...rows.map(r => r.area), 1);
+
+  return (
+    <div style={{
+      border: "1px solid var(--border-1)", background: "var(--bg-2)",
+      padding: "10px 12px", marginTop: -4, marginBottom: 12,
+    }}>
+      <div style={{
+        fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase",
+        color: "var(--fg-3)", fontWeight: 500, marginBottom: 6,
+      }}>
+        Floor-by-floor build-up
+      </div>
+      <div style={{ display: "flex", flexDirection: "column-reverse", gap: 3 }}>
+        {rows.map(r => {
+          const pct = (r.area / maxArea) * 100;
+          const tone = r.label === "Ground" ? "var(--ad-navy-700)"
+                     : r.label === "Last"   ? "var(--ad-sand-700)"
+                     :                        "var(--ad-navy-500)";
+          return (
+            <div key={r.f} style={{
+              display: "grid", gridTemplateColumns: "44px 60px 1fr 90px",
+              alignItems: "center", gap: 8, fontSize: 11, fontFamily: "var(--font-mono)",
+            }}>
+              <span style={{ color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.08em" }}>F{r.f}</span>
+              <span style={{
+                fontSize: 9, letterSpacing: "0.10em", textTransform: "uppercase",
+                color: tone, fontWeight: 600,
+              }}>{r.label}</span>
+              <div style={{ position: "relative", height: 10, background: "var(--bg-1)", border: "1px solid var(--border-1)" }}>
+                <div style={{ position: "absolute", inset: 0, width: `${pct}%`, background: tone, opacity: 0.85 }} />
+              </div>
+              <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500, textAlign: "right" }}>
+                {Feas.formatNumber(r.area)} m²
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{
+        display: "flex", justifyContent: "space-between", marginTop: 8,
+        paddingTop: 6, borderTop: "1px dashed var(--border-1)",
+        fontSize: 11,
+      }}>
+        <span style={{ color: "var(--fg-3)" }}>Total GFA</span>
+        <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>
+          {Feas.formatNumber(total)} m²
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Component editor ---------- */
+
+function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePerSqm }) {
+  const update = (k, v) => onChange({ ...comp, [k]: v });
+  const preset = COMPONENT_PRESETS[comp.kind] || {};
+
+  // Derived — use the engine so editor display always matches what the dashboard computes
+  const computed = Feas.computeComponent(comp, totalLandArea, landPricePerSqm);
+  const land = computed.land;
+  const gfa = computed.gfa;
+  const nsa = computed.nsa;
+  const footprint = computed.footprint;
+  const remainingArea = computed.remainingArea;
+  const builtCost = computed.builtCost;
+  const siteCost = computed.siteWorkCost;
+  const basementArea = computed.basementArea || 0;
+  const landCostC = computed.landCost;
+
+  // Units / keys derived
+  const basis = comp.revenueBasis || "sqm";
+  let units = 0;
+  if (basis === "unit") {
+    const avgUnit = +comp.avgUnitSize || 0;
+    units = avgUnit > 0 ? Math.floor(nsa / avgUnit) : 0;
+  }
+  const keys = basis === "key" ? (+comp.keys || 0) : 0;
+
+  // Revenue derived
+  let revenue = 0, gross = 0;
+  if (comp.mode === "sale") {
+    if (basis === "sqm") revenue = nsa * (+comp.pricePerSqm || 0);
+    if (basis === "unit") revenue = units * (+comp.pricePerUnit || 0);
+    if (basis === "key") revenue = keys * (+comp.pricePerKey || 0);
+  } else if (comp.mode === "lease") {
+    if (basis === "sqm") gross = nsa * (+comp.rentPerSqmYr || 0) * (+comp.occupancy || 0);
+    if (basis === "unit") gross = units * (+comp.rentPerUnitYr || 0) * (+comp.occupancy || 0);
+    if (basis === "key") gross = keys * (+comp.adr || 0) * (+comp.occupancy || 0) * 365;
+    revenue = gross * (1 - (+comp.opexPct || 0));
+  }
+
+  return (
+    <div style={{
+      border: "1px solid var(--border-1)",
+      background: comp.enabled ? "var(--bg-1)" : "var(--bg-2)",
+      padding: 14,
+      marginBottom: 10,
+    }}>
+      {/* Title row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 16, color: "var(--ad-navy-700)", width: 16, textAlign: "center" }}>{preset.icon || "◇"}</span>
+        <input
+          className="field-input"
+          style={{ flex: 1, border: "none", padding: "4px 6px", background: "transparent", fontWeight: 500, fontSize: 13 }}
+          value={comp.name}
+          onChange={(e) => update("name", e.target.value)}
+        />
+        <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 11, color: "var(--fg-3)" }}>
+          <input type="checkbox" checked={comp.enabled} onChange={e => update("enabled", e.target.checked)} />
+          on
+        </label>
+        <button onClick={onRemove} style={{
+          background: "none", border: "none", cursor: "pointer", color: "var(--fg-4)",
+          fontSize: 14, padding: "2px 6px",
+        }}>×</button>
+      </div>
+
+      {/* Mode toggle */}
+      <div style={{ marginBottom: 10 }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>Mode</div>
+        <Segmented
+          value={comp.mode}
+          onChange={v => update("mode", v)}
+          options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
+        />
+      </div>
+
+      {/* Land & massing */}
+      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Land & massing</div>
+      <Row cols={2}>
+        <PctField label="Allocation of land" value={comp.allocationPct} onChange={v => update("allocationPct", v)} step={0.5} hint="% of total land" />
+        <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" />
+      </Row>
+
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>
+          Build-up area methodology
+        </div>
+        <Segmented
+          value={comp.massingMode || "far"}
+          onChange={v => update("massingMode", v)}
+          options={[{ value: "far", label: "FAR" }, { value: "coverage", label: "Coverage" }]}
+        />
+      </div>
+
+      {(comp.massingMode || "far") === "far" ? (
+        <Row cols={2}>
+          <Field label="FAR" suffix="ratio" value={comp.far} onChange={v => update("far", v)} step={0.05}
+                 hint="GFA = Land × FAR" />
+          <div />
+        </Row>
+      ) : (
+        <>
+          <Row cols={2}>
+            <PctField label="Land coverage" value={comp.landCoveragePct} onChange={v => update("landCoveragePct", v)} hint="Ground floor area ÷ land area" />
+            <Field label="Max floors" suffix="incl. last" value={comp.maxFloors} onChange={v => update("maxFloors", v)} step={1} min={0} />
+            <PctField label="Upper-floor coverage" value={comp.upperFloorCoveragePct} onChange={v => update("upperFloorCoveragePct", v)} hint="Each upper floor ÷ land area (not ÷ ground)" />
+            <PctField label="Last floor" value={comp.lastFloorPct} onChange={v => update("lastFloorPct", v)} hint="Last floor as % of floor below" />
+          </Row>
+          <FloorBreakdown comp={comp} land={land} />
+        </>
+      )}
+
+      {/* Construction rates — apply to above-ground GFA */}
+      <Row cols={2}>
+        <Field label="Built-up cost" suffix="SAR/m² GFA" value={comp.costPerSqmGFA} onChange={v => update("costPerSqmGFA", v)} step={50} hint="Above-ground construction rate" />
+        <PctField label="Site work (incl. setbacks)" value={comp.siteWorkPct} onChange={v => update("siteWorkPct", v)} hint="% of construction cost" step={0.5} />
+      </Row>
+
+      {/* Basement */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "8px 10px", border: "1px solid var(--border-1)", background: "var(--bg-2)",
+        marginBottom: comp.hasBasement ? 8 : 12, marginTop: 4,
+      }}>
+        <span style={{ fontSize: 11, color: "var(--fg-2)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500 }}>
+          Basement
+        </span>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: "var(--fg-3)" }}>
+          <input type="checkbox" checked={!!comp.hasBasement} onChange={e => update("hasBasement", e.target.checked)} />
+          {comp.hasBasement ? "Included" : "None"}
+        </label>
+      </div>
+      {comp.hasBasement && (
+        <Row cols={2}>
+          <PctField label="Basement coverage" value={comp.basementCoveragePct} onChange={v => update("basementCoveragePct", v)} hint="% of land area" />
+          <Field label="Basement cost" suffix="SAR/m²" value={comp.basementCostPerSqm} onChange={v => update("basementCostPerSqm", v)} step={50} hint="Separate rate from built-up" />
+        </Row>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, padding: "8px 10px", background: "var(--bg-2)", fontSize: 10, color: "var(--fg-3)", marginBottom: 12 }}>
+        <div>Land<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(land)} m²</span></div>
+        <div>GFA<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(gfa)} m²</span></div>
+        <div>{comp.mode === "sale" ? "Saleable" : "Leasable"}<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(nsa)} m²</span></div>
+        <div>{(comp.massingMode || "far") === "coverage" ? "Ground floor" : "Footprint"}<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatNumber(footprint)} m²</span></div>
+        <div>{comp.hasBasement ? "Basement" : "Remaining"}<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatNumber(comp.hasBasement ? basementArea : remainingArea)} m²</span></div>
+        <div>Built + site<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatCurrency(builtCost + siteCost)}</span></div>
+      </div>
+
+      {/* Revenue basis */}
+      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Revenue basis</div>
+      <div style={{ marginBottom: 10 }}>
+        <Segmented
+          value={comp.revenueBasis || "sqm"}
+          onChange={v => update("revenueBasis", v)}
+          options={[
+            { value: "sqm",  label: "per m²" },
+            { value: "unit", label: "per unit" },
+            { value: "key",  label: "per key" },
+          ]}
+        />
+      </div>
+
+      {/* Revenue inputs depend on basis + mode */}
+      {comp.mode === "sale" && (
+        <Row cols={3}>
+          {basis === "sqm" && (
+            <>
+              <Field label="Sale price" suffix="SAR/m² NSA" value={comp.pricePerSqm} onChange={v => update("pricePerSqm", v)} step={100} />
+              <div />
+              <div />
+            </>
+          )}
+          {basis === "unit" && (
+            <>
+              <Field label="Avg unit size" suffix="m²" value={comp.avgUnitSize} onChange={v => update("avgUnitSize", v)} step={5} />
+              <Field label="Unit price" suffix="SAR/unit" value={comp.pricePerUnit} onChange={v => update("pricePerUnit", v)} step={50000} />
+              <Field label="Units (derived)" suffix="#" value={units} onChange={() => {}} disabled />
+            </>
+          )}
+          {basis === "key" && (
+            <>
+              <Field label="Keys" suffix="#" value={comp.keys} onChange={v => update("keys", v)} step={5} />
+              <Field label="Key price" suffix="SAR/key" value={comp.pricePerKey} onChange={v => update("pricePerKey", v)} step={50000} />
+              <div />
+            </>
+          )}
+        </Row>
+      )}
+      {comp.mode === "lease" && (
+        <>
+          <Row cols={3}>
+            {basis === "sqm" && (
+              <>
+                <Field label="Rent" suffix="SAR/m²·yr" value={comp.rentPerSqmYr} onChange={v => update("rentPerSqmYr", v)} step={25} />
+                <div />
+                <div />
+              </>
+            )}
+            {basis === "unit" && (
+              <>
+                <Field label="Avg unit size" suffix="m²" value={comp.avgUnitSize} onChange={v => update("avgUnitSize", v)} step={5} />
+                <Field label="Rent" suffix="SAR/unit·yr" value={comp.rentPerUnitYr} onChange={v => update("rentPerUnitYr", v)} step={2500} />
+                <Field label="Units" suffix="#" value={units} onChange={() => {}} disabled />
+              </>
+            )}
+            {basis === "key" && (
+              <>
+                <Field label="Keys" suffix="#" value={comp.keys} onChange={v => update("keys", v)} step={5} />
+                <Field label="ADR" suffix="SAR/night" value={comp.adr} onChange={v => update("adr", v)} step={25} />
+                <div />
+              </>
+            )}
+          </Row>
+
+          {/* Lease-up ramp — defines the occupancy curve from delivery to stabilization */}
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 10, display: "flex", alignItems: "center", gap: 8 }}>
+            <span>Lease-up ramp</span>
+            <span style={{ flex: 1, height: 1, background: "var(--border-2)" }} />
+            <span style={{ fontSize: 10, color: "var(--fg-4)", textTransform: "none", letterSpacing: 0 }}>
+              {fmtPct(comp.initialOccupancy ?? 0.30)} → {fmtPct(comp.occupancy ?? 0.85)} over {fmtYrs(comp.yearsToStabilization ?? 1)}
+            </span>
+          </div>
+          <Row cols={3}>
+            <PctField label="Initial occupancy" value={comp.initialOccupancy ?? 0.30} onChange={v => update("initialOccupancy", v)} hint="Day-1 at delivery" />
+            <Field label="Years to stabilization" suffix="years" value={comp.yearsToStabilization ?? 1} onChange={v => update("yearsToStabilization", v)} step={0.25} min={0} hint="Lease-up period" />
+            <PctField label="Stabilized occupancy" value={comp.occupancy} onChange={v => update("occupancy", v)} hint="Long-term run-rate" />
+          </Row>
+
+          <Row cols={2}>
+            <PctField label="OpEx" value={comp.opexPct} onChange={v => update("opexPct", v)} hint="% of gross income" />
+            <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} hint="Terminal cap" />
+          </Row>
+        </>
+      )}
+
+      {/* Timing */}
+      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6 }}>Timing</div>
+      <Row cols={2}>
+        {comp.mode === "sale" && (
+          <Field label="Sales period" suffix="months" value={comp.salesPeriodMonths} onChange={v => update("salesPeriodMonths", v)} />
+        )}
+        {comp.mode === "lease" && (
+          <Field label="Operating period" suffix="months → exit" value={comp.operatingPeriodMonths} onChange={v => update("operatingPeriodMonths", v)} hint="Hold until exit" />
+        )}
+        <div />
+      </Row>
+
+      {/* Summary */}
+      <div style={{
+        marginTop: 8, padding: "10px 12px", background: "var(--ad-navy-50)",
+        display: "flex", justifyContent: "space-between", fontSize: 11,
+      }}>
+        <span style={{ color: "var(--fg-3)" }}>
+          {comp.mode === "sale" ? "Sales revenue" : "Annual NOI"}
+        </span>
+        <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>
+          {Feas.formatCurrency(revenue)} {comp.mode === "lease" ? "/yr" : ""}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Component picker (tile grid) ---------- */
+
+function ComponentPicker({ onPick, hasComponents, landArea }) {
+  const entries = Object.entries(COMPONENT_PRESETS);
+  return (
+    <div style={{ marginBottom: hasComponents ? 4 : 0 }}>
+      <div style={{
+        display: "flex", justifyContent: "space-between", alignItems: "baseline",
+        marginBottom: 8,
+      }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 500 }}>
+          {hasComponents ? "Add another component" : "Choose program components"}
+        </div>
+        {!hasComponents && landArea > 0 && (
+          <div style={{ fontSize: 10, color: "var(--fg-4)" }}>
+            {Feas.formatNumber(landArea)} m² to allocate
+          </div>
+        )}
+      </div>
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6,
+      }}>
+        {entries.map(([k, p]) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => onPick(k)}
+            title={p.blurb}
+            style={{
+              display: "flex", flexDirection: "column", alignItems: "flex-start",
+              gap: 4, padding: "10px 10px 9px",
+              border: "1px solid var(--border-1)", background: "var(--bg-1)",
+              cursor: "pointer", textAlign: "left",
+              transition: "background 120ms var(--ease-out), border-color 120ms var(--ease-out)",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-1)"; e.currentTarget.style.borderColor = "var(--border-1)"; }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+              <span style={{ fontSize: 18, color: "var(--ad-navy-700)", lineHeight: 1 }}>{p.icon}</span>
+              <span style={{
+                fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: p.mode === "sale" ? "var(--ad-success)" : "var(--ad-gold-600)",
+                fontWeight: 600,
+              }}>{p.mode === "sale" ? "Sale" : "Lease"}</span>
+            </div>
+            <div style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-1)", marginTop: 4 }}>{p.label}</div>
+            <div style={{ fontSize: 10, color: "var(--fg-3)", lineHeight: 1.3 }}>{p.blurb}</div>
+            <div style={{
+              marginTop: 4, fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase",
+              color: "var(--ad-navy-700)", display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <span style={{ fontSize: 11, lineHeight: 1 }}>+</span> Add
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Empty state when no components selected ---------- */
+
+function ComponentEmptyState() {
+  return (
+    <div style={{
+      marginTop: 16,
+      padding: "20px 18px",
+      border: "1px dashed var(--border-1)",
+      background: "var(--bg-2)",
+      textAlign: "center",
+    }}>
+      <div style={{
+        fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+        color: "var(--fg-3)", fontWeight: 500, marginBottom: 6,
+      }}>No components yet</div>
+      <div style={{ fontSize: 12, color: "var(--fg-2)", lineHeight: 1.5 }}>
+        Pick from the tiles above to build your program.<br />
+        Each component lands with sensible defaults — names, sizing and pricing are all editable.
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Allocation alarm ---------- */
+
+function AllocationAlarm({ totalPct, totalLand, hasComponents, isRawLand }) {
+  if (!hasComponents) return null;
+  const isOver = totalPct > 1.001;
+  const isUnder = totalPct < 0.98;
+  const usedLand = totalPct * totalLand;
+  return (
+    <div style={{
+      margin: "12px 0",
+      padding: "12px 14px",
+      background: isOver ? "rgba(176,50,28,0.08)" : isUnder ? "rgba(184,118,30,0.07)" : "rgba(46,125,91,0.06)",
+      border: `1px solid ${isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)"}`,
+      borderLeft: `3px solid ${isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)"}`,
+    }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span style={{
+          fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600,
+          color: isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)",
+        }}>
+          {isOver ? "⚠ Land overallocated" : isUnder ? "Land partially allocated" : "Land fully allocated"}
+        </span>
+        <span className="tabnum" style={{ fontWeight: 600, color: "var(--fg-1)" }}>
+          {(totalPct * 100).toFixed(1)}%
+        </span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-2)" }}>
+        <span>{Feas.formatNumber(usedLand)} m² allocated</span>
+        <span>of {Feas.formatNumber(totalLand)} m²{isRawLand ? " net developable" : ""}</span>
+      </div>
+      <div style={{ height: 6, background: "var(--bg-3)", marginTop: 8, position: "relative" }}>
+        <div style={{
+          height: "100%",
+          background: isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)",
+          width: `${Math.min(100, totalPct * 100)}%`,
+        }} />
+        {isOver && (
+          <div style={{
+            position: "absolute", top: 0, left: "100%", height: "100%",
+            background: "var(--ad-danger)", opacity: 0.5,
+            width: `${Math.min(50, (totalPct - 1) * 100)}%`,
+            marginLeft: "-1px",
+          }} />
+        )}
+      </div>
+      {isOver && (
+        <div style={{ fontSize: 11, color: "var(--ad-danger)", marginTop: 8 }}>
+          Reduce one or more allocations — total exceeds available land by {((totalPct - 1) * 100).toFixed(1)} pts.
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Fund Structure section ---------- */
+
+function FundStructureSection({ input, upd }) {
+  const fund = input.fund || {};
+  const updFund = (k, v) => upd("fund", { ...fund, [k]: v });
+  const enabled = !!fund.enabled;
+  const eqSum = ((+fund.lpEquityPct || 0) + (+fund.devEquityPct || 0) + (+fund.gpEquityPct || 0));
+  const eqOver = Math.abs(eqSum - 1) > 0.005;
+
+  return (
+    <Section
+      title="Fund Structure"
+      n="08"
+      defaultOpen={enabled}
+      alarm={enabled && eqOver ? "EQUITY ≠ 100%" : null}
+    >
+      {/* Master toggle */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "12px 14px", border: "1px solid var(--border-1)",
+        background: enabled ? "var(--ad-navy-50)" : "var(--bg-2)",
+        marginBottom: enabled ? 14 : 4,
+      }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{
+            fontSize: 11, color: "var(--fg-1)", fontWeight: 600,
+            letterSpacing: "0.04em",
+          }}>Use fund structure</div>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2, lineHeight: 1.4 }}>
+            Splits equity across LP (cash investors), Developer and GP (fund manager),
+            adds fees + a promote waterfall, and opens the <strong>Fund</strong> tab.
+          </div>
+        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: "var(--fg-2)", fontWeight: 500 }}>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => updFund("enabled", e.target.checked)}
+            style={{ transform: "scale(1.1)" }}
+          />
+          {enabled ? "On" : "Off"}
+        </label>
+      </div>
+
+      {enabled && (
+        <>
+          {/* Capital split */}
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 4 }}>
+            Equity contribution split
+          </div>
+          <Row cols={3}>
+            <PctField label="LP" value={fund.lpEquityPct} onChange={v => updFund("lpEquityPct", v)} hint="Cash investors" />
+            <PctField label="Developer" value={fund.devEquityPct} onChange={v => updFund("devEquityPct", v)} hint="Co-invest" />
+            <PctField label="GP" value={fund.gpEquityPct} onChange={v => updFund("gpEquityPct", v)} hint="Fund manager" />
+          </Row>
+          <EquitySplitBar lp={fund.lpEquityPct} dev={fund.devEquityPct} gp={fund.gpEquityPct} />
+
+          {/* Fees */}
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 14 }}>
+            Fees
+          </div>
+          <Row cols={2}>
+            <PctField label="Acquisition fee" value={fund.acquisitionFeePct} onChange={v => updFund("acquisitionFeePct", v)} hint="To GP · % of total cost · at close" />
+            <PctField label="Asset mgmt (yr)" value={fund.assetMgmtFeePctYr} onChange={v => updFund("assetMgmtFeePctYr", v)} hint="To GP · annual · on unreturned equity" />
+            <PctField label="Development fee" value={fund.developmentFeePct} onChange={v => updFund("developmentFeePct", v)} hint="To Developer · % of constr. + site" />
+            <div />
+          </Row>
+
+          {/* Waterfall */}
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 14 }}>
+            Distribution waterfall
+          </div>
+          <Row cols={2}>
+            <PctField label="Preferred return" value={fund.preferredReturnPct} onChange={v => updFund("preferredReturnPct", v)} hint="Compounded · pro-rata to all equity" />
+            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share after pref / catch-up" />
+          </Row>
+
+          {/* Catch-up sub-section */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "8px 10px", border: "1px solid var(--border-1)", background: "var(--bg-2)",
+            marginTop: 4, marginBottom: fund.catchUpEnabled ? 8 : 12,
+          }}>
+            <span style={{ fontSize: 11, color: "var(--fg-2)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500 }}>
+              GP catch-up
+            </span>
+            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: "var(--fg-3)" }}>
+              <input type="checkbox" checked={!!fund.catchUpEnabled} onChange={e => updFund("catchUpEnabled", e.target.checked)} />
+              {fund.catchUpEnabled ? "On" : "Off"}
+            </label>
+          </div>
+          {fund.catchUpEnabled && (
+            <Row cols={2}>
+              <PctField label="Catch-up %" value={fund.catchUpPct} onChange={v => updFund("catchUpPct", v)} hint="100% = full catch-up · 50% = 50/50" />
+              <div />
+            </Row>
+          )}
+
+          <div style={{
+            padding: "10px 14px", background: "var(--bg-2)",
+            fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5,
+            borderLeft: "3px solid var(--ad-gold-600)",
+          }}>
+            <strong style={{ color: "var(--fg-1)" }}>European waterfall:</strong>{" "}
+            (1) <em>return of capital</em> pro-rata to whoever contributed cash, (2) <em>compounded preferred return</em> pro-rata, (3) {fund.catchUpEnabled ? "GP catch-up at the chosen % until promote share is reached, " : ""}(4) <em>performance fee</em> — {fpFsidebar(fund.promoteSplit)} to GP, {fpFsidebar(1 - (+fund.promoteSplit || 0))} pro-rata to investors (LP + Dev only — GP is rewarded via promote).
+          </div>
+        </>
+      )}
+    </Section>
+  );
+}
+
+// local % formatter (avoid leaking into Feas; we already have one but want a tiny inline)
+function fpFsidebar(v) {
+  if (v === null || v === undefined || isNaN(v)) return "—%";
+  return `${(v * 100).toFixed(0)}%`;
+}
+
+function EquitySplitBar({ lp, dev, gp }) {
+  const total = (+lp || 0) + (+dev || 0) + (+gp || 0);
+  const norm = total > 0 ? 1 / total : 0;
+  const lpW = (+lp || 0) * norm * 100;
+  const devW = (+dev || 0) * norm * 100;
+  const gpW = (+gp || 0) * norm * 100;
+  return (
+    <div style={{ marginBottom: 6, marginTop: -2 }}>
+      <div style={{ display: "flex", height: 14, border: "1px solid var(--border-1)" }}>
+        <div title="LP" style={{ width: `${lpW}%`, background: "var(--ad-navy-700)" }} />
+        <div title="Developer" style={{ width: `${devW}%`, background: "var(--ad-sand-700)" }} />
+        <div title="GP" style={{ width: `${gpW}%`, background: "var(--ad-gold-600)" }} />
+      </div>
+      <div style={{
+        display: "flex", justifyContent: "space-between", marginTop: 4,
+        fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)",
+      }}>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-navy-700)", marginRight: 4 }} />LP {(lpW).toFixed(0)}%</span>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-sand-700)", marginRight: 4 }} />Dev {(devW).toFixed(0)}%</span>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-gold-600)", marginRight: 4 }} />GP {(gpW).toFixed(0)}%</span>
+      </div>
+      {Math.abs(total - 1) > 0.005 && (
+        <div style={{ fontSize: 10, color: "var(--ad-danger)", marginTop: 4 }}>
+          Splits sum to {(total * 100).toFixed(1)}% — adjust to 100%.
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Sidebar ---------- */
+
+function Sidebar({ input, setInput }) {
+  const upd = (k, v) => setInput({ ...input, [k]: v });
+  const updComp = (idx, c) => {
+    const arr = input.components.slice();
+    arr[idx] = c;
+    upd("components", arr);
+  };
+  const removeComp = (idx) => {
+    const arr = input.components.slice();
+    arr.splice(idx, 1);
+    upd("components", arr);
+  };
+  const addComp = (kind) => {
+    const preset = COMPONENT_PRESETS[kind];
+    // Auto-number duplicates: "Villa", "Villa 2", "Villa 3"...
+    const sameKindCount = input.components.filter(c => c.kind === kind).length;
+    const name = sameKindCount === 0 ? preset.label : `${preset.label} ${sameKindCount + 1}`;
+    const newComp = {
+      id: Math.random().toString(36).slice(2, 9),
+      kind,
+      name,
+      mode: preset.mode,
+      enabled: true,
+      allocationPct: 0.10,
+      // Massing — default to FAR methodology for back-compat
+      massingMode: "far",
+      far: preset.far,
+      landCoveragePct: preset.landCoveragePct,
+      maxFloors: preset.maxFloors,
+      upperFloorCoveragePct: preset.upperFloorCoveragePct,
+      lastFloorPct: preset.lastFloorPct,
+      // Basement (off by default)
+      hasBasement: false,
+      basementCoveragePct: 0.40,
+      basementCostPerSqm: preset.basementCostPerSqm,
+      // Construction + site work
+      costPerSqmGFA: preset.costPerSqmGFA,
+      siteWorkPct: preset.siteWorkPct,
+      efficiency: preset.efficiency,
+      revenueBasis: preset.basis,
+      avgUnitSize: preset.avgUnitSize,
+      keys: preset.keys,
+      pricePerSqm: preset.pricePerSqm,
+      pricePerUnit: preset.pricePerUnit,
+      pricePerKey: preset.pricePerKey,
+      rentPerSqmYr: preset.rentPerSqmYr,
+      rentPerUnitYr: preset.rentPerUnitYr,
+      adr: preset.adr,
+      occupancy: preset.occupancy,
+      initialOccupancy: preset.initialOccupancy ?? 0.30,
+      yearsToStabilization: preset.yearsToStabilization ?? 1,
+      opexPct: preset.opexPct,
+      exitCapRate: preset.exitCapRate,
+      salesPeriodMonths: preset.salesPeriodMonths,
+      operatingPeriodMonths: preset.operatingPeriodMonths,
+    };
+    upd("components", [...input.components, newComp]);
+  };
+
+  const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
+  const hasComponents = input.components.filter(c => c.enabled).length > 0;
+  const totalLandCost = (input.landArea || 0) * (input.landPricePerSqm || 0);
+  const landTransferFees = totalLandCost * (input.landTransferFeesPct || 0);
+  const totalLandIn = totalLandCost + landTransferFees;
+  const isRawLand = input.landType === "raw";
+  const developablePct = isRawLand ? (input.developablePct ?? 0.70) : 1;
+  const netDevelopableArea = (input.landArea || 0) * developablePct;
+  const landInfraCost = (input.landArea || 0) * (input.landInfraCostPerSqm || 0);
+
+  return (
+    <aside style={{
+      gridArea: "side",
+      borderRight: "1px solid var(--border-1)",
+      background: "var(--bg-1)",
+      overflowY: "auto",
+      minWidth: 0,
+    }}>
+      {/* Project header */}
+      <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--border-1)" }}>
+        <Eyebrow n="01">Project</Eyebrow>
+        <div style={{ marginTop: 8 }}>
+          <input
+            className="field-input"
+            style={{ fontSize: 18, fontWeight: 600, padding: "6px 8px", marginLeft: -8, border: "none", background: "transparent", color: "var(--fg-1)", letterSpacing: "-0.01em" }}
+            value={input.projectName}
+            onChange={e => upd("projectName", e.target.value)}
+          />
+        </div>
+        <Row cols={2}>
+          <Field label="Location" type="text" value={input.location} onChange={v => upd("location", v)} mono={false} />
+          <Field label="Project type" type="text" value={input.projectType} onChange={v => upd("projectType", v)} mono={false} placeholder="e.g. Mixed-use, Residential…" />
+        </Row>
+      </div>
+
+      {/* 02 Land */}
+      <Section title="Land" n="02">
+        <Row cols={2}>
+          <Field label="Land area" suffix="m²" value={input.landArea} onChange={v => upd("landArea", v)} step={1000} />
+          <Field label="Land price" suffix="SAR/m²" value={input.landPricePerSqm} onChange={v => upd("landPricePerSqm", v)} step={50} />
+          <Field label="Total land cost" suffix="SAR" value={Math.round(totalLandCost)} onChange={() => {}} disabled />
+          <PctField label="Transfer / gov fees" value={input.landTransferFeesPct} onChange={v => upd("landTransferFeesPct", v)} hint="On land cost" />
+        </Row>
+
+        {/* Land condition: net (serviced) vs raw (needs infrastructure) */}
+        <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 4 }}>Land condition</div>
+        <div style={{ display: "flex", gap: 0, marginBottom: 10, border: "1px solid var(--border-1)" }}>
+          {[
+            { key: "net", label: "Net / serviced", blurb: "Ready to build" },
+            { key: "raw", label: "Raw / unserviced", blurb: "Incl. roads & utilities" },
+          ].map(opt => {
+            const active = (input.landType || "net") === opt.key;
+            return (
+              <button key={opt.key} onClick={() => upd("landType", opt.key)} style={{
+                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "left",
+                background: active ? "var(--ad-navy-900)" : "var(--bg-1)",
+                color: active ? "white" : "var(--fg-2)",
+                border: "none", borderRight: opt.key === "net" ? "1px solid var(--border-1)" : "none",
+                fontFamily: "inherit",
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600 }}>{opt.label}</div>
+                <div style={{ fontSize: 9.5, opacity: 0.75, marginTop: 1 }}>{opt.blurb}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {isRawLand && (
+          <Row cols={2}>
+            <PctField label="Developable share" value={input.developablePct ?? 0.70} onChange={v => upd("developablePct", v)} hint="Net of roads, utilities & open space" />
+            <Field label="Net developable" suffix="m²" value={Math.round(netDevelopableArea)} onChange={() => {}} disabled />
+          </Row>
+        )}
+
+        <Row cols={2}>
+          <Field label="Infrastructure cost" suffix="SAR/m²" value={input.landInfraCostPerSqm ?? 0} onChange={v => upd("landInfraCostPerSqm", v)} step={25} hint={isRawLand ? "Roads & utilities, on gross land" : "Optional — on gross land"} />
+          <Field label="Total infrastructure" suffix="SAR" value={Math.round(landInfraCost)} onChange={() => {}} disabled />
+        </Row>
+        <div style={{
+          padding: "10px 14px", background: "var(--ad-navy-50)",
+          display: "flex", justifyContent: "space-between", fontSize: 12,
+        }}>
+          <span style={{ color: "var(--fg-2)" }}>Total land in (cost + fees)</span>
+          <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>
+            {Feas.formatCurrency(totalLandIn)}
+          </span>
+        </div>
+      </Section>
+
+      {/* 03 Components */}
+      <Section
+        title="Program — Components"
+        n="03"
+        alarm={totalAllocationPct > 1.001 ? "OVERALLOCATED" : null}
+      >
+        <ComponentPicker
+          onPick={addComp}
+          hasComponents={hasComponents}
+          landArea={netDevelopableArea}
+        />
+
+        {hasComponents ? (
+          <>
+            <AllocationAlarm
+              totalPct={totalAllocationPct}
+              totalLand={netDevelopableArea}
+              hasComponents={hasComponents}
+              isRawLand={isRawLand}
+            />
+            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", margin: "16px 0 8px" }}>
+              Your program · {input.components.length} component{input.components.length === 1 ? "" : "s"}
+            </div>
+            <div>
+              {input.components.map((c, i) => (
+                <ComponentEditor
+                  key={c.id}
+                  comp={c}
+                  onChange={(c2) => updComp(i, c2)}
+                  onRemove={() => removeComp(i)}
+                  totalLandArea={netDevelopableArea}
+                  landPricePerSqm={input.landPricePerSqm || 0}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <ComponentEmptyState />
+        )}
+      </Section>
+
+      {/* 04 Timing */}
+      <Section title="Project Timing" n="04">
+        <Row cols={2}>
+          <Field label="Pre-design" suffix="months" value={input.predesignMonths} onChange={v => upd("predesignMonths", v)} hint="Concept → DD → tender" />
+          <Field label="Construction" suffix="months" value={input.constructionMonths} onChange={v => upd("constructionMonths", v)} />
+          <Field label="Pre-sales start" suffix="month" value={input.preSalesStartMonth} onChange={v => upd("preSalesStartMonth", v)} hint="From kickoff" />
+          <AutoHorizonDisplay input={input} />
+        </Row>
+        <div style={{ padding: "10px 14px", background: "var(--bg-2)", fontSize: 11, color: "var(--fg-3)" }}>
+          Operating period &amp; exit cap rate are set per-component above. Horizon is auto-sized from your timing &amp; hold assumptions.
+        </div>
+      </Section>
+
+      {/* 05 General Costs */}
+      <Section title="General Costs" n="05">
+        <Row cols={2}>
+          <PctField label="Soft costs" value={input.softCostsPct} onChange={v => upd("softCostsPct", v)} hint="Of construction + site" />
+          <PctField label="Contingency" value={input.contingencyPct} onChange={v => upd("contingencyPct", v)} hint="Of construction + soft" />
+          <PctField label="Marketing" value={input.marketingPct} onChange={v => upd("marketingPct", v)} hint="Of sales revenue" />
+          <PctField label="Sales commission" value={input.salesCommissionPct} onChange={v => upd("salesCommissionPct", v)} hint="Of sales revenue" />
+          <PctField label="Gov / sales fees" value={input.govFeesPct} onChange={v => upd("govFeesPct", v)} hint="On sales revenue" />
+        </Row>
+      </Section>
+
+      {/* 06 Financing */}
+      <Section title="Financing" n="06">
+        <Row cols={2}>
+          <PctField label="LTC" value={input.ltc} onChange={v => upd("ltc", v)} hint="Loan to cost" />
+          <PctField label="Interest" value={input.interestRate} onChange={v => upd("interestRate", v)} hint="Annual" />
+        </Row>
+        <div style={{
+          padding: "10px 14px", background: "var(--bg-2)",
+          fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5,
+          borderLeft: "3px solid var(--ad-navy-700)",
+        }}>
+          <strong style={{ color: "var(--fg-1)" }}>Repayment:</strong>{" "}
+          every SAR of positive operating cashflow (sales + NOI + exit proceeds) sweeps
+          against accrued interest first, then principal, until the loan is closed. Any
+          residual at the project's natural exit is cleared from exit proceeds.
+        </div>
+      </Section>
+
+      {/* 07 Valuation */}
+      <Section title="Valuation" n="07">
+        <Row cols={2}>
+          <PctField
+            label="Hurdle / discount rate"
+            value={input.discountRate}
+            onChange={(v) => upd("discountRate", v)}
+            hint="Used for NPV and the IRR hurdle check"
+          />
+          <div />
+        </Row>
+        <div style={{ padding: "10px 14px", background: "var(--bg-2)", fontSize: 11, color: "var(--fg-3)" }}>
+          The hurdle is the cost-of-equity benchmark. Equity IRR above this line clears the gate; NPV is discounted at this rate. Component-level exit cap rates live with each program component above.
+        </div>
+      </Section>
+
+      {/* 08 Fund Structure */}
+      <FundStructureSection input={input} upd={upd} />
+
+      <div style={{
+        padding: "20px 24px", borderTop: "1px solid var(--border-1)",
+        display: "flex", gap: 8, background: "var(--bg-2)",
+      }}>
+        <button className="btn btn-primary" onClick={() => window.dispatchEvent(new CustomEvent("feas:export"))}>
+          Export PDF
+        </button>
+        <button className="btn" onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}>
+          Reset
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+window.Sidebar = Sidebar;
+window.COMPONENT_PRESETS = COMPONENT_PRESETS;

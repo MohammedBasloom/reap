@@ -1,0 +1,209 @@
+/* Arabian Dyar tokens — adapted to load Inter via Google Fonts
+   (full local font files not bundled). */
+@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  /* Brand */
+  --ad-navy-900: #0A1A36;
+  --ad-navy-800: #102040;
+  --ad-navy-700: #1A2D55;
+  --ad-navy-600: #2A3F6E;
+  --ad-navy-500: #4A5F8E;
+  --ad-navy-400: #7A8AAE;
+  --ad-navy-300: #B0BBD0;
+  --ad-navy-200: #D6DCE8;
+  --ad-navy-100: #EAEEF5;
+  --ad-navy-50:  #F4F6FB;
+  --ad-sand-900: #6B5A40;
+  --ad-sand-700: #9C8761;
+  --ad-sand-500: #C9B58A;
+  --ad-sand-300: #E6D9BA;
+  --ad-sand-200: #EFE6D0;
+  --ad-sand-100: #F5EFE0;
+  --ad-sand-50:  #FAF6EC;
+  --ad-gold-600: #8E6A2A;
+  --ad-gold-500: #B89260;
+  --ad-gold-400: #C8A875;
+  --ad-paper:    #FFFFFF;
+  --ad-ink:      #0A0F1A;
+  --ad-line:     #E5E2D8;
+  --ad-line-cool:#E1E6EE;
+  --ad-success: #2E7D5B;
+  --ad-warning: #B8761E;
+  --ad-danger:  #B0321C;
+  --ad-info:    var(--ad-navy-600);
+
+  --fg-1: var(--ad-navy-900);
+  --fg-2: var(--ad-navy-700);
+  --fg-3: var(--ad-navy-500);
+  --fg-4: var(--ad-navy-400);
+  --fg-onDark:  #FFFFFF;
+  --fg-onSand:  var(--ad-navy-900);
+
+  --bg-1: var(--ad-paper);
+  --bg-2: var(--ad-sand-50);
+  --bg-3: var(--ad-sand-100);
+  --bg-dark: var(--ad-navy-900);
+  --bg-overlay: rgba(10, 26, 54, 0.55);
+
+  --border-1: var(--ad-line);
+  --border-2: var(--ad-line-cool);
+  --border-strong: var(--ad-navy-300);
+
+  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mid:     "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-body:    "Inter", system-ui, sans-serif;
+  --font-arabic:  "IBM Plex Sans Arabic", "Inter", sans-serif;
+  --font-serif:   "Fraunces", Georgia, serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --fs-display-xl: 96px;
+  --fs-display-lg: 72px;
+  --fs-display-md: 56px;
+  --fs-h1:         44px;
+  --fs-h2:         32px;
+  --fs-h3:         24px;
+  --fs-h4:         20px;
+  --fs-body-lg:    18px;
+  --fs-body:       16px;
+  --fs-body-sm:    14px;
+  --fs-caption:    12px;
+  --fs-eyebrow:    11px;
+
+  --lh-tight:  1.05;
+  --lh-snug:   1.2;
+  --lh-normal: 1.4;
+  --lh-relaxed:1.6;
+
+  --tracking-tight:   -0.02em;
+  --tracking-normal:   0;
+  --tracking-wide:     0.04em;
+  --tracking-eyebrow:  0.22em;
+
+  --sp-0:  0;
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  24px;
+  --sp-6:  32px;
+  --sp-7:  48px;
+  --sp-8:  64px;
+  --sp-9:  96px;
+
+  --r-0:  0;
+  --r-1:  2px;
+  --r-2:  4px;
+  --r-3:  8px;
+  --r-pill: 999px;
+
+  --shadow-sm:  0 1px 2px rgba(10, 26, 54, 0.06);
+  --shadow-md:  0 4px 16px -4px rgba(10, 26, 54, 0.10), 0 2px 4px rgba(10, 26, 54, 0.04);
+  --shadow-lg:  0 24px 48px -16px rgba(10, 26, 54, 0.18), 0 6px 16px -6px rgba(10, 26, 54, 0.08);
+
+  --ease-out:    cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-arch:   cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast:   140ms;
+  --t-base:   240ms;
+  --t-slow:   480ms;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-relaxed);
+  color: var(--fg-1);
+  background: var(--bg-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "cv11";
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--fg-1);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-snug);
+  margin: 0;
+}
+
+.ad-eyebrow {
+  font-family: var(--font-body);
+  font-size: var(--fs-eyebrow);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--ad-navy-200); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ad-navy-300); }
+
+/* Focus */
+input:focus, select:focus, textarea:focus, button:focus { outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+  outline: 1px solid var(--ad-navy-700);
+  outline-offset: 1px;
+}
+
+/* Subtle inputs */
+.field-input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--fg-1);
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-radius: 2px;
+  padding: 8px 10px;
+  width: 100%;
+  transition: border-color var(--t-fast) var(--ease-out);
+  font-variant-numeric: tabular-nums;
+}
+.field-input:hover { border-color: var(--border-strong); }
+.field-input:focus-visible { border-color: var(--ad-navy-700); }
+.field-input.mono { font-family: var(--font-mono); font-size: 13px; }
+
+.btn {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 10px 18px;
+  border: 1px solid var(--ad-navy-800);
+  background: transparent;
+  color: var(--ad-navy-800);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity var(--t-fast) var(--ease-out);
+}
+.btn:hover { opacity: 0.7; }
+.btn-primary { background: var(--ad-navy-800); color: var(--fg-onDark); }
+.btn-ghost { border-color: transparent; }
+
+.tabnum { font-variant-numeric: tabular-nums; }
+
+/* =============================================================
+   Arabic — Thmanyah Sans (official brand font) + RTL rules
+   ============================================================= */
+@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Regular.otf") format("opentype"); font-weight: 300 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Medium.otf") format("opentype"); font-weight: 500 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Bold.otf") format("opentype"); font-weight: 700 900; font-style: normal; font-display: swap; }
+
+html[lang="ar"] {
+  --font-display: "Thmanyah", "IBM Plex Sans Arabic", "Inter Tight", system-ui, sans-serif;
+  --font-mid:     "Thmanyah", "IBM Plex Sans Arabic", "Inter Tight", system-ui, sans-serif;
+  --font-body:    "Thmanyah", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+}
+html[lang="ar"] body { font-family: var(--font-body); }
+/* Arabic never tracks — kill letter-spacing everywhere (incl. inline styles) */
+html[dir="rtl"] * { letter-spacing: 0 !important; }
+/* Keep numerals/latin fragments readable inside RTL text */
+html[dir="rtl"] .tabnum { direction: ltr; unicode-bidi: embed; }

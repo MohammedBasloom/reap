@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>REAP — Real Estate Valuation</title>
+  <meta name="description" content="Value any property with the three internationally recognised approaches — guided, plain-language, no expertise required." />
+  <link rel="icon" type="image/png" href="assets/arch-mark.png" />
+
+  <!-- Auth gate: session or guest access required, else back to landing -->
+  <script src="vendor/supabase.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/i18n.js"></script>
+  <script>
+    document.documentElement.style.visibility = "hidden";
+    reapAuth.requireAuth().then(() => { document.documentElement.style.visibility = ""; });
+  </script>
+
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <style>
+    body { background: var(--bg-2); overflow: hidden; }
+    #root { height: 100vh; }
+    .print-only { display: none; }
+    @media print {
+      @page { margin: 13mm; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { overflow: visible; background: white; }
+      #root { height: auto; }
+      /* Collapse the app grid: the hidden sidebar must not keep its column */
+      #root > div { display: block !important; height: auto !important; background: white !important; }
+      header, aside, footer, .no-print { display: none !important; }
+      main { overflow: visible !important; height: auto !important; background: white !important; }
+      main > div { padding: 0 !important; max-width: none !important; }
+      .val-panel, .val-kpis { break-inside: avoid; }
+      .print-only { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + Babel (vendored) -->
+  <script src="vendor/react.development.js"></script>
+  <script src="vendor/react-dom.development.js"></script>
+  <script>I18N.patchReact();</script>
+  <script src="vendor/babel.min.js"></script>
+
+  <!-- Valuation engine (plain JS) -->
+  <script src="src/val_calc.js"></script>
+
+  <!-- App (JSX) -->
+  <script type="text/babel" src="src/usermenu.jsx"></script>
+  <script type="text/babel" src="src/valuation.jsx"></script>
+</body>
+</html>

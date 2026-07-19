@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+
+  <defs>
+    <pattern id="msh" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+      <g stroke="#102040" stroke-width="0.6" fill="none">
+        <polygon points="30,4 38,22 56,30 38,38 30,56 22,38 4,30 22,22"></polygon>
+        <circle cx="30" cy="30" r="6"></circle>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="120" height="120" fill="url(#msh)" opacity="0.6"></rect>
+</svg>

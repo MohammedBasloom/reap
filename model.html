@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>REAP — Financial Modeling</title>
+  <meta name="description" content="REAP — Real Estate Assessment Platform. Live feasibility modeling: program, cost, cashflow, returns, sensitivity, and fund waterfall." />
+  <meta property="og:title" content="REAP Platform" />
+  <meta property="og:description" content="Real Estate Assessment Platform — live feasibility modeling." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://reapapp.netlify.app/" />
+  <meta property="og:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="REAP Platform" />
+  <meta name="twitter:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <link rel="icon" type="image/png" href="assets/arch-mark.png" />
+
+  <!-- Auth gate: session or guest access required, else back to landing -->
+  <script src="vendor/supabase.js"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/auth.js"></script>
+  <script src="assets/i18n.js"></script>
+  <script>
+    document.documentElement.style.visibility = "hidden";
+    reapAuth.requireAuth().then(() => { document.documentElement.style.visibility = ""; });
+  </script>
+
+  <!-- Code-referenced resource (set as a string in app.jsx, not an HTML attribute) -->
+  <meta name="ext-resource-dependency" content="assets/logo-arabian-dyar-white.png" data-resource-id="logo" />
+  <script>
+    // Patch ResizeObserver to swallow benign loop-completion warnings.
+    (function(){
+      if (typeof ResizeObserver !== "undefined") {
+        const Orig = ResizeObserver;
+        window.ResizeObserver = class PatchedRO extends Orig {
+          constructor(cb) {
+            super((entries, obs) => {
+              window.requestAnimationFrame(() => {
+                try { cb(entries, obs); } catch(e) {}
+              });
+            });
+          }
+        };
+      }
+      const RO = "ResizeObserver loop";
+      window.addEventListener("error", function(e){
+        if (e && e.message && e.message.indexOf(RO) !== -1) {
+          e.stopImmediatePropagation(); e.preventDefault(); return false;
+        }
+      }, true);
+      const ce = console.error, cw = console.warn;
+      console.error = function(...a){ if (a[0] && String(a[0]).indexOf(RO) !== -1) return; return ce.apply(console, a); };
+      console.warn  = function(...a){ if (a[0] && String(a[0]).indexOf(RO) !== -1) return; return cw.apply(console, a); };
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/tokens.css" />
+  <style>
+    body { background: var(--bg-2); overflow: hidden; }
+    #root { height: 100vh; }
+    .print-only { display: none; }
+    @media print {
+      @page { margin: 13mm; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { overflow: visible; background: white; }
+      #root { height: auto; }
+      /* Collapse the app grid: the hidden sidebar must not keep its column */
+      #root > div { display: block !important; height: auto !important; background: white !important; }
+      header, aside, footer, .no-print { display: none !important; }
+      main { overflow: visible !important; height: auto !important; background: white !important; }
+      main > div { padding-left: 0 !important; padding-right: 0 !important; }
+      .print-only { display: block !important; }
+      /* Keep report sections whole across page breaks */
+      main > div:last-child > div > div { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <template id="__bundler_thumbnail" data-bg-color="#0f2a22">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="800" fill="#0f2a22" />
+      <g fill="none" stroke="#c9a861" stroke-width="6">
+        <rect x="470" y="250" width="260" height="300" rx="4" />
+        <path d="M470 330 h260 M470 410 h260 M470 490 h260 M560 250 v300 M650 250 v300" stroke-width="3" opacity="0.5" />
+        <path d="M600 180 l70 70 -70 70 -70 -70 z" fill="#c9a861" stroke="none" />
+      </g>
+      <text x="600" y="640" fill="#c9a861" font-family="Georgia, serif" font-size="42" font-weight="600" text-anchor="middle" letter-spacing="2">ARABIAN DYAR</text>
+      <text x="600" y="690" fill="#7d8b80" font-family="Georgia, serif" font-size="22" text-anchor="middle" letter-spacing="3">OPPORTUNITY ASSESSMENT</text>
+    </svg>
+  </template>
+
+  <script>
+    // Suppress benign ResizeObserver loop warning (React 18 + responsive SVGs).
+    window.addEventListener("error", (e) => {
+      if (e.message && e.message.includes("ResizeObserver loop")) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    });
+  </script>
+
+  <!-- React + Babel (pinned, vendored locally — react@18.3.1, @babel/standalone@7.29.0) -->
+  <script src="vendor/react.development.js"></script>
+  <script src="vendor/react-dom.development.js"></script>
+  <script>I18N.patchReact();</script>
+  <script src="vendor/babel.min.js"></script>
+
+  <!-- Calc engine (plain JS, no JSX) -->
+  <script src="src/calc.js"></script>
+
+  <!-- Components (JSX) -->
+  <script type="text/babel" src="src/usermenu.jsx"></script>
+  <script type="text/babel" src="src/charts.jsx"></script>
+  <script type="text/babel" src="src/sidebar.jsx"></script>
+  <script type="text/babel" src="src/results.jsx"></script>
+  <script type="text/babel" src="src/fund.jsx"></script>
+  <script type="text/babel" src="src/app.jsx"></script>
+</body>
+</html>

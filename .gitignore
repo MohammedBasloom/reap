@@ -1,0 +1,13 @@
+# Secrets — never commit tokens
+.netlify-token
+netlify-token.txt
+.netlify-token.txt
+.github-token
+github-token.txt
+
+# Local build/test artifacts
+build/
+serve.ps1
+deploy.ps1
+deploy-github.ps1
+.claude/
