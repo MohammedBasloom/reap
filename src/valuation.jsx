@@ -187,11 +187,17 @@ function ValApp() {
           <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", display: "flex", gap: 12 }}>
             <span>{input.property.city || "—"}</span><span style={{ opacity: 0.4 }}>·</span><span>{typeDef.label}</span>
           </div>
-          <input
-            value={input.name}
-            onChange={(e) => upd("name", e.target.value)}
-            style={{ fontSize: 15, fontWeight: 500, marginTop: 2, background: "transparent", border: "none", color: "white", fontFamily: "var(--font-body)", width: "100%", padding: 0 }}
-          />
+          <div className="editable-name-wrap on-dark" style={{ marginTop: 2 }} title="Click to rename">
+            <input
+              className="editable-name on-dark"
+              value={input.name}
+              onChange={(e) => upd("name", e.target.value)}
+              style={{ fontSize: 15, fontWeight: 500, color: "white", fontFamily: "var(--font-body)", flex: 1, padding: "1px 2px" }}
+            />
+            <svg className="pencil" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+            </svg>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18, justifyContent: "flex-end" }}>
           <div style={{ textAlign: "right" }}>

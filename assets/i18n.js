@@ -121,6 +121,8 @@
     "Development fee": "رسوم التطوير", "Preferred return": "العائد الممتاز",
     "Performance fee": "رسوم الأداء", "Catch-up %": "نسبة التعويض",
     "Reset": "إعادة تعيين", "Export": "تصدير", "Print": "طباعة", "Export PDF": "تصدير PDF",
+    "Click to rename": "انقر لتغيير الاسم",
+    "Name this opportunity…": "سمِّ هذه الفرصة…",
     "Used for NPV and the IRR hurdle check": "يُستخدم لحساب NPV ولمقارنة IRR بالعائد المستهدف",
     "The hurdle is the cost-of-equity benchmark. Equity IRR above this line clears the gate; NPV is discounted at this rate. Component-level exit cap rates live with each program component above.": "العائد المستهدف هو مرجع تكلفة حقوق الملكية: إذا تجاوزه IRR الملكية فالمشروع يجتاز البوابة، ويُخصم NPV بهذا المعدل. أما معدلات رسملة التخارج فتُضبط داخل كل مكوّن أعلاه.",
     "Reset all inputs and clear program components?": "إعادة تعيين جميع المدخلات ومسح مكوّنات البرنامج؟",

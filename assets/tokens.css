@@ -190,6 +190,23 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 
 .tabnum { font-variant-numeric: tabular-nums; }
 
+/* Editable-name affordance — dashed underline + pencil that lights up */
+.editable-name-wrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.editable-name-wrap .pencil { color: var(--fg-4); flex-shrink: 0; pointer-events: none; transition: color var(--t-fast) var(--ease-out); }
+.editable-name-wrap:hover .pencil, .editable-name-wrap:focus-within .pencil { color: var(--ad-gold-600); }
+.editable-name {
+  border: none !important; border-bottom: 1px dashed var(--border-strong) !important;
+  border-radius: 0; background: transparent; cursor: text; min-width: 0;
+  transition: border-color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+}
+.editable-name:hover { background: color-mix(in oklab, var(--ad-navy-50) 60%, transparent); border-bottom-color: var(--ad-navy-500) !important; }
+.editable-name:focus-visible { outline: none; border-bottom: 1px solid var(--ad-navy-700) !important; background: var(--ad-navy-50); }
+.editable-name.on-dark { border-bottom-color: rgba(255,255,255,0.35) !important; }
+.editable-name.on-dark:hover { background: rgba(255,255,255,0.07); border-bottom-color: rgba(255,255,255,0.6) !important; }
+.editable-name.on-dark:focus-visible { border-bottom: 1px solid var(--ad-gold-500) !important; background: rgba(255,255,255,0.07); }
+.editable-name-wrap.on-dark .pencil { color: rgba(255,255,255,0.45); }
+.editable-name-wrap.on-dark:hover .pencil, .editable-name-wrap.on-dark:focus-within .pencil { color: var(--ad-gold-400); }
+
 /* =============================================================
    Arabic — Thmanyah typeface (official), deployed per the brand
    guide (دليل جماليات خط ثمانية):

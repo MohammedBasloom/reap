@@ -957,13 +957,17 @@ function Sidebar({ input, setInput }) {
       {/* Project header */}
       <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--border-1)" }}>
         <Eyebrow n="01">Project</Eyebrow>
-        <div style={{ marginTop: 8 }}>
+        <div className="editable-name-wrap" style={{ marginTop: 8 }} title="Click to rename">
           <input
-            className="field-input"
-            style={{ fontSize: 18, fontWeight: 600, padding: "6px 8px", marginLeft: -8, border: "none", background: "transparent", color: "var(--fg-1)", letterSpacing: "-0.01em" }}
+            className="field-input editable-name"
+            style={{ fontSize: 18, fontWeight: 600, padding: "6px 2px", color: "var(--fg-1)", letterSpacing: "-0.01em", flex: 1 }}
             value={input.projectName}
             onChange={e => upd("projectName", e.target.value)}
+            placeholder="Name this opportunity…"
           />
+          <svg className="pencil" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+          </svg>
         </div>
         <Row cols={2}>
           <Field label="Location" type="text" value={input.location} onChange={v => upd("location", v)} mono={false} />
