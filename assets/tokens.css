@@ -191,18 +191,45 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .tabnum { font-variant-numeric: tabular-nums; }
 
 /* =============================================================
-   Arabic — Thmanyah Sans (official brand font) + RTL rules
+   Arabic — Thmanyah typeface (official), deployed per the brand
+   guide (دليل جماليات خط ثمانية):
+     · خط ثمانية للعناوين  (Serif Display) → headlines & titles
+     · خط ثمانية للنصوص   (Serif Text)    → long reading text
+     · خط ثمانية الرقمي    (Sans)          → digital UI, labels, data
+   Five weights per family, official woff2 web cuts.
    ============================================================= */
-@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Regular.otf") format("opentype"); font-weight: 300 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Medium.otf") format("opentype"); font-weight: 500 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Thmanyah"; src: url("fonts/ThmanyahSans-Bold.otf") format("opentype"); font-weight: 700 900; font-style: normal; font-display: swap; }
+/* Sans — الرقمي (UI) */
+@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
+/* Serif Display — للعناوين (headlines) */
+@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
+/* Serif Text — للنصوص (long reading text) */
+@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
 
 html[lang="ar"] {
-  --font-display: "Thmanyah", "IBM Plex Sans Arabic", "Inter Tight", system-ui, sans-serif;
-  --font-mid:     "Thmanyah", "IBM Plex Sans Arabic", "Inter Tight", system-ui, sans-serif;
-  --font-body:    "Thmanyah", "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+  /* Headlines → Serif Display; UI/body → Sans (الرقمي); long text → Serif Text */
+  --font-display: "Thmanyah Serif Display", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mid:     "Thmanyah Serif Display", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-body:    "Thmanyah Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-serif:   "Thmanyah Serif Text", "IBM Plex Sans Arabic", serif;
 }
 html[lang="ar"] body { font-family: var(--font-body); }
+/* Data/KPI numerals stay on the digital (Sans) cut for legibility —
+   !important because KPI tiles set the display family inline */
+html[lang="ar"] .tabnum { font-family: "Thmanyah Sans", "IBM Plex Sans Arabic", system-ui, sans-serif !important; }
+/* Long-form paragraphs read in Serif Text per the guide */
+html[lang="ar"] p.lede, html[lang="ar"] .card p, html[lang="ar"] .step p { font-family: var(--font-serif); }
 /* Arabic never tracks — kill letter-spacing everywhere (incl. inline styles) */
 html[dir="rtl"] * { letter-spacing: 0 !important; }
 /* Keep numerals/latin fragments readable inside RTL text */
