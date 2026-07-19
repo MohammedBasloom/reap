@@ -155,7 +155,7 @@ function UserMenu({ table, itemNoun, currentName, getCurrent, onLoad }) {
   );
 }
 
-/* Language toggle — swaps AR/EN and reloads. */
+/* Language toggle — globe icon, swaps AR/EN and reloads. */
 function LangToggle() {
   const isAr = window.I18N && I18N.lang === "ar";
   return (
@@ -163,13 +163,16 @@ function LangToggle() {
       className="no-print"
       onClick={() => I18N.setLang(isAr ? "en" : "ar")}
       title={isAr ? "Switch to English" : "التبديل إلى العربية"}
+      aria-label={isAr ? "Switch to English" : "التبديل إلى العربية"}
       style={{
-        background: "transparent", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 2,
-        color: "white", cursor: "pointer", fontSize: 11, fontWeight: 600,
-        padding: "7px 12px", fontFamily: "var(--font-body)", whiteSpace: "nowrap",
+        background: "transparent", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "50%",
+        color: "white", cursor: "pointer", width: 36, height: 36,
+        display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
       }}
     >
-      {isAr ? "English" : "عربية"}
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm7.93 9h-3.02a15.9 15.9 0 0 0-1.4-5.02A8.01 8.01 0 0 1 19.93 11zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14A8.1 8.1 0 0 1 4 12c0-.69.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h3.02c.35 1.77 1.03 3.5 1.4 5.02A8.01 8.01 0 0 1 5.08 16zm3.02-8H5.08a8.01 8.01 0 0 1 4.42-5.02A15.9 15.9 0 0 0 8.1 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 7.02c.37-1.52 1.05-3.25 1.4-5.02h3.02a8.01 8.01 0 0 1-4.42 5.02zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" />
+      </svg>
     </button>
   );
 }
