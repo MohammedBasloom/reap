@@ -244,3 +244,7 @@ html[dir="rtl"] .tabnum { direction: ltr; unicode-bidi: embed; text-align: right
 /* SVG charts draw in absolute coordinates — RTL direction flips text-anchor
    semantics and makes labels overlap the marks. Charts stay LTR. */
 html[dir="rtl"] svg { direction: ltr; }
+/* Inline `textAlign: "left"` (table headers, panels) doesn't flip with the
+   document direction — force right in RTL so headers sit over their data. */
+html[dir="rtl"] th, html[dir="rtl"] td { text-align: right !important; }
+html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
