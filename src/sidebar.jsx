@@ -957,7 +957,7 @@ function Sidebar({ input, setInput }) {
       {/* Project header */}
       <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--border-1)" }}>
         <Eyebrow n="01">Project</Eyebrow>
-        <div className="editable-name-wrap" style={{ marginTop: 8 }} title="Click to rename">
+        <div className="editable-name-wrap" style={{ marginTop: 8, marginBottom: 14 }} title="Click to rename">
           <input
             className="field-input editable-name"
             style={{ fontSize: 18, fontWeight: 600, padding: "6px 2px", color: "var(--fg-1)", letterSpacing: "-0.01em", flex: 1 }}
