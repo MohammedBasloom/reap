@@ -7,10 +7,14 @@
 const { useState, useMemo, useEffect } = React;
 const V = window.Val;
 const fc = V.formatCurrency, fn = V.formatNumber, fp = V.formatPct;
-// Localized currency mark (matches fc's "ر.س" in Arabic), and an LTR bidi
-// isolate so mixed number+currency ranges never reorder in RTL.
+// Localized currency mark (matches fc's "ر.س" in Arabic). Ranges follow the
+// reading direction: Arabic lists low→high right-to-left, English left-to-right.
+// (Each fc() token is already internally bidi-isolated by the formatter.)
 const curSym = () => (window.I18N && I18N.lang === "ar") ? "ر.س" : "SAR";
-const ISO = { direction: "ltr", unicodeBidi: "isolate", display: "inline-block", whiteSpace: "nowrap" };
+const ISO = {
+  direction: (window.I18N && I18N.lang === "ar") ? "rtl" : "ltr",
+  unicodeBidi: "isolate", display: "inline-block", whiteSpace: "nowrap",
+};
 
 const STORAGE_KEY = "reap_val_v1";
 
