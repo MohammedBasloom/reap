@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <script>
+    // The github.io mirror forwards to the primary domain.
+    if (location.hostname.endsWith("github.io")) {
+      location.replace("https://reapapp.pages.dev" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>REAP Platform</title>
   <meta name="description" content="REAP — Real Estate Assessment Platform. Feasibility modeling and property valuation, built for everyone." />
@@ -15,7 +21,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="REAP Platform" />
   <meta name="twitter:image" content="https://reapapp.netlify.app/assets/og-card.png" />
-  <link rel="icon" href="data:," />
+  <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
   <script src="assets/i18n.js"></script>
   <link rel="stylesheet" href="assets/tokens.css" />
   <style>
@@ -28,9 +34,11 @@
       display: flex; align-items: center; justify-content: space-between;
       padding: 18px 40px; border-bottom: 1px solid rgba(255,255,255,0.08);
     }
-    .brand { display: flex; align-items: baseline; gap: 12px; }
-    .brand b { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: 0.04em; color: white; }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand .mark { width: 29px; height: 26px; flex-shrink: 0; }
+    .brand b { font-family: "Ador Hairline", system-ui, sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.16em; color: white; }
     .brand span { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    html[dir="rtl"] .brand b { letter-spacing: 0; }
     .topbar .actions { display: flex; gap: 10px; align-items: center; }
 
     .btn-land {
@@ -185,7 +193,10 @@
 
   <!-- ============ TOP BAR ============ -->
   <div class="topbar">
-    <div class="brand"><b>REAP</b><span data-ar="منصة تقييم العقارات">Real Estate Assessment Platform</span></div>
+    <div class="brand">
+      <svg class="mark" viewBox="4 16 88 78" fill="#fff" aria-hidden="true"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
+      <b>REAP</b><span data-ar="منصة تحليل وتقييم الفرص العقارية">Real Estate Assessment Platform</span>
+    </div>
     <div class="actions">
       <div class="userchip" id="userChip">
         <button class="avatar" id="btnAvatar" aria-label="Account menu">?</button>
@@ -230,11 +241,10 @@
       </div>
     </div>
     <div class="arch-art">
-      <svg viewBox="0 0 300 380" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M60 360 V150 C60 80 100 40 150 40 C200 40 240 80 240 150 V360" stroke="#B89260" stroke-width="5"/>
-        <path d="M95 360 V170 C95 115 120 85 150 85 C180 85 205 115 205 170 V360" stroke="#B89260" stroke-width="2.5" opacity="0.55"/>
-        <line x1="30" y1="360" x2="270" y2="360" stroke="#B89260" stroke-width="5"/>
-        <circle cx="150" cy="22" r="6" fill="#B89260"/>
+      <svg viewBox="4 14 88 80" fill="#fff" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z" opacity="0.4"/>
+        <path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z" opacity="0.68"/>
+        <path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/>
       </svg>
     </div>
   </div>

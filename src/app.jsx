@@ -229,8 +229,11 @@ function App() {
         <div className="print-only" style={{ margin: "0 0 26px", borderBottom: "3px solid var(--ad-navy-900)", paddingBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
             <div>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 700, letterSpacing: "0.04em", color: "var(--ad-navy-900)" }}>REAP</div>
-              <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-3)", marginTop: 2 }}>Feasibility Study Report</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <AscentMark size={24} color="var(--ad-navy-900)" />
+                <span style={{ fontFamily: "'Ador Hairline', system-ui, sans-serif", fontSize: 26, fontWeight: 500, letterSpacing: "0.16em", color: "var(--ad-navy-900)" }}>REAP</span>
+              </div>
+              <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-3)", marginTop: 4 }}>Feasibility Study Report</div>
             </div>
             <div style={{ textAlign: "right", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
               <div style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)" }}>{input.projectName}</div>

@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <script>
+    // The github.io mirror forwards to the primary domain.
+    if (location.hostname.endsWith("github.io")) {
+      location.replace("https://reapapp.pages.dev" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
+    }
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>REAP — Real Estate Valuation</title>
   <meta name="description" content="Value any property with the three internationally recognised approaches — guided, plain-language, no expertise required." />
-  <link rel="icon" href="data:," />
+  <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
 
   <!-- Auth gate: session or guest access required, else back to landing -->
   <script src="vendor/supabase.js"></script>

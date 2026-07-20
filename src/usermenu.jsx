@@ -177,16 +177,31 @@ function LangToggle() {
   );
 }
 
-/* Brand wordmark — identical to the landing page, links home. */
+/* The Ascent — REAP mark: three arches rising to the right. */
+function AscentMark({ size = 24, color = "currentColor" }) {
+  return (
+    <svg width={size * 1.13} height={size} viewBox="4 16 88 78" fill={color} aria-hidden="true" style={{ flexShrink: 0, display: "block" }}>
+      <path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z" />
+      <path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z" />
+      <path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z" />
+    </svg>
+  );
+}
+
+/* Brand lockup — Ascent mark + REAP wordmark (Ador Hairline). Links home. */
 function BrandMark({ platform }) {
   return (
-    <a href="index.html" title="Back to home" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "baseline", gap: 10, whiteSpace: "nowrap" }}>
-      <span style={{ fontFamily: "var(--font-display)", fontSize: 21, fontWeight: 700, letterSpacing: "0.04em", color: "white" }}>REAP</span>
-      <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>{platform}</span>
+    <a href="index.html" title="Back to home" style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 12, whiteSpace: "nowrap" }}>
+      <AscentMark size={26} color="white" />
+      <span style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+        <span style={{ fontFamily: "'Ador Hairline', system-ui, sans-serif", fontSize: 22, fontWeight: 500, letterSpacing: "0.16em", color: "white" }}>REAP</span>
+        <span style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>{platform}</span>
+      </span>
     </a>
   );
 }
 
 window.UserMenu = UserMenu;
 window.BrandMark = BrandMark;
+window.AscentMark = AscentMark;
 window.LangToggle = LangToggle;

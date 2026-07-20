@@ -1,6 +1,11 @@
-/* Arabian Dyar tokens — adapted to load Inter via Google Fonts
-   (full local font files not bundled). */
-@import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Inter+Tight:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap");
+/* REAP brand tokens v1.0 — Ador Hairline (Latin, self-hosted) +
+   HT Sonata (Arabic, self-hosted). Mono + Arabic fallback via Google Fonts. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+/* Ador Hairline — REAP Latin typeface (wordmark, display & body) */
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Medium.ttf")  format("truetype"); font-weight: 500 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Bold.ttf")    format("truetype"); font-weight: 700 900; font-style: normal; font-display: swap; }
 
 :root {
   /* Brand */
@@ -50,11 +55,11 @@
   --border-2: var(--ad-line-cool);
   --border-strong: var(--ad-navy-300);
 
-  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
-  --font-mid:     "Inter Tight", "Inter", system-ui, sans-serif;
-  --font-body:    "Inter", system-ui, sans-serif;
-  --font-arabic:  "IBM Plex Sans Arabic", "Inter", sans-serif;
-  --font-serif:   "Fraunces", Georgia, serif;
+  --font-display: "Ador Hairline", system-ui, -apple-system, sans-serif;
+  --font-mid:     "Ador Hairline", system-ui, -apple-system, sans-serif;
+  --font-body:    "Ador Hairline", system-ui, -apple-system, sans-serif;
+  --font-arabic:  "HT Sonata", "IBM Plex Sans Arabic", sans-serif;
+  --font-serif:   "Ador Hairline", Georgia, serif;
   --font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --fs-display-xl: 96px;
@@ -208,51 +213,23 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .editable-name-wrap.on-dark:hover .pencil, .editable-name-wrap.on-dark:focus-within .pencil { color: var(--ad-gold-400); }
 
 /* =============================================================
-   Arabic — Thmanyah typeface (official), deployed per the brand
-   guide (دليل جماليات خط ثمانية):
-     · خط ثمانية للعناوين  (Serif Display) → headlines & titles
-     · خط ثمانية للنصوص   (Serif Text)    → long reading text
-     · خط ثمانية الرقمي    (Sans)          → digital UI, labels, data
-   Five weights per family, official woff2 web cuts.
+   Arabic — HT Sonata (REAP brand Arabic typeface).
+   Bold 700 → display/headlines; Regular 400 → body & data.
+   Never letter-spaced (handled by the RTL rule below).
    ============================================================= */
-/* Sans — الرقمي (UI) */
-@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
-@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
-@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Thmanyah Sans"; src: url("fonts/thmanyahsans-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
-/* Serif Display — للعناوين (headlines) */
-@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Display"; src: url("fonts/thmanyahserifdisplay-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
-/* Serif Text — للنصوص (long reading text) */
-@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Light.woff2") format("woff2"); font-weight: 300; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Medium.woff2") format("woff2"); font-weight: 500 600; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
-@font-face { font-family: "Thmanyah Serif Text"; src: url("fonts/thmanyahseriftext-Black.woff2") format("woff2"); font-weight: 800 900; font-display: swap; }
+@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Regular.ttf") format("truetype"); font-weight: 400 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Bold.ttf")    format("truetype"); font-weight: 700 900; font-style: normal; font-display: swap; }
 
 html[lang="ar"] {
-  /* Headlines → Serif Display; UI/body → Sans (الرقمي); long text → Serif Text */
-  --font-display: "Thmanyah Serif Display", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  --font-mid:     "Thmanyah Serif Display", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  --font-body:    "Thmanyah Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
-  --font-serif:   "Thmanyah Serif Text", "IBM Plex Sans Arabic", serif;
+  --font-display: "HT Sonata", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-mid:     "HT Sonata", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-body:    "HT Sonata", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-serif:   "HT Sonata", "IBM Plex Sans Arabic", serif;
 }
 html[lang="ar"] body { font-family: var(--font-body); }
-/* Data/KPI numerals stay on the digital (Sans) cut for legibility —
+/* Data/KPI numerals stay on the body cut for legibility —
    !important because KPI tiles set the display family inline */
-html[lang="ar"] .tabnum { font-family: "Thmanyah Sans", "IBM Plex Sans Arabic", system-ui, sans-serif !important; }
-/* Long-form paragraphs read in Serif Text per the guide */
-html[lang="ar"] p.lede, html[lang="ar"] .card p, html[lang="ar"] .step p { font-family: var(--font-serif); }
-/* الأحرف المرسلة — stylistic alternates. Per the guide: a display flourish
-   for a single word / two adjacent words, never body text. Applied to the
-   hero highlight; reuse .thm-alt anywhere else deliberately. */
-.thm-alt, html[lang="ar"] .hero h1 em {
-  font-feature-settings: "ss01" 1, "salt" 1;
-}
+html[lang="ar"] .tabnum { font-family: "HT Sonata", "IBM Plex Sans Arabic", system-ui, sans-serif !important; }
 /* Arabic never tracks — kill letter-spacing everywhere (incl. inline styles) */
 html[dir="rtl"] * { letter-spacing: 0 !important; }
 /* Keep numerals/latin fragments readable inside RTL text — but aligned
