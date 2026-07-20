@@ -7,6 +7,10 @@
 const { useState, useMemo, useEffect } = React;
 const V = window.Val;
 const fc = V.formatCurrency, fn = V.formatNumber, fp = V.formatPct;
+// Localized currency mark (matches fc's "ر.س" in Arabic), and an LTR bidi
+// isolate so mixed number+currency ranges never reorder in RTL.
+const curSym = () => (window.I18N && I18N.lang === "ar") ? "ر.س" : "SAR";
+const ISO = { direction: "ltr", unicodeBidi: "isolate", display: "inline-block", whiteSpace: "nowrap" };
 
 const STORAGE_KEY = "reap_val_v1";
 
@@ -210,7 +214,7 @@ function ValApp() {
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>Range</div>
             <div className="tabnum" style={{ fontSize: 12, marginTop: 4, color: "rgba(255,255,255,0.8)" }}>
-              {r.finalValue > 0 ? `${fc(r.low)} – ${fc(r.high)}` : "—"}
+              {r.finalValue > 0 ? <span style={ISO}>{fc(r.low)} – {fc(r.high)}</span> : "—"}
             </div>
           </div>
           <span style={{ height: 28, width: 1, background: "rgba(255,255,255,0.14)" }} />
@@ -461,10 +465,10 @@ function ValResults({ result, sens, input }) {
             {hasValue ? fc(r.finalValue) : "—"}
           </div>
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>
-            {hasValue ? `Likely range ${fc(r.low)} – ${fc(r.high)} (±${(r.rangePct * 100).toFixed(0)}%)` : "Waiting for inputs"}
+            {hasValue ? <>{"Likely range "}<span style={ISO}>{fc(r.low)} – {fc(r.high)} (±{(r.rangePct * 100).toFixed(0)}%)</span></> : "Waiting for inputs"}
           </div>
         </div>
-        <KPI eyebrow={`Value per m² (${result.property.typeDef.landOnly ? "land" : "built"})`} value={hasValue ? `${fn(r.perSqm)} SAR` : "—"} sub={`${fn(r.areaBasis)} m² basis`} />
+        <KPI eyebrow={`Value per m² (${result.property.typeDef.landOnly ? "land" : "built"})`} value={hasValue ? `${fn(r.perSqm)} ${curSym()}` : "—"} sub={`${fn(r.areaBasis)} ${I18N.t("m² basis")}`} />
         <KPI eyebrow="Approaches used" value={r.entries.filter((e) => e.value > 0).length} sub={r.divergence > 0 ? `${(r.divergence * 100).toFixed(0)}% divergence` : "—"} />
       </div>
 
