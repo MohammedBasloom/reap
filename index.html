@@ -36,8 +36,9 @@
     }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand .mark { width: 29px; height: 26px; flex-shrink: 0; }
-    .brand b { font-family: "Ador Hairline", system-ui, sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.16em; color: white; }
-    .brand span { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    .brand .lockup { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; }
+    .brand b { font-family: "Ador Hairline", system-ui, sans-serif; font-size: 22px; font-weight: 500; letter-spacing: 0.16em; line-height: 1; color: white; }
+    .brand .tag { font-size: 11px; letter-spacing: 0.18em; line-height: 1; text-transform: uppercase; color: rgba(255,255,255,0.45); }
     html[dir="rtl"] .brand b { letter-spacing: 0; }
     .topbar .actions { display: flex; gap: 10px; align-items: center; }
 
@@ -195,7 +196,7 @@
   <div class="topbar">
     <div class="brand">
       <svg class="mark" viewBox="4 16 88 78" fill="#fff" aria-hidden="true"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
-      <b>REAP</b><span data-ar="منصة تحليل وتقييم الفرص العقارية">Real Estate Assessment Platform</span>
+      <span class="lockup"><b>REAP</b><span class="tag" data-ar="منصة تحليل وتقييم الفرص العقارية">Real Estate Assessment Platform</span></span>
     </div>
     <div class="actions">
       <div class="userchip" id="userChip">
@@ -417,21 +418,21 @@
     if (!$("userChip").contains(e.target)) $("avatarMenu").classList.remove("open");
   });
 
+  function toServices() { document.querySelector(".services").scrollIntoView({ behavior: "smooth" }); }
+
   async function launch(app) {
     const user = await reapAuth.getUser();
-    if (user) { window.location.href = app; return; }
+    if (user || reapAuth.isGuest()) { window.location.href = app; return; }
     openAuth("signup", app);
   }
 
   // Wire up
   $("btnLogin").onclick = () => openAuth("login");
   $("btnSignup").onclick = () => openAuth("signup");
-  $("btnStart").onclick = async () => {
-    const user = await reapAuth.getUser();
-    if (user) { document.querySelector(".services").scrollIntoView({ behavior: "smooth" }); }
-    else openAuth("signup");
-  };
-  $("btnExplore").onclick = () => { reapAuth.enterGuest(); window.location.href = "model.html"; };
+  // Both hero CTAs lead the user to CHOOSE a platform (the two service cards),
+  // rather than forcing Financial Modeling.
+  $("btnStart").onclick = () => { reapAuth.clearGuest(); toServices(); };
+  $("btnExplore").onclick = () => { reapAuth.enterGuest(); toServices(); };
   $("btnLogout").onclick = () => reapAuth.signOut();
   $("authClose").onclick = closeAuth;
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAuth(); });
@@ -439,7 +440,8 @@
   $("toSignup").onclick = () => showView("signup");
   $("guestLink1").onclick = $("guestLink2").onclick = () => {
     reapAuth.enterGuest();
-    window.location.href = pendingApp || "model.html";
+    if (pendingApp) { window.location.href = pendingApp; }
+    else { closeAuth(); toServices(); }
   };
   document.querySelectorAll(".card .go").forEach((b) => {
     b.onclick = () => launch(b.dataset.app);
