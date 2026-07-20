@@ -278,7 +278,9 @@ const formatCurrency = (v) => {
   const abs = Math.abs(v);
   const sign = v < 0 ? "−" : "";
   const ar = typeof window !== "undefined" && window.I18N && window.I18N.lang === "ar";
-  const wrap = (body) => (ar ? `${sign}${body} ر.س` : `${sign}SAR ${body}`);
+  // ⁦..⁩ (LRI..PDI) makes the whole token an atomic LTR run, so
+  // "436K ر.س – 552K ر.س" can never reorder inside RTL text.
+  const wrap = (body) => (ar ? `⁦${sign}${body} ر.س⁩` : `${sign}SAR ${body}`);
   if (abs >= 1e9) return wrap(`${(abs / 1e9).toFixed(2)}B`);
   if (abs >= 1e6) return wrap(`${(abs / 1e6).toFixed(1)}M`);
   if (abs >= 1e3) return wrap(`${(abs / 1e3).toFixed(0)}K`);

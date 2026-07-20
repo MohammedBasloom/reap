@@ -1147,8 +1147,9 @@ function formatCurrency(v, opts = {}) {
   const sign = v < 0 ? "−" : "";
   const ar = typeof window !== "undefined" && window.I18N && window.I18N.lang === "ar";
   const compact = opts.compact !== false;
-  // Arabic: value first, currency after (‏−367.5M ر.س)
-  const wrap = (body) => (ar ? `${sign}${body} ر.س` : `${sign}SAR ${body}`);
+  // Arabic: value first, currency after. ⁦..⁩ (LRI..PDI) makes the
+  // token an atomic LTR run so it can never reorder inside RTL text.
+  const wrap = (body) => (ar ? `⁦${sign}${body} ر.س⁩` : `${sign}SAR ${body}`);
   if (compact) {
     if (abs >= 1e9) return wrap(`${(abs / 1e9).toFixed(2)}B`);
     if (abs >= 1e6) return wrap(`${(abs / 1e6).toFixed(1)}M`);
