@@ -249,8 +249,11 @@ html[dir="rtl"] th, html[dir="rtl"] td { text-align: right !important; }
 html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
 
 /* Mobile compatibility notice (injected by assets/mobile-notice.js) —
-   hidden on desktop, shown as a slim band above the header on phones. */
+   hidden on desktop, shown as a slim band above the header on phones.
+   Never printed: paper width can match the phone media query, which
+   would leak the banner into exported PDF reports. */
 #mobileNotice { display: none; }
+@media print { #mobileNotice { display: none !important; } }
 @media (max-width: 860px) {
   #mobileNotice {
     display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
