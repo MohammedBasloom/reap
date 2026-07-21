@@ -2,10 +2,13 @@
    HT Sonata (Arabic, self-hosted). Mono + Arabic fallback via Google Fonts. */
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
-/* Ador Hairline — REAP Latin typeface (wordmark, display & body) */
-@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Regular.ttf") format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Medium.ttf")  format("truetype"); font-weight: 500 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Bold.ttf")    format("truetype"); font-weight: 700 900; font-style: normal; font-display: swap; }
+/* Ador Hairline — REAP Latin typeface (wordmark, display & body).
+   The Regular cut is hairline-thin, so it only serves explicit light
+   weights (≤300); normal text (400–500) gets the Medium cut and
+   emphasis (600+) gets Bold — otherwise UI labels are unreadable. */
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Regular.ttf") format("truetype"); font-weight: 100 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Medium.ttf")  format("truetype"); font-weight: 400 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Ador Hairline"; src: url("fonts/AdorHairline-Bold.ttf")    format("truetype"); font-weight: 600 900; font-style: normal; font-display: swap; }
 
 :root {
   /* Brand */
@@ -142,7 +145,7 @@ h1, h2, h3, h4, h5, h6 {
   font-size: var(--fs-eyebrow);
   letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--fg-3);
 }
 
@@ -217,8 +220,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
    Bold 700 → display/headlines; Regular 400 → body & data.
    Never letter-spaced (handled by the RTL rule below).
    ============================================================= */
-@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Regular.ttf") format("truetype"); font-weight: 400 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Bold.ttf")    format("truetype"); font-weight: 700 900; font-style: normal; font-display: swap; }
+/* Only two cuts exist — labels styled 500/600 must resolve to Bold,
+   not Regular, or all Arabic UI chrome renders too light. */
+@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Regular.ttf") format("truetype"); font-weight: 100 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "HT Sonata"; src: url("fonts/HTSonata-Bold.ttf")    format("truetype"); font-weight: 500 900; font-style: normal; font-display: swap; }
 
 html[lang="ar"] {
   --font-display: "HT Sonata", "IBM Plex Sans Arabic", system-ui, sans-serif;
