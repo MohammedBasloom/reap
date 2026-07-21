@@ -236,7 +236,22 @@ function ValApp() {
       {/* ===== SIDEBAR (wizard) ===== */}
       <aside style={{ gridArea: "side", borderRight: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}>
         <div style={{ padding: "18px 24px 14px" }}>
-          <Eyebrow n="01">Property</Eyebrow>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <Eyebrow n="01">Property</Eyebrow>
+            <button
+              type="button"
+              onClick={() => { if (confirm(I18N.t("Start a fresh valuation?"))) setInput(defaultInput(input.property.type)); }}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
+                color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+                padding: "4px 9px", fontFamily: "inherit",
+              }}
+            >
+              <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
+              Reset
+            </button>
+          </div>
           <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>
             Tell us what you're valuing. Everything else pre-fills with realistic market defaults you can refine later.
           </div>

@@ -956,7 +956,22 @@ function Sidebar({ input, setInput }) {
     }}>
       {/* Project header */}
       <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--border-1)" }}>
-        <Eyebrow n="01">Project</Eyebrow>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Eyebrow n="01">Project</Eyebrow>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
+              color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "4px 9px", fontFamily: "inherit",
+            }}
+          >
+            <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
+            Reset
+          </button>
+        </div>
         <div className="editable-name-wrap" style={{ marginTop: 8, marginBottom: 14 }} title="Click to rename">
           <input
             className="field-input editable-name"
