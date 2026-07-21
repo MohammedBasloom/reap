@@ -196,20 +196,17 @@
     .ctaband h2 { font-family: var(--font-display); font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: -0.02em; margin-top: 12px; color: white; }
     .ctaband p { font-size: 14px; color: rgba(255,255,255,0.62); margin-top: 10px; max-width: 460px; line-height: 1.65; }
     .ctaband .cta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .applinks { display: flex; flex-direction: column; gap: 12px; }
-    .applink {
-      display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 2px;
-      border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.03);
-      cursor: pointer; text-align: start; color: white; font-family: var(--font-body); width: 100%;
-      transition: border-color 160ms var(--ease-out), background 160ms var(--ease-out);
+    .disclaim {
+      border: 1px solid rgba(255,255,255,0.16); border-inline-start: 3px solid var(--ad-gold-500);
+      background: rgba(255,255,255,0.03); border-radius: 2px; padding: 20px 24px;
     }
-    .applink:hover { border-color: var(--ad-gold-500); background: rgba(255,255,255,0.06); }
-    .applink .anum { font-family: var(--font-mono); font-size: 11px; color: var(--ad-gold-400); letter-spacing: 0.08em; }
-    .applink .alb { flex: 1; }
-    .applink .alb b { display: block; font-size: 14px; font-weight: 600; letter-spacing: 0.02em; }
-    .applink .alb span { display: block; font-size: 11.5px; color: rgba(255,255,255,0.55); margin-top: 3px; }
-    .applink .arr { color: var(--ad-gold-400); font-size: 16px; }
-    html[dir="rtl"] .applink .arr { transform: scaleX(-1); }
+    .disclaim .dhead {
+      display: flex; align-items: center; gap: 9px;
+      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;
+      color: var(--ad-gold-400);
+    }
+    .disclaim .dhead svg { flex-shrink: 0; }
+    .disclaim p { font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,0.62); margin: 12px 0 0; }
 
     /* ---------- Footer ---------- */
     .footer {
@@ -549,23 +546,20 @@
           <button class="btn-land" id="btnExplore2" data-ar="استكشف كضيف">Explore as guest</button>
         </div>
       </div>
-      <div class="applinks">
-        <button class="applink" data-app="model.html">
-          <span class="anum">01</span>
-          <span class="alb">
-            <b data-ar="النمذجة المالية">Financial Modeling</b>
-            <span data-ar="دراسات جدوى تطويرية — عوائد وتمويل ومخاطر">Development feasibility — returns, financing &amp; risk</span>
-          </span>
-          <span class="arr">→</span>
-        </button>
-        <button class="applink" data-app="valuation.html">
-          <span class="anum">02</span>
-          <span class="alb">
-            <b data-ar="التقييم العقاري">Real Estate Valuation</b>
-            <span data-ar="قيمة سوقية بالأساليب الثلاثة المعتمدة دوليًا">Market value via the three recognised approaches</span>
-          </span>
-          <span class="arr">→</span>
-        </button>
+      <div class="disclaim">
+        <div class="dhead">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5v.5"/></svg>
+          <span data-ar="تنويه — نتائج استرشادية">Disclaimer — indicative results</span>
+        </div>
+        <p data-ar="الدراسات والتقييمات الصادرة عن منصة REAP هي تحليلات أولية استرشادية، أُعدّت لأغراض الفحص المبدئي ودعم اتخاذ القرار، وهي غير معتمدة ولا يُعتد بها للأغراض الرسمية أو التنظيمية أو التمويلية أو القانونية.">
+          The studies and valuations produced by REAP are preliminary, indicative analyses intended for
+          initial screening and decision support. They are not accredited reports and should not be
+          relied upon for official, regulatory, financing or legal purposes.
+        </p>
+        <p data-ar="وعند الحاجة إلى دراسة جدوى رسمية أو تقييم معتمد، يسعدنا تواصلكم عبر بيانات الاتصال في أسفل الصفحة، وسيتم الترتيب وفقًا لذلك.">
+          Should you require a formal feasibility study or an accredited valuation, please reach out
+          using the contact details in the footer below and arrangements will be made accordingly.
+        </p>
       </div>
     </div>
   </div>
@@ -748,7 +742,7 @@
     if (pendingApp) { window.location.href = pendingApp; }
     else { closeAuth(); toServices(); }
   };
-  // Service cards + CTA-band platform links share the same launch flow
+  // Service cards launch their platform through the auth-aware flow
   document.querySelectorAll("[data-app]").forEach((b) => {
     b.onclick = () => launch(b.dataset.app);
   });
