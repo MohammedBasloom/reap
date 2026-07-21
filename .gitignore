@@ -1,4 +1,5 @@
 # Secrets — never commit tokens
+.mcp.json
 .netlify-token
 netlify-token.txt
 .netlify-token.txt
