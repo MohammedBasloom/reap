@@ -56,6 +56,18 @@
       return sb.auth.signInWithPassword({ email, password });
     },
 
+    /* Sends the branded reset email; the link returns the user to the
+       landing page with a recovery token, where they set a new password. */
+    async resetPassword(email) {
+      return sb.auth.resetPasswordForEmail(email, {
+        redirectTo: new URL("index.html", window.location.href).href,
+      });
+    },
+
+    async updatePassword(newPassword) {
+      return sb.auth.updateUser({ password: newPassword });
+    },
+
     async signOut() {
       this.clearGuest();
       await sb.auth.signOut();

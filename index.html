@@ -351,10 +351,26 @@
       <div class="sub" data-ar="سجّل الدخول للوصول إلى تحليلاتك المحفوظة.">Log in to access your saved analyses.</div>
       <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="liEmail" autocomplete="email" /></label>
       <label><span data-ar="كلمة المرور">Password</span><input type="password" id="liPassword" autocomplete="current-password" /></label>
+      <div class="alt" style="text-align:start;margin-top:8px;"><a id="toReset" data-ar="نسيت كلمة المرور؟">Forgot password?</a></div>
       <button class="submit" id="liSubmit" data-ar="تسجيل الدخول">Log in</button>
       <div class="msg" id="liMsg"></div>
       <div class="alt" data-ar='جديد على REAP؟ <a id="toSignup">سجّل مجانًا</a>'>New to REAP? <a id="toSignup">Sign up free</a></div>
       <div class="guest"><a id="guestLink2" data-ar="أو تابع كضيف (لن يُحفظ شيء)">or continue as guest (nothing is saved)</a></div>
+    </div>
+    <div id="authResetView" style="display:none">
+      <h3 data-ar="إعادة تعيين كلمة المرور">Reset your password</h3>
+      <div class="sub" data-ar="أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.">Enter your email and we'll send you a reset link.</div>
+      <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="riEmail" autocomplete="email" /></label>
+      <button class="submit" id="riSubmit" data-ar="إرسال رابط إعادة التعيين">Send reset link</button>
+      <div class="msg" id="riMsg"></div>
+      <div class="alt"><a id="backToLogin" data-ar="العودة لتسجيل الدخول">Back to log in</a></div>
+    </div>
+    <div id="authNewPwView" style="display:none">
+      <h3 data-ar="اختر كلمة مرور جديدة">Choose a new password</h3>
+      <div class="sub" data-ar="أدخل كلمة المرور الجديدة لحسابك.">Enter the new password for your account.</div>
+      <label><span data-ar="كلمة المرور الجديدة (٦ أحرف على الأقل)">New password (min 6 characters)</span><input type="password" id="npPassword" autocomplete="new-password" /></label>
+      <button class="submit" id="npSubmit" data-ar="حفظ كلمة المرور">Save new password</button>
+      <div class="msg" id="npMsg"></div>
     </div>
   </div>
 </div>
@@ -378,6 +394,8 @@
   function showView(which) {
     $("authSignupView").style.display = which === "signup" ? "" : "none";
     $("authLoginView").style.display = which === "login" ? "" : "none";
+    $("authResetView").style.display = which === "reset" ? "" : "none";
+    $("authNewPwView").style.display = which === "newpw" ? "" : "none";
   }
   function openAuth(which, app) {
     pendingApp = app || null;
@@ -438,6 +456,39 @@
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAuth(); });
   $("toLogin").onclick = () => showView("login");
   $("toSignup").onclick = () => showView("signup");
+  $("toReset").onclick = () => { $("riEmail").value = $("liEmail").value; showView("reset"); };
+  $("backToLogin").onclick = () => showView("login");
+
+  // Forgot password: send the branded reset email
+  $("riSubmit").onclick = async () => {
+    const email = $("riEmail").value.trim();
+    const m = $("riMsg");
+    if (!/.+@.+\..+/.test(email)) return msg(m, L("Please enter a valid email address.", "فضلًا أدخل بريدًا إلكترونيًا صحيحًا."), "err");
+    $("riSubmit").disabled = true;
+    const { error } = await reapAuth.resetPassword(email);
+    $("riSubmit").disabled = false;
+    if (error) return msg(m, error.message, "err");
+    msg(m, L("Reset link sent — check your inbox.", "أرسلنا رابط إعادة التعيين — تفقد بريدك الإلكتروني."), "ok");
+  };
+
+  // Returning from the reset email: set the new password
+  $("npSubmit").onclick = async () => {
+    const pw = $("npPassword").value;
+    const m = $("npMsg");
+    if (pw.length < 6) return msg(m, L("Password must be at least 6 characters.", "كلمة المرور يجب ألا تقل عن ٦ أحرف."), "err");
+    $("npSubmit").disabled = true;
+    const { error } = await reapAuth.updatePassword(pw);
+    $("npSubmit").disabled = false;
+    if (error) return msg(m, error.message, "err");
+    msg(m, L("Password updated — you're signed in.", "تم تحديث كلمة المرور وتسجيل دخولك."), "ok");
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+    await refreshSessionUI();
+    setTimeout(closeAuth, 1600);
+  };
+
+  // Open the new-password view when the user arrives via the recovery link
+  sb.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") openAuth("newpw"); });
+  if (location.hash.includes("type=recovery")) openAuth("newpw");
   $("guestLink1").onclick = $("guestLink2").onclick = () => {
     reapAuth.enterGuest();
     if (pendingApp) { window.location.href = pendingApp; }
