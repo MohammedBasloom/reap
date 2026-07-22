@@ -739,6 +739,7 @@ function ProgramPanel({ result, input }) {
         const totalRentAll = cf.rent.reduce((a, v) => a + v, 0);
         const totalOpexAll = -cf.opex.reduce((a, v) => a + v, 0);
         const totalNOIAll = totalRentAll - totalOpexAll;
+        const totalExitAll = cf.exit.reduce((a, v) => a + v, 0);
         const grossSalesAll = cf.sales.reduce((a, v) => a + v, 0);
         const commissionAll = grossSalesAll * (+input.salesCommissionPct || 0);
         const netSalesAll = grossSalesAll - commissionAll;
@@ -762,9 +763,19 @@ function ProgramPanel({ result, input }) {
                     <span style={{ color: "var(--fg-2)" }}>Operating expenses</span>
                     <span className="tabnum" style={{ color: "var(--ad-danger)" }}>− {fc(totalOpexAll)}</span>
                   </div>
+                  <div style={rowStyle}>
+                    <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>Total NOI (whole period)</span>
+                    <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>{fc(totalNOIAll)}</span>
+                  </div>
+                  {totalExitAll > 0 && (
+                    <div style={rowStyle}>
+                      <span style={{ color: "var(--fg-2)" }}>Net exit proceeds</span>
+                      <span className="tabnum" style={{ color: "var(--ad-gold-600)", fontWeight: 600 }}>+ {fc(totalExitAll)}</span>
+                    </div>
+                  )}
                   <div style={totalRowStyle}>
-                    <span>Total NOI (whole period)</span>
-                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(totalNOIAll)}</span>
+                    <span>Total (NOI + exit proceeds)</span>
+                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(totalNOIAll + totalExitAll)}</span>
                   </div>
                 </div>
               </div>

@@ -229,6 +229,8 @@
     "All sold components": "جميع المكوّنات المباعة",
     "Gross sales": "إجمالي المبيعات",
     "Net sales proceeds": "صافي متحصلات البيع",
+    "Net exit proceeds": "صافي متحصلات التخارج",
+    "Total (NOI + exit proceeds)": "الإجمالي (صافي الدخل التشغيلي + التخارج)",
     "Full bar = gross income": "طول الشريط الكامل = الدخل الإجمالي",
     "Stab. gross:": "الدخل الإجمالي المستقر:", "Stab. NOI:": "صافي الدخل المستقر:",
     "Operating starts:": "بدء التشغيل:",
