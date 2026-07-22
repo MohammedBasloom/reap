@@ -639,7 +639,7 @@ function ProgramPanel({ result, input }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <Eyebrow>Sales — annual (bars) &amp; cumulative (line)</Eyebrow>
+          <Eyebrow>Sales — annual</Eyebrow>
           <StackedBars
             months={cf.months}
             height={200}
@@ -660,7 +660,7 @@ function ProgramPanel({ result, input }) {
         </div>
 
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <Eyebrow>Rent / lease income — annual (bars) &amp; cumulative (line)</Eyebrow>
+          <Eyebrow>Rent / lease income — annual</Eyebrow>
           <StackedBars
             months={cf.months}
             height={200}

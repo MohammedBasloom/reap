@@ -127,19 +127,6 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
   const xSlot = (bi) => padL + bi * slotW + slotW / 2;
   const y = (v) => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
 
-  // Monthly cumulative net line (secondary scale, like StackedArea)
-  const cumulative = [];
-  let cum = 0;
-  for (let i = 0; i < n; i++) {
-    cum += series.reduce((s2, sr) => s2 + (sr.values[i] || 0), 0);
-    cumulative.push(cum);
-  }
-  const cumMax = Math.max(...cumulative, 0);
-  const cumMin = Math.min(...cumulative, 0);
-  const cumRange = (cumMax - cumMin) || 1;
-  const xm = (i) => padL + ((i + 0.5) / n) * plotW;
-  const yCum = (v) => padT + (1 - (v - cumMin) / cumRange) * (H - padT - padB);
-
   const yTicks = [];
   for (let i = 0; i <= 4; i++) { const v = yMin + (yRange * i) / 4; yTicks.push({ v, y: y(v) }); }
 
@@ -167,13 +154,6 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
         </g>
       ))}
 
-      <polyline
-        fill="none"
-        stroke="var(--ad-navy-900)"
-        strokeWidth="1.5"
-        points={cumulative.map((v, i) => `${xm(i)},${yCum(v)}`).join(" ")}
-      />
-
       {/* Data labels: total of the positive stack above each bar,
           total of the negative stack below it */}
       {pos.map((v, bi) => v > 0 ? (
@@ -191,7 +171,7 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
         <text key={bi} x={xSlot(bi)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--fg-3)">Y{bi + 1}</text>
       ))}
     </svg>
-    {/* Legend: one swatch per series + the cumulative line */}
+    {/* Legend: one swatch per series */}
     <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "4px 18px", marginTop: 8, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600, color: "var(--fg-3)" }}>
       {series.map((s, si) => (
         <span key={si} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -199,10 +179,6 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
           {s.label}
         </span>
       ))}
-      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 15, height: 2, background: "var(--ad-navy-900)", display: "inline-block", flexShrink: 0 }} />
-        Cumulative
-      </span>
     </div>
     </div>
   );
