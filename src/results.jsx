@@ -315,17 +315,6 @@ function CashflowPanel({ result, input }) {
         </div>
       </div>
 
-      <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)" }}>
-        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)" }}>
-          <Eyebrow>③ Capital deployed — debt draws & equity contributions</Eyebrow>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
-            Where the funding came from each year — debt drawn from the facility vs. equity contributed by investors. Together they fund the project deficit.
-          </div>
-        </div>
-        <div style={{ overflowX: "auto" }}>
-          <CapitalDeployedTable cf={cf} yearly={yearly} />
-        </div>
-      </div>
     </div>
   );
 }
