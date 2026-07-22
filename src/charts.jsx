@@ -93,6 +93,93 @@ function StackedArea({ months, series, height = 220, formatY }) {
   );
 }
 
+/* ---------- StackedBars (annual stacked bars + monthly cumulative line) ---------- */
+function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
+  // series: [{ label, color, values: [n monthly] }] — bars aggregate the
+  // monthly values into `bucket`-month groups (years by default); the
+  // cumulative net line keeps monthly resolution on its own scale.
+  const W = 800, H = height;
+  const padL = 56, padR = 16, padT = 12, padB = 28;
+  const n = months.length;
+  const nb = Math.max(1, Math.ceil(n / bucket));
+
+  const agg = series.map(s => {
+    const vals = Array(nb).fill(0);
+    for (let i = 0; i < n; i++) vals[Math.floor(i / bucket)] += (s.values[i] || 0);
+    return { ...s, vals };
+  });
+
+  const pos = Array(nb).fill(0), neg = Array(nb).fill(0);
+  const withBase = agg.map(s => {
+    const pts = s.vals.map((v, bi) => {
+      if (v >= 0) { const b = pos[bi]; pos[bi] = b + v; return { base: b, top: b + v }; }
+      const b = neg[bi]; neg[bi] = b + v; return { base: b, top: b + v };
+    });
+    return { ...s, pts };
+  });
+
+  const yMax = Math.max(...pos, 1);
+  const yMin = Math.min(...neg, 0);
+  const yRange = (yMax - yMin) || 1;
+  const plotW = W - padL - padR;
+  const slotW = plotW / nb;
+  const barW = Math.min(slotW * 0.6, 46);
+  const xSlot = (bi) => padL + bi * slotW + slotW / 2;
+  const y = (v) => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
+
+  // Monthly cumulative net line (secondary scale, like StackedArea)
+  const cumulative = [];
+  let cum = 0;
+  for (let i = 0; i < n; i++) {
+    cum += series.reduce((s2, sr) => s2 + (sr.values[i] || 0), 0);
+    cumulative.push(cum);
+  }
+  const cumMax = Math.max(...cumulative, 0);
+  const cumMin = Math.min(...cumulative, 0);
+  const cumRange = (cumMax - cumMin) || 1;
+  const xm = (i) => padL + ((i + 0.5) / n) * plotW;
+  const yCum = (v) => padT + (1 - (v - cumMin) / cumRange) * (H - padT - padB);
+
+  const yTicks = [];
+  for (let i = 0; i <= 4; i++) { const v = yMin + (yRange * i) / 4; yTicks.push({ v, y: y(v) }); }
+
+  const labelEvery = nb > 14 ? Math.ceil(nb / 12) : 1;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked bars">
+      {yTicks.map((t, i) => (
+        <g key={i}>
+          <line x1={padL} x2={W - padR} y1={t.y} y2={t.y} stroke="var(--border-1)" strokeWidth="0.5" strokeDasharray="2 3" />
+          <text x={padL - 8} y={t.y + 3} textAnchor="end" fontSize="10" fill="var(--fg-3)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatY ? formatY(t.v) : t.v.toFixed(0)}</text>
+        </g>
+      ))}
+      <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke="var(--ad-navy-300)" strokeWidth="1" />
+
+      {withBase.map((s, si) => (
+        <g key={si}>
+          {s.pts.map((p, bi) => {
+            if (p.top === p.base) return null;
+            const yTop = y(Math.max(p.base, p.top));
+            const h = Math.abs(y(p.base) - y(p.top));
+            return <rect key={bi} x={xSlot(bi) - barW / 2} y={yTop} width={barW} height={h} fill={s.color} opacity={s.opacity || 0.95} />;
+          })}
+        </g>
+      ))}
+
+      <polyline
+        fill="none"
+        stroke="var(--ad-navy-900)"
+        strokeWidth="1.5"
+        points={cumulative.map((v, i) => `${xm(i)},${yCum(v)}`).join(" ")}
+      />
+
+      {Array.from({ length: nb }, (_, bi) => bi).filter(bi => bi % labelEvery === 0).map(bi => (
+        <text key={bi} x={xSlot(bi)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--fg-3)">Y{bi + 1}</text>
+      ))}
+    </svg>
+  );
+}
+
 /* ---------- Bars (horizontal — cost stack, etc.) ---------- */
 function HBars({ data, height = 240, formatV }) {
   // data: [{ label, value, color }]
@@ -315,4 +402,4 @@ function Sparkline({ values, height = 28, color = "var(--ad-navy-800)" }) {
   );
 }
 
-window.Charts = { StackedArea, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline };
+window.Charts = { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline };

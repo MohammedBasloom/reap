@@ -2,7 +2,7 @@
    Results panel — all output views, tabbed.
    ============================================================= */
 const { useState: useStateR, useMemo: useMemoR, useEffect: useEffectR } = React;
-const { StackedArea, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline } = window.Charts;
+const { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline } = window.Charts;
 const { formatCurrency: fc, formatPct: fp, formatNumber: fn } = window.Feas;
 
 /* ---------- KPI tile ---------- */
@@ -639,8 +639,8 @@ function ProgramPanel({ result, input }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <Eyebrow>Sales velocity (cumulative)</Eyebrow>
-          <StackedArea
+          <Eyebrow>Sales — annual (bars) &amp; cumulative (line)</Eyebrow>
+          <StackedBars
             months={cf.months}
             height={200}
             series={[
@@ -655,8 +655,8 @@ function ProgramPanel({ result, input }) {
         </div>
 
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <Eyebrow>Rent / lease income (monthly)</Eyebrow>
-          <StackedArea
+          <Eyebrow>Rent / lease income — annual (bars) &amp; cumulative (line)</Eyebrow>
+          <StackedBars
             months={cf.months}
             height={200}
             series={[

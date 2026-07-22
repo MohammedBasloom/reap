@@ -149,6 +149,8 @@
     "Program & revenue": "البرنامج والإيرادات", "Component table": "جدول المكوّنات",
     "Sales velocity (cumulative)": "سرعة المبيعات (تراكمي)",
     "Rent / lease income (monthly)": "دخل الإيجار (شهري)",
+    "Sales — annual (bars) & cumulative (line)": "المبيعات — سنوي (أعمدة) وتراكمي (خط)",
+    "Rent / lease income — annual (bars) & cumulative (line)": "دخل الإيجار — سنوي (أعمدة) وتراكمي (خط)",
     "Annual rent income build-up by component": "الدخل الإيجاري السنوي حسب المكوّن",
     "What moves the needle": "ما الذي يحرّك النتيجة",
     "Tornado · Equity IRR sensitivity (±15%)": "تورنادو · حساسية IRR الملكية (±15%)",
