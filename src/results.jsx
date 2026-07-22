@@ -1045,7 +1045,7 @@ function WaterfallPanel({ result, input }) {
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-        <Eyebrow>Returns split — base case</Eyebrow>
+        <Eyebrow>Uses &amp; Sources</Eyebrow>
         <ReturnsSplit k={k} input={input} />
       </div>
     </div>
@@ -1555,16 +1555,9 @@ function ReturnsSplit({ k, input }) {
   const scaleMax = Math.max(totalSources, totalUses, 1);
   const tie = Math.abs(totalSources - totalUses) < 1;
 
-  // ----- RETURNS: what the equity holder actually gets back -----
-  const profit = k.profit;
-  const peakEquityAtRisk = k.peakEquity || equity;
-  const equityReturn = equity + profit;
-  const debtPaid = debtDrawn + k.totalInterest;
-  const returnsMax = Math.max(debtPaid, equityReturn, 1);
-
   return (
     <div style={{ marginTop: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 24, marginBottom: 16, alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 16, alignItems: "start" }}>
         {/* Sources */}
         <div>
           <Eyebrow>Sources</Eyebrow>
@@ -1583,21 +1576,6 @@ function ReturnsSplit({ k, input }) {
           <TotalRow label="Total uses" value={totalUses} />
         </div>
 
-        {/* Returns */}
-        <div>
-          <Eyebrow>Returns</Eyebrow>
-          <Bar label="Debt repaid + interest" value={debtPaid} max={returnsMax} color="var(--ad-navy-500)" />
-          <Bar label="Equity returned" value={equityReturn} max={returnsMax} color="var(--ad-gold-500)" />
-          <div style={{ marginTop: 12, fontSize: 11, color: "var(--fg-3)" }}>
-            Equity multiple <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{equity > 0 ? `${(equityReturn / equity).toFixed(2)}×` : "—"}</span>
-          </div>
-          <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)" }}>
-            Peak equity at risk <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fc(peakEquityAtRisk)}</span>
-          </div>
-          <div style={{ marginTop: 4, fontSize: 11, color: "var(--fg-3)" }}>
-            Profit (levered) <span className="tabnum" style={{ color: profit >= 0 ? "var(--ad-success)" : "var(--ad-danger)", fontWeight: 500 }}>{fc(profit)}</span>
-          </div>
-        </div>
       </div>
 
       {/* Balance check — confirms sources = uses */}
