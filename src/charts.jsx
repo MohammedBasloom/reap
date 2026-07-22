@@ -5,7 +5,7 @@
 const { useState, useMemo, useRef, useEffect } = React;
 
 /* ---------- StackedArea (cash flow S-curve) ---------- */
-function StackedArea({ months, series, height = 220, formatY }) {
+function StackedArea({ months, series, height = 220, formatY, cumulativeValues, cumulativeOnPrimary }) {
   // series: [{ label, color, values: [n], stack: "neg" | "pos" }]
   const W = 800;
   const H = height;
@@ -32,23 +32,34 @@ function StackedArea({ months, series, height = 220, formatY }) {
     return out;
   });
 
-  const yMax = Math.max(...posStacks, 1);
-  const yMin = Math.min(...negStacks, -1);
+  // Cumulative line — by default the running sum of the plotted series;
+  // callers can pass `cumulativeValues` to plot an engine-computed series
+  // instead (e.g. true equity cashflow, avoiding P&L/cash double counts).
+  const cumulative = [];
+  let cum = 0;
+  for (let i = 0; i < n; i++) {
+    cum += cumulativeValues ? (cumulativeValues[i] || 0) : series.reduce((s, sr) => s + (sr.values[i] || 0), 0);
+    cumulative.push(cum);
+  }
+
+  let yMax = Math.max(...posStacks, 1);
+  let yMin = Math.min(...negStacks, -1);
+  // With `cumulativeOnPrimary` the line shares the labeled axis (honest
+  // reading against the ticks); otherwise it keeps its own fitted scale.
+  if (cumulativeOnPrimary) {
+    yMax = Math.max(yMax, ...cumulative, 0);
+    yMin = Math.min(yMin, ...cumulative, 0);
+  }
   const yRange = yMax - yMin;
   const x = (i) => padL + (i / Math.max(1, n - 1)) * (W - padL - padR);
   const y = (v) => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
 
-  // Cumulative net line
-  const cumulative = [];
-  let cum = 0;
-  for (let i = 0; i < n; i++) {
-    cum += series.reduce((s, sr) => s + (sr.values[i] || 0), 0);
-    cumulative.push(cum);
-  }
   const cumMax = Math.max(...cumulative, 0);
   const cumMin = Math.min(...cumulative, 0);
   const cumRange = (cumMax - cumMin) || 1;
-  const yCum = (v) => padT + (1 - (v - cumMin) / cumRange) * (H - padT - padB);
+  const yCum = cumulativeOnPrimary
+    ? y
+    : (v) => padT + (1 - (v - cumMin) / cumRange) * (H - padT - padB);
 
   // Y ticks
   const yTicks = [];

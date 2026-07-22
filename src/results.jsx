@@ -96,6 +96,13 @@ function SummaryPanel({ result, input, scenarios }) {
               { label: "Debt",    color: "var(--ad-navy-400)", opacity: 0.6, values: cf.debtDraw.map((_, i) => cf.debtDraw[i] + cf.debtRepay[i]) },
             ]}
             height={220}
+            /* The line is the engine's levered (equity) cashflow, on the SAME
+               labeled axis — matches the Cash Flow tab's cumulative equity.
+               (Summing the display series would double-count interest: the
+               Cost band carries P&L interest while debt repayments already
+               carry the cash interest.) */
+            cumulativeValues={cf.net}
+            cumulativeOnPrimary
             formatY={(v) => v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`}
           />
           <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 11, color: "var(--fg-3)" }}>
