@@ -69,8 +69,29 @@ function StackedArea({ months, series, height = 220, formatY, cumulativeValues, 
     yTicks.push({ v, y: y(v) });
   }
 
+  // Hover tooltip on the cumulative line — quiet by design: nothing is
+  // drawn until the pointer is over the chart.
+  const [hoverI, setHoverI] = React.useState(null);
+  const fmtCumVal = (v) => {
+    const a = Math.abs(v);
+    const s = v < 0 ? "−" : "";
+    if (a >= 1e9) return `${s}${(a / 1e9).toFixed(2)}B`;
+    if (a >= 1e6) return `${s}${(a / 1e6).toFixed(1)}M`;
+    if (a >= 1e3) return `${s}${(a / 1e3).toFixed(0)}K`;
+    return `${s}${a.toFixed(0)}`;
+  };
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const sx = ((e.clientX - r.left) / r.width) * W;
+    let i = Math.round(((sx - padL) / (W - padL - padR)) * (n - 1));
+    if (i < 0) i = 0;
+    if (i > n - 1) i = n - 1;
+    setHoverI(i);
+  };
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked cashflow">
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked cashflow"
+         onMouseMove={onMove} onMouseLeave={() => setHoverI(null)}>
       {/* Y grid */}
       {yTicks.map((t, i) => (
         <g key={i}>
@@ -100,6 +121,25 @@ function StackedArea({ months, series, height = 220, formatY, cumulativeValues, 
       {[0, Math.floor(n / 4), Math.floor(n / 2), Math.floor(3 * n / 4), n - 1].map((i) => (
         <text key={i} x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--fg-3)">M{i}</text>
       ))}
+
+      {/* Cumulative-line tooltip: guideline + dot + compact value chip */}
+      {hoverI !== null && (() => {
+        const hx = x(hoverI);
+        const hy = yCum(cumulative[hoverI]);
+        const label = `M${hoverI} · ${fmtCumVal(cumulative[hoverI])}`;
+        const flip = hx > W - 130;
+        const chipY = Math.min(Math.max(hy, padT + 12), H - padB - 10);
+        return (
+          <g pointerEvents="none">
+            <line x1={hx} x2={hx} y1={padT} y2={H - padB} stroke="var(--ad-navy-300)" strokeWidth="0.6" strokeDasharray="3 3" />
+            <circle cx={hx} cy={hy} r="3.5" fill="var(--ad-navy-900)" stroke="#FFFFFF" strokeWidth="1.2" />
+            <g transform={`translate(${flip ? hx - 8 : hx + 8}, ${chipY})`}>
+              <rect x={flip ? -98 : 0} y={-10} width="98" height="18" rx="3" fill="var(--ad-navy-900)" opacity="0.92" />
+              <text x={flip ? -49 : 49} y={3} textAnchor="middle" fontSize="10" fill="#FFFFFF" style={{ fontVariantNumeric: "tabular-nums" }}>{label}</text>
+            </g>
+          </g>
+        );
+      })()}
     </svg>
   );
 }

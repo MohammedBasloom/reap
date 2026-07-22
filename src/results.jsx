@@ -596,7 +596,6 @@ function ProgramPanel({ result, input }) {
                 <th style={thStyleNum}>NSA</th>
                 <th style={thStyleNum}>Units / Keys</th>
                 <th style={thStyleNum}>Price / Rent</th>
-                <th style={thStyleNum}>Gross / NOI</th>
                 <th style={thStyleNum}>Exit cap</th>
                 <th style={thStyleNum}>Exit value</th>
                 <th style={thStyleNum}>Timing</th>
@@ -630,9 +629,6 @@ function ProgramPanel({ result, input }) {
                     <td style={tdNum(c.nsa)}>{fn(c.nsa)}</td>
                     <td style={tdNum(1)}>{unitsKeys}</td>
                     <td style={tdNum(1)}>{priceLabel}</td>
-                    <td style={tdNum(c.salesRevenue || c.grossIncome)}>
-                      {c.mode === "sale" ? fc(c.salesRevenue) : `${fc(c.grossIncome)} → ${fc(c.noi)} NOI`}
-                    </td>
                     <td style={tdNum(c.exitCapRate)}>{isLease ? fp(c.exitCapRate, 2) : "—"}</td>
                     <td style={tdNum(c.exitValue)}>{c.exitValue ? fc(c.exitValue) : "—"}</td>
                     <td style={{ ...tdNum(1), fontSize: 11, color: "var(--fg-3)" }}>{timing}</td>
@@ -736,6 +732,66 @@ function ProgramPanel({ result, input }) {
           </div>
         </div>
       )}
+
+      {/* Whole-period totals — leasing NOI and net sales proceeds.
+          Display-only: sums of the engine's monthly cashflow series. */}
+      {(() => {
+        const totalRentAll = cf.rent.reduce((a, v) => a + v, 0);
+        const totalOpexAll = -cf.opex.reduce((a, v) => a + v, 0);
+        const totalNOIAll = totalRentAll - totalOpexAll;
+        const grossSalesAll = cf.sales.reduce((a, v) => a + v, 0);
+        const commissionAll = grossSalesAll * (+input.salesCommissionPct || 0);
+        const netSalesAll = grossSalesAll - commissionAll;
+        if (totalRentAll <= 0 && grossSalesAll <= 0) return null;
+
+        const rowStyle = { display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "8px 0", fontSize: 13, borderBottom: "1px dashed var(--border-2)" };
+        const totalRowStyle = { display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "12px 0 2px", fontSize: 15, fontWeight: 600 };
+
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginTop: 24 }}>
+            {totalRentAll > 0 && (
+              <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
+                <Eyebrow>Leasing — whole-period totals</Eyebrow>
+                <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>All leasable components, over the full operating period</div>
+                <div style={{ marginTop: 12 }}>
+                  <div style={rowStyle}>
+                    <span style={{ color: "var(--fg-2)" }}>Operating income (collected)</span>
+                    <span className="tabnum" style={{ color: "var(--ad-gold-600)", fontWeight: 600 }}>{fc(totalRentAll)}</span>
+                  </div>
+                  <div style={rowStyle}>
+                    <span style={{ color: "var(--fg-2)" }}>Operating expenses</span>
+                    <span className="tabnum" style={{ color: "var(--ad-danger)" }}>− {fc(totalOpexAll)}</span>
+                  </div>
+                  <div style={totalRowStyle}>
+                    <span>Total NOI (whole period)</span>
+                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(totalNOIAll)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            {grossSalesAll > 0 && (
+              <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
+                <Eyebrow>Sales — total proceeds</Eyebrow>
+                <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>All sold components</div>
+                <div style={{ marginTop: 12 }}>
+                  <div style={rowStyle}>
+                    <span style={{ color: "var(--fg-2)" }}>Gross sales</span>
+                    <span className="tabnum" style={{ color: "var(--ad-success)", fontWeight: 600 }}>{fc(grossSalesAll)}</span>
+                  </div>
+                  <div style={rowStyle}>
+                    <span style={{ color: "var(--fg-2)" }}>Sales commission</span>
+                    <span className="tabnum" style={{ color: "var(--ad-danger)" }}>− {fc(commissionAll)}</span>
+                  </div>
+                  <div style={totalRowStyle}>
+                    <span>Net sales proceeds</span>
+                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(netSalesAll)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
