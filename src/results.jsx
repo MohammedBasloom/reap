@@ -1726,35 +1726,6 @@ function ReturnsPanel({ result, input }) {
         </div>
       </div>
 
-      {/* Leverage benefit strip */}
-      <div style={{
-        padding: "14px 20px", marginBottom: 24,
-        border: "1px solid var(--border-1)", background: "var(--ad-navy-50)",
-        display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24,
-      }}>
-        <div>
-          <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 500 }}>Leverage benefit on IRR</div>
-          <div className="tabnum" style={{ fontSize: 22, fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--ad-navy-900)", letterSpacing: "-0.02em", marginTop: 4 }}>
-            {k.equityIRR !== null && k.projectIRR !== null ? `+${((k.equityIRR - k.projectIRR) * 100).toFixed(1)} pp` : "—"}
-          </div>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>Equity IRR − Project IRR</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 500 }}>Interest paid</div>
-          <div className="tabnum" style={{ fontSize: 22, fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--ad-danger)", letterSpacing: "-0.02em", marginTop: 4 }}>
-            {fc(k.totalInterest)}
-          </div>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>Cost of leverage</div>
-        </div>
-        <div>
-          <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 500 }}>Profit boost from debt</div>
-          <div className="tabnum" style={{ fontSize: 22, fontFamily: "var(--font-display)", fontWeight: 600, color: "var(--ad-success)", letterSpacing: "-0.02em", marginTop: 4 }}>
-            {fc(k.profit - k.profitUnlevered)}
-          </div>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>Levered − unlevered profit</div>
-        </div>
-      </div>
-
       {/* Two-column: cumulative cashflow chart + profit waterfall */}
       <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 24, marginBottom: 24 }}>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
