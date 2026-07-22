@@ -218,6 +218,9 @@
     "sale": "بيع", "lease": "تأجير",
     "Total sales:": "إجمالي المبيعات:", "Avg velocity:": "متوسط سرعة البيع:",
     "Net sales (after commission):": "صافي المبيعات (بعد العمولة):",
+    "OpEx (deducted)": "مصاريف التشغيل (مخصومة)",
+    "NOI (after OpEx)": "صافي الدخل التشغيلي NOI",
+    "Full bar = gross income": "طول الشريط الكامل = الدخل الإجمالي",
     "Stab. gross:": "الدخل الإجمالي المستقر:", "Stab. NOI:": "صافي الدخل المستقر:",
     "Operating starts:": "بدء التشغيل:",
     /* Cashflow tab */

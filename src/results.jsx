@@ -699,16 +699,32 @@ function ProgramPanel({ result, input }) {
                       <span style={{ color: "var(--fg-3)", fontSize: 10, marginLeft: 6 }}>NOI /yr</span>
                     </span>
                   </div>
-                  <div style={{ height: 8, background: "var(--bg-3)", position: "relative" }}>
-                    <div style={{ height: "100%", background: "var(--ad-gold-500)", width: `${ratio * 100}%` }} />
-                    <div style={{ height: "100%", background: "var(--ad-navy-800)", width: `${ratio * noiRatio * 100}%`, position: "absolute", top: 0, left: 0 }} />
+                  {/* Full bar length = gross income; the solid part is the NOI
+                      kept, the hatched tail is the OpEx deducted (track colour
+                      shows through the dashes). */}
+                  <div style={{ height: 10, background: "var(--bg-3)", position: "relative" }}>
+                    <div style={{ position: "absolute", insetInlineStart: 0, top: 0, height: "100%", width: `${ratio * noiRatio * 100}%`, background: "var(--ad-navy-800)" }} />
+                    <div style={{
+                      position: "absolute", insetInlineStart: `${ratio * noiRatio * 100}%`, top: 0, height: "100%",
+                      width: `${ratio * (1 - noiRatio) * 100}%`,
+                      backgroundImage: "repeating-linear-gradient(45deg, var(--ad-sand-700) 0, var(--ad-sand-700) 3px, transparent 3px, transparent 7px)",
+                      border: "1px dashed var(--ad-sand-700)", boxSizing: "border-box",
+                    }} />
                   </div>
                 </div>
               );
             })}
-            <div style={{ display: "flex", gap: 16, fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>
-              <Legend color="var(--ad-gold-500)" label="Gross income" />
+            <div style={{ display: "flex", gap: 18, fontSize: 10, color: "var(--fg-3)", marginTop: 6, flexWrap: "wrap" }}>
               <Legend color="var(--ad-navy-800)" label="NOI (after OpEx)" />
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span style={{
+                  width: 12, height: 10, flexShrink: 0,
+                  backgroundImage: "repeating-linear-gradient(45deg, var(--ad-sand-700) 0, var(--ad-sand-700) 3px, transparent 3px, transparent 7px)",
+                  border: "1px dashed var(--ad-sand-700)", boxSizing: "border-box",
+                }} />
+                OpEx (deducted)
+              </span>
+              <span style={{ color: "var(--fg-4)" }}>Full bar = gross income</span>
             </div>
           </div>
         </div>
