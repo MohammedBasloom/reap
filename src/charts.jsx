@@ -146,6 +146,7 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
   const labelEvery = nb > 14 ? Math.ceil(nb / 12) : 1;
 
   return (
+    <div>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked bars">
       {yTicks.map((t, i) => (
         <g key={i}>
@@ -173,10 +174,37 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
         points={cumulative.map((v, i) => `${xm(i)},${yCum(v)}`).join(" ")}
       />
 
+      {/* Data labels: total of the positive stack above each bar,
+          total of the negative stack below it */}
+      {pos.map((v, bi) => v > 0 ? (
+        <text key={`p${bi}`} x={xSlot(bi)} y={y(v) - 5} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--fg-2)" style={{ fontVariantNumeric: "tabular-nums" }}>
+          {formatY ? formatY(v) : v.toFixed(0)}
+        </text>
+      ) : null)}
+      {neg.map((v, bi) => v < 0 ? (
+        <text key={`n${bi}`} x={xSlot(bi)} y={y(v) + 11} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--ad-danger)" style={{ fontVariantNumeric: "tabular-nums" }}>
+          {formatY ? formatY(v) : v.toFixed(0)}
+        </text>
+      ) : null)}
+
       {Array.from({ length: nb }, (_, bi) => bi).filter(bi => bi % labelEvery === 0).map(bi => (
         <text key={bi} x={xSlot(bi)} y={H - 8} textAnchor="middle" fontSize="10" fill="var(--fg-3)">Y{bi + 1}</text>
       ))}
     </svg>
+    {/* Legend: one swatch per series + the cumulative line */}
+    <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: "4px 18px", marginTop: 8, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600, color: "var(--fg-3)" }}>
+      {series.map((s, si) => (
+        <span key={si} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 9, height: 9, background: s.color, display: "inline-block", flexShrink: 0 }} />
+          {s.label}
+        </span>
+      ))}
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 15, height: 2, background: "var(--ad-navy-900)", display: "inline-block", flexShrink: 0 }} />
+        Cumulative
+      </span>
+    </div>
+    </div>
   );
 }
 
