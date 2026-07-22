@@ -645,8 +645,12 @@ function ProgramPanel({ result, input }) {
             height={200}
             series={[
               { label: "Sales", color: "var(--ad-success)", values: cf.sales },
+              /* Display-only: commission is charged pro-rata to sales in the
+                 engine, so the monthly series is exactly sales × pct. The
+                 cumulative line then shows sales net of commission. */
+              { label: "Sales commission", color: "var(--ad-sand-900)", values: cf.sales.map(v => -(v * (+input.salesCommissionPct || 0))) },
             ]}
-            formatY={v => `${(v / 1e6).toFixed(0)}M`}
+            formatY={v => `${(v / 1e6).toFixed(1)}M`}
           />
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-3)", marginTop: 8 }}>
             <span>Total sales: <span style={{ color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>{fc(totalSales)}</span></span>
