@@ -460,7 +460,25 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       </div>
       {comp.hasBasement && (
         <Row cols={2}>
-          <PctField label="Basement coverage" value={comp.basementCoveragePct} onChange={v => update("basementCoveragePct", v)} hint="% of land area" />
+          <PctField
+            label={
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <span>Basement coverage</span>
+                <span
+                  title="Basement coverage is measured as % of the land area. If the basement spans more than one floor, enter more than 100% — e.g. two full basement floors ≈ 200%."
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+                    border: "1px solid var(--ad-gold-600)", color: "var(--ad-gold-600)",
+                    fontSize: 9, fontWeight: 700, cursor: "help", lineHeight: 1,
+                  }}
+                >!</span>
+              </span>
+            }
+            value={comp.basementCoveragePct}
+            onChange={v => update("basementCoveragePct", v)}
+            hint="% of land — over 100% adds floors (200% ≈ 2 levels)"
+          />
           <Field label="Basement cost" suffix="SAR/m²" value={comp.basementCostPerSqm} onChange={v => update("basementCostPerSqm", v)} step={50} hint="Separate rate from built-up" />
         </Row>
       )}

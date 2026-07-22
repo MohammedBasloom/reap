@@ -186,7 +186,9 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
 
   // ----- Basement -----
   const hasBasement = !!c.hasBasement;
-  const basementCoverage = hasBasement ? Math.max(0, Math.min(1, +c.basementCoveragePct || 0)) : 0;
+  // Coverage may exceed 100% of land: each extra 100% represents another
+  // full basement floor (e.g. 200% ≈ two basement levels).
+  const basementCoverage = hasBasement ? Math.max(0, +c.basementCoveragePct || 0) : 0;
   const basementArea = land * basementCoverage;
   // Basement uses its own SAR/m² rate (typically lower per m² than above-ground).
   const basementCostPerSqm = +c.basementCostPerSqm || 0;
