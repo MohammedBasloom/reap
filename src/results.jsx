@@ -652,8 +652,9 @@ function ProgramPanel({ result, input }) {
             ]}
             formatY={v => `${(v / 1e6).toFixed(1)}M`}
           />
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--fg-3)", marginTop: 8 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "4px 12px", fontSize: 11, color: "var(--fg-3)", marginTop: 8 }}>
             <span>Total sales: <span style={{ color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>{fc(totalSales)}</span></span>
+            <span>Net sales (after commission): <span style={{ color: "var(--fg-1)", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>{fc(totalSales * (1 - (+input.salesCommissionPct || 0)))}</span></span>
             <span>Avg velocity: <span style={{ color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>{fc(totalSales / Math.max(1, cf.sales.filter(v=>v>0).length))}/mo</span></span>
           </div>
         </div>

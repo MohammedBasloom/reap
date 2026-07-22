@@ -217,6 +217,7 @@
     "Component": "المكوّن", "Land %": "حصة الأرض %",
     "sale": "بيع", "lease": "تأجير",
     "Total sales:": "إجمالي المبيعات:", "Avg velocity:": "متوسط سرعة البيع:",
+    "Net sales (after commission):": "صافي المبيعات (بعد العمولة):",
     "Stab. gross:": "الدخل الإجمالي المستقر:", "Stab. NOI:": "صافي الدخل المستقر:",
     "Operating starts:": "بدء التشغيل:",
     /* Cashflow tab */
