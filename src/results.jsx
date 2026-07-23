@@ -274,8 +274,8 @@ function CashflowPanel({ result, input }) {
 
   return (
     <div style={{ padding: 32 }}>
-      <Eyebrow>Cashflow · S-Curve & Annual Table</Eyebrow>
-      <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 20 }}>Sources & uses over time</h2>
+      <Eyebrow>Cashflow · annual & cumulative</Eyebrow>
+      <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 20 }}>Project & equity cashflow over time</h2>
 
       <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", marginBottom: 24 }}>
         <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

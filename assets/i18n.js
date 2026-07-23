@@ -139,6 +139,8 @@
     "Massing": "الكتلة العمرانية", "Scenario Range": "نطاق السيناريوهات",
     "Cashflow · S-Curve & Annual Table": "التدفقات النقدية · منحنى S والجدول السنوي",
     "Sources & uses over time": "المصادر والاستخدامات عبر الزمن",
+    "Cashflow · annual & cumulative": "التدفقات النقدية · سنوي وتراكمي",
+    "Project & equity cashflow over time": "تدفقات المشروع والملكية عبر الزمن",
     "Monthly cashflow — stacked": "التدفق النقدي الشهري — تراكمي",
     "① Project cashflow (unlevered)": "① تدفق المشروع (قبل التمويل)",
     "② Equity cashflow (levered)": "② تدفق الملكية (بعد التمويل)",
