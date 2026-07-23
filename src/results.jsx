@@ -155,13 +155,17 @@ function FactRow({ label, value }) {
   );
 }
 
-function Legend({ color, label, line }) {
+function Legend({ color, label, line, dash, dot }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-      {line ? (
-        <span style={{ width: 16, height: 1.5, background: color, display: "inline-block" }} />
+      {dot ? (
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block", flexShrink: 0 }} />
+      ) : dash ? (
+        <span style={{ width: 18, height: 0, borderTop: `2.5px dashed ${color}`, display: "inline-block", flexShrink: 0 }} />
+      ) : line ? (
+        <span style={{ width: 18, height: 2.5, background: color, display: "inline-block", flexShrink: 0 }} />
       ) : (
-        <span style={{ width: 10, height: 10, background: color, display: "inline-block" }} />
+        <span style={{ width: 10, height: 10, background: color, display: "inline-block", flexShrink: 0 }} />
       )}
       {label}
     </span>
@@ -1833,10 +1837,10 @@ function ReturnsPanel({ result, input }) {
             projectPayback={k.projectPayback}
             horizon={k.horizonMonths}
           />
-          <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 11, color: "var(--fg-3)" }}>
+          <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 11, color: "var(--fg-3)", flexWrap: "wrap" }}>
             <Legend color="var(--ad-navy-900)" label="Equity (levered)" line />
-            <Legend color="var(--ad-sand-700)" label="Project (unlevered)" line />
-            <Legend color="var(--ad-gold-600)" label="Payback (equity)" line />
+            <Legend color="var(--ad-gold-500)" label="Project (unlevered)" dash />
+            <Legend color="var(--ad-success)" label="Payback (equity)" dot />
           </div>
         </div>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
@@ -1922,15 +1926,16 @@ function CumulativeCashflowChart({ months, equityCum, projectCum, equityPayback,
           <text x={x(m)} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 9, fill: "var(--fg-4)", fontFamily: "var(--font-mono)" }}>{`Y${m/12}`}</text>
         </g>
       ))}
-      {/* Project line */}
-      <path d={path(projectCum)} fill="none" stroke="var(--ad-sand-700)" strokeWidth="2" strokeDasharray="4 3" />
+      {/* Project line — light gold, long dashes: clearly distinct from the
+          dark solid equity line */}
+      <path d={path(projectCum)} fill="none" stroke="var(--ad-gold-500)" strokeWidth="2" strokeDasharray="7 5" />
       {/* Equity line */}
       <path d={path(equityCum)} fill="none" stroke="var(--ad-navy-900)" strokeWidth="2.5" />
-      {/* Payback markers */}
+      {/* Payback marker — green milestone dot, not another line colour */}
       {equityPayback !== null && equityPayback < len && (
         <g>
-          <line x1={x(equityPayback)} x2={x(equityPayback)} y1={padT} y2={H - padB} stroke="var(--ad-gold-600)" strokeWidth="1" strokeDasharray="3 3" />
-          <circle cx={x(equityPayback)} cy={y(0)} r="3.5" fill="var(--ad-gold-600)" />
+          <line x1={x(equityPayback)} x2={x(equityPayback)} y1={padT} y2={H - padB} stroke="var(--ad-success)" strokeWidth="1" strokeDasharray="2 3" />
+          <circle cx={x(equityPayback)} cy={y(0)} r="4.5" fill="var(--ad-success)" stroke="#FFFFFF" strokeWidth="1.5" />
         </g>
       )}
     </svg>
