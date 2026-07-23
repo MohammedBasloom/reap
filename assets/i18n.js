@@ -586,7 +586,7 @@
     [/^(\d+) mo hold$/, "$1 شهر تشغيل"],
     [/^(SAR .+)\/mo$/, "$1/شهر"],
     [/^(SAR .+)\/yr$/, "$1/سنة"],
-    [/^Facility (.+) \((.+) LTC\) @ (.+) · revenue-first$/, "تسهيلات $1 (‏LTC ‏$2) بفائدة $3 · الإيراد أولًا"],
+    [/^Facility (.+) \((.+) LTC\) · (.+) used incl\. capitalised interest$/, "تسهيلات $1 (‏LTC ‏$2) · مستخدَم $3 شاملًا الفوائد المرسملة"],
     [/^Total capital called · peak (.+)$/, "إجمالي المستدعى · الذروة $1"],
     [/^Horizon auto-sized to (\d+) months \((.+) yrs\) — predesign \+ construction \+ sell-down \/ hold \+ tail\.$/, "الأفق محسوب تلقائيًا: $1 شهرًا ($2 سنة) — التصميم + الإنشاء + البيع/التشغيل + هامش."],
     [/^Base IRR (.+)$/, "‏IRR الأساس $1"],

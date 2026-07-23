@@ -1,0 +1,11 @@
+/
+  Cache-Control: no-cache
+
+/index.html
+  Cache-Control: no-cache
+
+/model.html
+  Cache-Control: no-cache
+
+/valuation.html
+  Cache-Control: no-cache

@@ -1038,7 +1038,14 @@ function WaterfallPanel({ result, input }) {
       <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 24 }}>Debt & equity waterfall</h2>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <KPI eyebrow="Debt drawn" value={fc(k.debtDrawnTotal || 0)} sub={`Facility ${fc(k.devCostExFinance * input.ltc)} (${fp(input.ltc)} LTC) @ ${fp(input.interestRate)} · revenue-first`} />
+        <KPI eyebrow="Debt drawn" value={fc(k.debtDrawnTotal || 0)} sub={(() => {
+          const facility = k.devCostExFinance * input.ltc;
+          const used = (cf.coverageTotals && cf.coverageTotals.debt) || k.debtDrawnTotal || 0;
+          const usedPct = facility > 0 ? used / facility : 0;
+          // Draws + capitalised interest consume the cap together — show it,
+          // so near-full usage never reads as unused headroom.
+          return `Facility ${fc(facility)} (${fp(input.ltc)} LTC) · ${fp(usedPct)} used incl. capitalised interest`;
+        })()} />
         <KPI eyebrow="Equity contributed" value={fc(k.totalEquity)} sub={`Total capital called${k.peakEquity && Math.abs(k.peakEquity - k.totalEquity) > 1 ? ` · peak ${fc(k.peakEquity)}` : ""}`} />
         <KPI eyebrow="Peak debt outstanding" value={fc(k.peakDebt)} sub="Max balance at any month" />
         <KPI eyebrow="Total interest paid" value={fc(k.totalInterest)} />
