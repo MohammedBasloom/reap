@@ -243,6 +243,8 @@ function CashflowPanel({ result, input }) {
         debtRepay: slice(cf.debtRepay),
         interest: slice(cf.interest),
         net: slice(cf.net),
+        // Year-end retained project cash (undistributed surpluses)
+        cashEnd: (cf.cashBalance || [])[Math.min((y + 1) * 12 - 1, cf.months.length - 1)] || 0,
       });
     }
     return out;
@@ -321,7 +323,7 @@ function CashflowPanel({ result, input }) {
           <div>
             <Eyebrow>② Equity cashflow (levered)</Eyebrow>
             <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
-              Project cashflow + debt draws + debt repayments (incl. interest) = equity cashflow.
+              Equity calls out, distributions in. Surplus cash is retained to fund later periods — it distributes only once no further contributions are needed.
             </div>
           </div>
           <ViewToggle view={eqView} setView={setEqView} />
@@ -412,6 +414,7 @@ function EquityCashflowTable({ yearly }) {
           <th style={thStyleNum}><span style={{ color: "var(--ad-success)" }}>+ Debt draw</span></th>
           <th style={thStyleNum}><span style={{ color: "var(--ad-danger)" }}>− Debt repay</span></th>
           <th style={thStyleNum}>of which: interest</th>
+          <th style={thStyleNum}>Retained cash (end)</th>
           <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>= Equity CF</th>
           <th style={thStyleNum}>Cum. equity</th>
         </tr>
@@ -429,6 +432,7 @@ function EquityCashflowTable({ yearly }) {
               <td style={{ ...tdNum(y.debtDraw), color: y.debtDraw > 0 ? "var(--ad-success)" : "var(--fg-4)" }}>{y.debtDraw === 0 ? "—" : `+${fc(y.debtDraw).replace("SAR ", "")}`}</td>
               <td style={tdNum(y.debtRepay)}>{y.debtRepay === 0 ? "—" : fc(y.debtRepay)}</td>
               <td style={{ ...tdNum(y.interest), color: "var(--ad-gold-600)", fontSize: 11 }}>{y.interest === 0 ? "—" : fc(y.interest)}</td>
+              <td style={{ ...tdNum(y.cashEnd), color: "var(--fg-2)", fontSize: 11 }}>{y.cashEnd < 0.5 ? "—" : fc(y.cashEnd)}</td>
               <td style={{ ...tdNum(equity), fontWeight: 600, background: "var(--ad-navy-50)" }}>{fc(equity)}</td>
               <td style={{ ...tdNum(cumEquity), color: cumEquity < 0 ? "var(--ad-danger)" : "var(--ad-success)" }}>{fc(cumEquity)}</td>
             </tr>
@@ -1453,7 +1457,7 @@ function DebtScheduleTable({ cf, input, k }) {
         is reached. Equity is called only for what neither revenue nor debt could cover.
         Interest accrues monthly at <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fp(input.interestRate)}</span> on
         the outstanding balance. <strong style={{ color: "var(--fg-1)" }}>Surplus income</strong> —
-        whatever remains after covering the month's own costs — sweeps against accrued interest first, then principal, until the loan is fully closed.
+        whatever remains after covering the month's own costs — is retained to fund upcoming periods, sweeps the loan (interest first, then principal), and is distributed to equity only once no further contributions are needed.
         Any residual balance at the project's natural exit month is force-cleared from exit proceeds.
       </div>
     </div>
