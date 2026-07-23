@@ -1480,6 +1480,7 @@ function CashSweepTable({ cf }) {
   const slice = (arr, yr) => arr.slice(yr * 12, (yr + 1) * 12).reduce((s, v) => s + v, 0);
 
   const rows = [];
+  const horizonIdx = months.length - 1;
   for (let yr = 0; yr < years; yr++) {
     const sales    = slice(cf.sales, yr);
     const noi      = slice(cf.noi, yr);   // NOI = rent - opex (already net)
@@ -1488,26 +1489,33 @@ function CashSweepTable({ cf }) {
     const intPaid  = slice(cf.interestPaid, yr);
     const principal = slice(cf.principalRepay, yr);
     const sweep    = intPaid + principal;
-    const toEquity = Math.max(0, cashIn - sweep);
-    // Skip rows where there's no positive cash AND no repayment (i.e. construction-only years)
-    if (cashIn <= 0.5 && sweep <= 0.5) continue;
-    rows.push({ yr, sales, noi, exit, cashIn, intPaid, principal, sweep, toEquity });
+    // Actual distributions to equity that year — from the engine, not a
+    // residual guess (income can also fund the year's own costs directly).
+    const toEquity = slice(cf.distributions || [], yr);
+    const cashEnd   = (cf.cashBalance || [])[Math.min((yr + 1) * 12 - 1, horizonIdx)] || 0;
+    const cashStart = yr === 0 ? 0 : ((cf.cashBalance || [])[yr * 12 - 1] || 0);
+    const retainedDelta = cashEnd - cashStart;
+    // Income used on the year's own costs = what's left of the positive
+    // cashflow after debt service, distributions and retention movements.
+    const applied = Math.max(0, cashIn - sweep - toEquity - retainedDelta);
+    // Skip rows with no activity at all
+    if (cashIn <= 0.5 && sweep <= 0.5 && toEquity <= 0.5) continue;
+    rows.push({ yr, sales, noi, exit, cashIn, applied, intPaid, principal, sweep, toEquity });
   }
 
   const totals = rows.reduce((t, r) => ({
     sales: t.sales + r.sales, noi: t.noi + r.noi, exit: t.exit + r.exit,
-    cashIn: t.cashIn + r.cashIn,
+    cashIn: t.cashIn + r.cashIn, applied: t.applied + r.applied,
     intPaid: t.intPaid + r.intPaid, principal: t.principal + r.principal,
     sweep: t.sweep + r.sweep, toEquity: t.toEquity + r.toEquity,
-  }), { sales: 0, noi: 0, exit: 0, cashIn: 0, intPaid: 0, principal: 0, sweep: 0, toEquity: 0 });
+  }), { sales: 0, noi: 0, exit: 0, cashIn: 0, applied: 0, intPaid: 0, principal: 0, sweep: 0, toEquity: 0 });
 
   return (
     <div style={{ marginTop: 22 }}>
       <div style={{ borderTop: "1px solid var(--border-1)", paddingTop: 16 }}>
         <Eyebrow>Cash applied to debt service — positive cashflow swept against the loan</Eyebrow>
         <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 6, marginBottom: 10, lineHeight: 1.5 }}>
-          Each row shows the year's positive operating cashflow (sales + NOI + exit) and how much was swept
-          against interest then principal. The remainder is what flowed through to equity that year.
+          Each row shows the year's positive operating cashflow (sales + NOI + exit) and where it went: funding that year's own costs first, then interest, then the principal sweep — with distributions to equity only once no further contributions are needed.
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
@@ -1518,9 +1526,10 @@ function CashSweepTable({ cf }) {
                 <th style={thStyleNum}>NOI</th>
                 <th style={thStyleNum}>Exit</th>
                 <th style={thStyleNum}>Positive cashflow</th>
+                <th style={thStyleNum}>→ Applied to costs</th>
                 <th style={thStyleNum}>→ Interest paid</th>
                 <th style={thStyleNum}>→ Principal repaid</th>
-                <th style={thStyleNum}>Net to equity</th>
+                <th style={thStyleNum}>Distributed to equity</th>
               </tr>
             </thead>
             <tbody>
@@ -1531,6 +1540,7 @@ function CashSweepTable({ cf }) {
                   <td style={tdNum(r.noi)}>{r.noi ? fc(r.noi) : "—"}</td>
                   <td style={tdNum(r.exit)}>{r.exit ? fc(r.exit) : "—"}</td>
                   <td style={{ ...tdNum(r.cashIn), fontWeight: 600 }}>{r.cashIn ? fc(r.cashIn) : "—"}</td>
+                  <td style={{ ...tdNum(r.applied), color: r.applied > 0.5 ? "var(--ad-navy-700)" : "var(--fg-4)" }}>{r.applied > 0.5 ? fc(r.applied) : "—"}</td>
                   <td style={{ ...tdNum(r.intPaid), color: r.intPaid > 0 ? "var(--ad-danger)" : "var(--fg-4)" }}>{r.intPaid ? fc(r.intPaid) : "—"}</td>
                   <td style={{ ...tdNum(r.principal), color: r.principal > 0 ? "var(--ad-gold-600)" : "var(--fg-4)" }}>{r.principal ? fc(r.principal) : "—"}</td>
                   <td style={{ ...tdNum(r.toEquity), color: r.toEquity > 0 ? "var(--ad-success)" : "var(--fg-4)", fontWeight: 600 }}>{r.toEquity ? fc(r.toEquity) : "—"}</td>
@@ -1542,6 +1552,7 @@ function CashSweepTable({ cf }) {
                 <td style={{ ...tdNum(totals.noi), fontWeight: 600 }}>{totals.noi ? fc(totals.noi) : "—"}</td>
                 <td style={{ ...tdNum(totals.exit), fontWeight: 600 }}>{totals.exit ? fc(totals.exit) : "—"}</td>
                 <td style={{ ...tdNum(totals.cashIn), fontWeight: 700 }}>{fc(totals.cashIn)}</td>
+                <td style={{ ...tdNum(totals.applied), fontWeight: 600, color: "var(--ad-navy-700)" }}>{totals.applied > 0.5 ? fc(totals.applied) : "—"}</td>
                 <td style={{ ...tdNum(totals.intPaid), fontWeight: 600, color: "var(--ad-danger)" }}>{fc(totals.intPaid)}</td>
                 <td style={{ ...tdNum(totals.principal), fontWeight: 600, color: "var(--ad-gold-600)" }}>{fc(totals.principal)}</td>
                 <td style={{ ...tdNum(totals.toEquity), fontWeight: 700, color: "var(--ad-success)" }}>{fc(totals.toEquity)}</td>
