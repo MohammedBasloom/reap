@@ -248,71 +248,104 @@ function CashflowPanel({ result, input }) {
     return out;
   }, [result]);
 
-  let cumNet = 0;
+  // Chart-first presentation; each card can flip to the numeric table.
+  const [projView, setProjView] = React.useState("chart");
+  const [eqView, setEqView] = React.useState("chart");
+
+  // Monthly project (unlevered) flow — all uses & revenues, no debt/interest.
+  const projFlow = months.map((_, i) =>
+    cf.land[i] + cf.soft[i] + cf.construction[i] + (cf.infra ? cf.infra[i] : 0) + cf.siteWork[i] +
+    cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.sales[i] + cf.rent[i] + cf.exit[i]);
+
+  const ViewToggle = ({ view, setView }) => (
+    <div style={{ display: "flex", border: "1px solid var(--border-1)", flexShrink: 0 }}>
+      {["chart", "table"].map((v, i) => (
+        <button key={v} type="button" onClick={() => setView(v)} style={{
+          padding: "5px 14px", cursor: "pointer", border: "none",
+          borderInlineStart: i > 0 ? "1px solid var(--border-1)" : "none",
+          background: view === v ? "var(--ad-navy-800)" : "transparent",
+          color: view === v ? "white" : "var(--fg-2)",
+          fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600,
+          fontFamily: "var(--font-body)",
+        }}>{v === "chart" ? "Chart" : "Table"}</button>
+      ))}
+    </div>
+  );
 
   return (
     <div style={{ padding: 32 }}>
       <Eyebrow>Cashflow · S-Curve & Annual Table</Eyebrow>
       <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 20 }}>Sources & uses over time</h2>
 
-      <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
-        <Eyebrow>Monthly cashflow — stacked</Eyebrow>
-        <StackedArea
-          months={months}
-          height={260}
-          series={[
-            { label: "Land",     color: "var(--ad-navy-900)", values: cf.land },
-            { label: "Soft",     color: "var(--ad-navy-700)", values: cf.soft },
-            { label: "Construction", color: "var(--ad-navy-500)", values: cf.construction },
-            { label: "Site work", color: "var(--ad-navy-400)", values: cf.siteWork },
-            { label: "Contingency", color: "var(--ad-sand-700)", values: cf.contingency },
-            { label: "Selling",  color: "var(--ad-sand-500)", values: cf.selling },
-            { label: "OpEx",     color: "var(--ad-sand-900)", values: cf.opex },
-            { label: "Interest", color: "var(--ad-danger)", opacity: 0.6, values: cf.interest },
-            { label: "Sales",    color: "var(--ad-success)", values: cf.sales },
-            { label: "Rent / Lease income", color: "var(--ad-gold-500)", values: cf.rent },
-            { label: "Exit",     color: "var(--ad-gold-600)", values: cf.exit },
-          ]}
-          formatY={v => v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`}
-        />
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 14, marginTop: 12, fontSize: 11, color: "var(--fg-3)" }}>
-          <Legend color="var(--ad-navy-900)" label="Land" />
-          <Legend color="var(--ad-navy-700)" label="Soft costs" />
-          <Legend color="var(--ad-navy-500)" label="Construction" />
-          <Legend color="var(--ad-navy-400)" label="Site work" />
-          <Legend color="var(--ad-sand-700)" label="Contingency" />
-          <Legend color="var(--ad-sand-500)" label="Selling costs" />
-          <Legend color="var(--ad-sand-900)" label="OpEx" />
-          <Legend color="var(--ad-danger)" label="Interest" />
-          <Legend color="var(--ad-success)" label="Sales" />
-          <Legend color="var(--ad-gold-500)" label="Rent / Lease income" />
-          <Legend color="var(--ad-gold-600)" label="Exit value" />
-          <Legend color="var(--ad-navy-900)" label="Cumulative" line />
+      <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", marginBottom: 24 }}>
+        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <Eyebrow>① Project cashflow (unlevered)</Eyebrow>
+            <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
+              All project uses and revenues — before any debt activity.
+            </div>
+          </div>
+          <ViewToggle view={projView} setView={setProjView} />
         </div>
+        {projView === "chart" ? (
+          <div style={{ padding: 24 }}>
+            <StackedBars
+              months={months}
+              height={260}
+              series={[
+                { label: "Land",     color: "var(--ad-navy-900)", values: cf.land },
+                { label: "Soft costs", color: "var(--ad-navy-700)", values: cf.soft },
+                { label: "Construction", color: "var(--ad-navy-500)", values: cf.construction },
+                { label: "Site work", color: "var(--ad-navy-400)", values: months.map((_, i) => cf.siteWork[i] + (cf.infra ? cf.infra[i] : 0)) },
+                { label: "Contingency", color: "var(--ad-sand-700)", values: cf.contingency },
+                { label: "Selling costs", color: "var(--ad-sand-500)", values: cf.selling },
+                { label: "OpEx",     color: "var(--ad-sand-900)", values: cf.opex },
+                { label: "Sales",    color: "var(--ad-success)", values: cf.sales },
+                { label: "Rent / Lease income", color: "var(--ad-gold-500)", values: cf.rent },
+                { label: "Exit value", color: "var(--ad-gold-600)", values: cf.exit },
+              ]}
+              cumulativeValues={projFlow}
+              cumulativeOnPrimary
+              formatY={v => v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`}
+            />
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <ProjectCashflowTable yearly={yearly} />
+          </div>
+        )}
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", marginBottom: 24 }}>
-        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)" }}>
-          <Eyebrow>① Project cashflow (unlevered)</Eyebrow>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
-            All project uses and revenues — before any debt activity.
+        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <Eyebrow>② Equity cashflow (levered)</Eyebrow>
+            <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
+              Project cashflow + debt draws + debt repayments (incl. interest) = equity cashflow.
+            </div>
           </div>
+          <ViewToggle view={eqView} setView={setEqView} />
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <ProjectCashflowTable yearly={yearly} />
-        </div>
-      </div>
-
-      <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", marginBottom: 24 }}>
-        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)" }}>
-          <Eyebrow>② Equity cashflow (levered)</Eyebrow>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>
-            Project cashflow + debt draws + debt repayments (incl. interest) = equity cashflow.
+        {eqView === "chart" ? (
+          <div style={{ padding: 24 }}>
+            <StackedBars
+              months={months}
+              height={260}
+              series={[
+                { label: "Project cashflow", color: "var(--ad-navy-500)", values: projFlow },
+                { label: "Debt draw", color: "var(--ad-navy-300)", values: cf.debtDraw },
+                { label: "Debt repay", color: "var(--ad-danger)", opacity: 0.75, values: cf.debtRepay },
+              ]}
+              cumulativeValues={cf.net}
+              cumulativeOnPrimary
+              formatY={v => v === 0 ? "0" : `${(v / 1e6).toFixed(0)}M`}
+            />
           </div>
-        </div>
-        <div style={{ overflowX: "auto" }}>
-          <EquityCashflowTable yearly={yearly} />
-        </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <EquityCashflowTable yearly={yearly} />
+          </div>
+        )}
       </div>
 
     </div>

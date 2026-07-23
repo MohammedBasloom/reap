@@ -145,7 +145,7 @@ function StackedArea({ months, series, height = 220, formatY, cumulativeValues, 
 }
 
 /* ---------- StackedBars (annual stacked bars + monthly cumulative line) ---------- */
-function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
+function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumulativeValues, cumulativeOnPrimary }) {
   // series: [{ label, color, values: [n monthly] }] — bars aggregate the
   // monthly values into `bucket`-month groups (years by default); the
   // cumulative net line keeps monthly resolution on its own scale.
@@ -169,8 +169,21 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
     return { ...s, pts };
   });
 
-  const yMax = Math.max(...pos, 1);
-  const yMin = Math.min(...neg, 0);
+  // Optional cumulative line (monthly resolution). Only drawn when the
+  // caller passes `cumulativeValues` — the revenue charts stay bars-only.
+  let cumulative = null;
+  if (cumulativeValues) {
+    cumulative = [];
+    let c = 0;
+    for (let i = 0; i < n; i++) { c += cumulativeValues[i] || 0; cumulative.push(c); }
+  }
+
+  let yMax = Math.max(...pos, 1);
+  let yMin = Math.min(...neg, 0);
+  if (cumulative && cumulativeOnPrimary) {
+    yMax = Math.max(yMax, ...cumulative, 0);
+    yMin = Math.min(yMin, ...cumulative, 0);
+  }
   const yRange = (yMax - yMin) || 1;
   const plotW = W - padL - padR;
   const slotW = plotW / nb;
@@ -205,6 +218,22 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
         </g>
       ))}
 
+      {cumulative && (() => {
+        const xm = (i) => padL + ((i + 0.5) / n) * plotW;
+        const cumMax = Math.max(...cumulative, 0);
+        const cumMin = Math.min(...cumulative, 0);
+        const cumRange = (cumMax - cumMin) || 1;
+        const yC = cumulativeOnPrimary ? y : (v) => padT + (1 - (v - cumMin) / cumRange) * (H - padT - padB);
+        return (
+          <polyline
+            fill="none"
+            stroke="var(--ad-navy-900)"
+            strokeWidth="1.5"
+            points={cumulative.map((v, i) => `${xm(i)},${yC(v)}`).join(" ")}
+          />
+        );
+      })()}
+
       {/* Data labels: total of the positive stack above each bar,
           total of the negative stack below it */}
       {pos.map((v, bi) => v > 0 ? (
@@ -230,6 +259,12 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12 }) {
           {s.label}
         </span>
       ))}
+      {cumulative && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 15, height: 2, background: "var(--ad-navy-900)", display: "inline-block", flexShrink: 0 }} />
+          Cumulative
+        </span>
+      )}
     </div>
     </div>
   );
