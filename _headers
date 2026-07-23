@@ -9,3 +9,9 @@
 
 /valuation.html
   Cache-Control: no-cache
+
+/model
+  Cache-Control: no-cache
+
+/valuation
+  Cache-Control: no-cache
