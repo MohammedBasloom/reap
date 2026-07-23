@@ -452,14 +452,17 @@ function runFeasibility(input) {
     }
   });
 
-  /* ---------- Debt model — debt-first draw + cash-sweep ----------
-     Funding order follows facility best practice: the debt facility funds
-     100% of each month's costs — and accrued interest capitalises into the
-     balance, consuming headroom — until the facility cap (LTC × dev cost) is
-     reached. Only after the cap is hit does equity fund the remainder.
-     Every SAR of positive operating cashflow (sales + NOI + exit proceeds)
-     is swept against accrued interest first, then principal, until the loan
-     is closed. Any residual at the project's natural exit month is
+  /* ---------- Debt model — revenue-first funding + cash-sweep ----------
+     Funding order each month:
+       1. The month's own project income (off-plan sales, NOI, exit
+          proceeds) covers that month's costs first.
+       2. Any shortfall is drawn from the debt facility — and accrued
+          interest capitalises into the balance, consuming headroom —
+          until the facility cap (LTC × dev cost) is reached.
+       3. Whatever remains is called from equity.
+     Only SURPLUS income (after covering the month's own costs) sweeps the
+     loan — accrued interest first, then principal — until the loan is
+     closed. Any residual at the project's natural exit month is
      force-cleared from exit proceeds. */
   const ltc = Math.max(0, Math.min(1, +a.ltc || 0));
   const interestAnnual = +a.interestRate || 0;
@@ -486,28 +489,36 @@ function runFeasibility(input) {
     const outlay = -(landFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] + contingencyFlow[m]);
     const incoming = salesFlow[m] + noiFlow[m] + exitFlow[m];
 
-    // Interest accrues on the opening balance. While the facility has
-    // headroom, capitalised interest is itself a draw against the cap (the
-    // loan pays its own interest). Beyond the cap it still rolls up into the
-    // balance and is cleared by the cash sweep / exit.
+    // 1) Revenue-first: the month's own income funds the month's costs
+    //    before any debt is drawn (off-plan sales finance construction
+    //    directly). Only the surplus is left for debt service.
+    const revToCosts = Math.min(Math.max(0, incoming), Math.max(0, outlay));
+    const residualOutlay = Math.max(0, outlay) - revToCosts;
+    const surplus = Math.max(0, incoming) - revToCosts;
+
+    // 2) Interest accrues on the opening balance. While the facility has
+    //    headroom, capitalised interest is itself a draw against the cap
+    //    (the loan pays its own interest). Beyond the cap it still rolls up
+    //    into the balance and is cleared by the cash sweep / exit.
     const interest = outstanding * interestMonthly;
     let headroom = Math.max(0, debtFacility - cumDrawn);
     const intCapitalised = Math.min(headroom, interest);
     cumDrawn += intCapitalised;
     headroom -= intCapitalised;
 
-    // Debt-first draw: the facility funds 100% of this month's costs until
-    // LIFETIME draws reach the cap — repayments do NOT reopen headroom
-    // (construction facility, not a revolver). Equity plugs the rest.
+    // 3) Debt covers the residual costs until LIFETIME draws reach the cap —
+    //    repayments do NOT reopen headroom (construction facility, not a
+    //    revolver).
     let draw = 0;
-    if (outlay > 0 && headroom > 0) {
-      draw = Math.min(headroom, outlay);
+    if (residualOutlay > 0 && headroom > 0) {
+      draw = Math.min(headroom, residualOutlay);
       cumDrawn += draw;
     }
 
+    // 5) Surplus income (only) sweeps the loan.
     let repay = 0;
-    if (incoming > 0 && (outstanding + draw + interest) > 0) {
-      repay = Math.min(outstanding + draw + interest, incoming);
+    if (surplus > 0 && (outstanding + draw + interest) > 0) {
+      repay = Math.min(outstanding + draw + interest, surplus);
     }
 
     // Force-clear any residual at the project's natural exit month
@@ -529,10 +540,13 @@ function runFeasibility(input) {
     debtBalance[m] = outstanding;
     interestPaidFlow[m] = intPaid;
     principalRepayFlow[m] = principalPaid;
-    cashAvailableFlow[m] = Math.max(0, incoming);
+    // Cash available for debt service = income left after funding the
+    // month's own costs (revenue-first order).
+    cashAvailableFlow[m] = surplus;
     intCapitalisedFlow[m] = intCapitalised;
 
-    const equityNeeded = Math.max(0, outlay - draw);
+    // 4) Equity plugs whatever revenue + debt could not cover.
+    const equityNeeded = Math.max(0, residualOutlay - draw);
     equityNeedCashFlow[m] = equityNeeded;
     totalEquity += equityNeeded;
   }
@@ -572,10 +586,11 @@ function runFeasibility(input) {
       usesByCatFlow.interest[m];
     totalUsesFlow[m] = u;
     const debtThisMonth = debtDrawFlow[m] || 0;
-    // Funding order (matches the debt loop): the facility covers costs AND its
-    // own capitalised interest until the cap; equity is only the actual cash
-    // shortfall the loop computed; whatever's left (interest rolled beyond the
-    // cap, selling costs netted from receipts) is revenue applied.
+    // Funding order (matches the debt loop): revenue first, then the facility
+    // (costs + its own capitalised interest until the cap), then equity.
+    // "Revenue applied" is the residual: income used on the month's own
+    // costs, interest rolled beyond the cap, selling costs netted from
+    // receipts.
     const debtCover = debtThisMonth + (intCapitalisedFlow[m] || 0);
     equityInjectedFlow[m] = equityNeedCashFlow[m] || 0;
     revenueAppliedFlow[m] = Math.max(0, u - debtCover - equityInjectedFlow[m]);
@@ -649,10 +664,9 @@ function runFeasibility(input) {
      softCosts + contingency) +
     (marketing + salesCommission + govFees) +
     (-interestFlow.reduce((s, v) => s + v, 0));
-  // Equity required = actual CASH called from investors (uses the facility
-  // could not cover). Under debt-first funding the old accounting identity
-  // (total uses − debt drawn) overstated equity by the revenue-funded share —
-  // interest rolled beyond the cap and selling costs netted from receipts.
+  // Equity required = actual CASH called from investors — only what neither
+  // the month's own revenue nor the facility could cover (revenue-first →
+  // debt → equity funding order).
   const totalEquityContributed = totalEquity;
   // Canonical equity basis — same figure the header / Capital tab display.
   // null when the facility funds everything (ROI on zero equity is undefined).

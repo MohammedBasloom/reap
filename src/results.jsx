@@ -1034,7 +1034,7 @@ function WaterfallPanel({ result, input }) {
       <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 24 }}>Debt & equity waterfall</h2>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <KPI eyebrow="Debt drawn" value={fc(k.debtDrawnTotal || 0)} sub={`Facility ${fc(k.devCostExFinance * input.ltc)} (${fp(input.ltc)} LTC) @ ${fp(input.interestRate)} · debt-first`} />
+        <KPI eyebrow="Debt drawn" value={fc(k.debtDrawnTotal || 0)} sub={`Facility ${fc(k.devCostExFinance * input.ltc)} (${fp(input.ltc)} LTC) @ ${fp(input.interestRate)} · revenue-first`} />
         <KPI eyebrow="Equity contributed" value={fc(k.totalEquity)} sub={`Total capital called${k.peakEquity && Math.abs(k.peakEquity - k.totalEquity) > 1 ? ` · peak ${fc(k.peakEquity)}` : ""}`} />
         <KPI eyebrow="Peak debt outstanding" value={fc(k.peakDebt)} sub="Max balance at any month" />
         <KPI eyebrow="Total interest paid" value={fc(k.totalInterest)} />
@@ -1446,14 +1446,14 @@ function DebtScheduleTable({ cf, input, k }) {
         <span style={{
           textTransform: "uppercase", letterSpacing: "0.18em", fontWeight: 600,
           color: "var(--fg-1)", fontSize: 10, display: "block", marginBottom: 4,
-        }}>Funding order · Debt-first draw + cash sweep</span>
-        The facility funds <strong style={{ color: "var(--fg-1)" }}>100% of each month's development outflows</strong> (land,
-        construction, site, soft, contingency) — and accrued interest capitalises into the balance, consuming headroom —
+        }}>Funding order · Revenue → Debt → Equity</span>
+        <strong style={{ color: "var(--fg-1)" }}>Each month's project income covers that month's costs first</strong> (off-plan sales, rent and exit proceeds fund land, construction, site, soft and contingency directly).
+        Any shortfall is drawn from the facility — accrued interest capitalises into the balance, consuming headroom —
         until the facility cap of <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fc(k.devCostExFinance * input.ltc)}</span> ({fp(input.ltc)} LTC)
-        is reached. Only then is equity called for the remainder.
+        is reached. Equity is called only for what neither revenue nor debt could cover.
         Interest accrues monthly at <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fp(input.interestRate)}</span> on
-        the outstanding balance. <strong style={{ color: "var(--fg-1)" }}>Every SAR of positive operating cashflow</strong> —
-        sales receipts, NOI, and exit proceeds — sweeps against accrued interest first, then principal, until the loan is fully closed.
+        the outstanding balance. <strong style={{ color: "var(--fg-1)" }}>Surplus income</strong> —
+        whatever remains after covering the month's own costs — sweeps against accrued interest first, then principal, until the loan is fully closed.
         Any residual balance at the project's natural exit month is force-cleared from exit proceeds.
       </div>
     </div>

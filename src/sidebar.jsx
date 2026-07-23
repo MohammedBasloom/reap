@@ -1138,10 +1138,8 @@ function Sidebar({ input, setInput }) {
           fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5,
           borderLeft: "3px solid var(--ad-navy-700)",
         }}>
-          <strong style={{ color: "var(--fg-1)" }}>Repayment:</strong>{" "}
-          every SAR of positive operating cashflow (sales + NOI + exit proceeds) sweeps
-          against accrued interest first, then principal, until the loan is closed. Any
-          residual at the project's natural exit is cleared from exit proceeds.
+          <strong style={{ color: "var(--fg-1)" }}>Funding order:</strong>{" "}
+          each month's income (e.g. off-plan sales) covers that month's costs first; any shortfall is drawn from the facility with interest capitalising until the cap, and equity covers the remainder. Surplus income sweeps the loan — interest first, then principal.
         </div>
       </Section>
 
