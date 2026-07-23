@@ -1040,11 +1040,10 @@ function WaterfallPanel({ result, input }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <KPI eyebrow="Debt drawn" value={fc(k.debtDrawnTotal || 0)} sub={(() => {
           const facility = k.devCostExFinance * input.ltc;
-          const used = (cf.coverageTotals && cf.coverageTotals.debt) || k.debtDrawnTotal || 0;
-          const usedPct = facility > 0 ? used / facility : 0;
-          // Draws + capitalised interest consume the cap together — show it,
-          // so near-full usage never reads as unused headroom.
-          return `Facility ${fc(facility)} (${fp(input.ltc)} LTC) · ${fp(usedPct)} used incl. capitalised interest`;
+          const peakPct = facility > 0 ? (k.peakDebt || 0) / facility : 0;
+          // Revolver: repaid amounts re-open the facility, so gross draws can
+          // exceed the cap — peak BALANCE vs cap is the meaningful usage.
+          return `Facility ${fc(facility)} (${fp(input.ltc)} LTC) · peak balance ${fp(peakPct)} of cap`;
         })()} />
         <KPI eyebrow="Equity contributed" value={fc(k.totalEquity)} sub={`Total capital called${k.peakEquity && Math.abs(k.peakEquity - k.totalEquity) > 1 ? ` · peak ${fc(k.peakEquity)}` : ""}`} />
         <KPI eyebrow="Peak debt outstanding" value={fc(k.peakDebt)} sub="Max balance at any month" />
@@ -1459,12 +1458,12 @@ function DebtScheduleTable({ cf, input, k }) {
           color: "var(--fg-1)", fontSize: 10, display: "block", marginBottom: 4,
         }}>Funding order · Revenue → Debt → Equity</span>
         <strong style={{ color: "var(--fg-1)" }}>Each month's project income covers that month's costs first</strong> (off-plan sales, rent and exit proceeds fund land, construction, site, soft and contingency directly).
-        Any shortfall is drawn from the facility — accrued interest capitalises into the balance, consuming headroom —
-        until the facility cap of <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fc(k.devCostExFinance * input.ltc)}</span> ({fp(input.ltc)} LTC)
+        Any shortfall is drawn from the facility — interest capitalises into the balance only when no project cash is available to pay it —
+        up to the facility cap of <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fc(k.devCostExFinance * input.ltc)}</span> ({fp(input.ltc)} LTC)
         is reached. Equity is called only for what neither revenue nor debt could cover.
         Interest accrues monthly at <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{fp(input.interestRate)}</span> on
         the outstanding balance. <strong style={{ color: "var(--fg-1)" }}>Surplus income</strong> —
-        whatever remains after covering the month's own costs — is retained to fund upcoming periods, sweeps the loan (interest first, then principal), and is distributed to equity only once no further contributions are needed.
+        whatever remains after covering the month's own costs — pays interest in cash, then sweeps the principal immediately (repaid amounts re-open the facility for later draws), and is distributed to equity only once no further contributions are needed.
         Any residual balance at the project's natural exit month is force-cleared from exit proceeds.
       </div>
     </div>

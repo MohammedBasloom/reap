@@ -452,22 +452,24 @@ function runFeasibility(input) {
     }
   });
 
-  /* ---------- Debt model — revenue-first funding with retained cash ----------
+  /* ---------- Debt model — revenue-first funding, revolving cash sweep ----------
      Funding order each month:
        1. The month's own project income (off-plan sales, NOI, exit
           proceeds — net of selling costs) PLUS any cash retained from
           earlier surpluses covers that month's costs first.
-       2. Any shortfall is drawn from the debt facility — and accrued
-          interest capitalises into the balance, consuming headroom —
-          until the facility cap (LTC × dev cost) is reached.
+       2. Any shortfall is drawn from the facility, capped by OUTSTANDING
+          BALANCE (LTC × dev cost, with room reserved for the month's
+          interest) — repaid amounts re-open the facility for later draws.
        3. Whatever remains is called from equity.
-     Surplus cash is NOT distributed while future months still need funding:
-     it is retained (a project cash account) to cover upcoming costs — an
-     equity holder takes no distribution if they'd have to contribute again
-     next period. Cash beyond the remaining future need sweeps the loan
-     (interest first, then principal) and only then distributes to equity.
+     Interest is PAID IN CASH whenever the project has positive cash that
+     month; it capitalises into the balance only when there is no cash to
+     pay it. All remaining cash sweeps the principal immediately — even
+     during construction — since the facility can be redrawn.
+     Distributions to equity happen only when retained cash plus remaining
+     facility capacity fully cover every future funding need — an equity
+     holder takes no distribution while they might have to contribute again.
      Any residual loan balance at the project's natural exit month is
-     force-cleared (from cash, else a final equity call). */
+     force-cleared (from cash, else a final equity deficiency call). */
   const ltc = Math.max(0, Math.min(1, +a.ltc || 0));
   const interestAnnual = +a.interestRate || 0;
   const interestMonthly = Math.pow(1 + interestAnnual, 1 / 12) - 1;
@@ -493,126 +495,143 @@ function runFeasibility(input) {
     runNeed = Math.max(0, needFlow[m] + runNeed);
   }
 
-  let outstanding = 0;
-  let cumDrawn = 0; // lifetime facility draws (costs + capitalised interest) — construction facility, no redraws
-  let cashBalance = 0; // retained project cash (undistributed surpluses)
-  const debtDrawFlow = arr();
-  const debtRepayFlow = arr();
-  const interestFlow = arr();
-  const debtBalance = arr();
-  // Decomposition: how each month's repayment splits into interest vs principal,
-  // and what positive cash was available to fund it.
-  const interestPaidFlow = arr();
-  const principalRepayFlow = arr();
-  const cashAvailableFlow = arr();
-  const intCapitalisedFlow = arr();
-  const equityNeedCashFlow = arr();
-  const distributionFlow = arr();
-  const cashBalanceFlow = arr();
-  // Equity cash that clears a loan deficiency at exit (revenue < debt
-  // service). Real investor cash — part of the equity cashflow — but NOT
-  // "equity funding project uses", so it stays out of the Capital tab's
-  // sources-cover-uses decomposition (principal repayment is financing,
-  // not a use).
-  const deficiencyFlow = arr();
-  let totalEquity = 0;
+  /* The funding loop runs as a function so it can be iterated: distributions
+     are LOCKED before the last observed equity call, and the loop re-runs
+     until stable. That makes "no distribution while a later contribution
+     could be required" exact rather than estimated (the capacity heuristic
+     alone can miss future capitalised interest). */
+  const runFundingPass = (noDistBefore) => {
+    const F = {
+      debtDrawFlow: arr(), debtRepayFlow: arr(), interestFlow: arr(), debtBalance: arr(),
+      interestPaidFlow: arr(), principalRepayFlow: arr(), cashAvailableFlow: arr(),
+      intCapitalisedFlow: arr(), equityNeedCashFlow: arr(), distributionFlow: arr(),
+      cashBalanceFlow: arr(),
+      // Equity cash that clears a loan deficiency at exit (revenue < debt
+      // service). Real investor cash — part of the equity cashflow — but NOT
+      // "equity funding project uses" (principal repayment is financing,
+      // not a use), so it stays out of the Capital tab's decomposition.
+      deficiencyFlow: arr(),
+      totalEquity: 0, lastCall: -1,
+    };
+    let outstanding = 0;
+    let cashBalance = 0; // retained project cash (undistributed surpluses)
 
-  for (let m = 0; m <= horizon; m++) {
-    // 2) Interest accrues on the opening balance. While the facility has
-    //    headroom, capitalised interest is itself a draw against the cap
-    //    (the loan pays its own interest). Beyond the cap it still rolls up
-    //    into the balance and is cleared by the cash sweep / exit.
-    const interest = outstanding * interestMonthly;
-    let headroom = Math.max(0, debtFacility - cumDrawn);
-    const intCapitalised = Math.min(headroom, interest);
-    cumDrawn += intCapitalised;
-    headroom -= intCapitalised;
+    for (let m = 0; m <= horizon; m++) {
+      // Interest accrues on the opening balance.
+      const interest = outstanding * interestMonthly;
 
-    // 1) Revenue-first: this month's income AND retained cash fund the
-    //    month's costs before any debt is drawn.
-    const need = needFlow[m];
-    let draw = 0;
-    let equityNeeded = 0;
-    let totalCash;
-    if (need > 0) {
-      const fromCash = Math.min(cashBalance, need);
-      const afterCash = need - fromCash;
-      // 3) Debt covers the residual until LIFETIME draws reach the cap —
-      //    repayments do NOT reopen headroom (construction facility).
-      if (afterCash > 0 && headroom > 0) {
-        draw = Math.min(headroom, afterCash);
-        cumDrawn += draw;
+      // 1) Revenue-first: this month's income AND retained cash fund the
+      //    month's costs before any debt is drawn.
+      const need = needFlow[m];
+      let draw = 0;
+      let equityNeeded = 0;
+      let totalCash;
+      // 2) Draw headroom is capped on the OUTSTANDING balance (revolver:
+      //    repayments re-open it), reserving room for this month's interest
+      //    so the cap covers draws INCLUDING capitalised interest.
+      const drawHeadroom = Math.max(0, debtFacility - outstanding - interest);
+      if (need > 0) {
+        const fromCash = Math.min(cashBalance, need);
+        const afterCash = need - fromCash;
+        if (afterCash > 0 && drawHeadroom > 0) {
+          draw = Math.min(drawHeadroom, afterCash);
+        }
+        // 3) Equity plugs whatever cash + debt could not cover.
+        equityNeeded = Math.max(0, afterCash - draw);
+        totalCash = cashBalance - fromCash;
+      } else {
+        totalCash = cashBalance - need; // need < 0 → surplus adds to cash
       }
-      // 4) Equity plugs whatever cash + debt could not cover.
-      equityNeeded = Math.max(0, afterCash - draw);
-      totalCash = cashBalance - fromCash;
-    } else {
-      totalCash = cashBalance - need; // need < 0 → surplus adds to cash
-    }
+      const cashForService = totalCash;
 
-    // 5) Cash beyond the remaining future funding need services the loan.
-    //    (Retained cash is held as liquidity — the facility cannot be
-    //    redrawn, so repaying with cash that upcoming costs need would just
-    //    force an equity call later.)
-    const retainTarget = (m >= projectExitMonth) ? 0 : futureNeed[m];
-    let sweepable = Math.max(0, totalCash - retainTarget);
-    let repay = 0;
-    if (sweepable > 0 && (outstanding + draw + interest) > 0) {
-      repay = Math.min(outstanding + draw + interest, sweepable);
-    }
-    let repayFromCash = repay;
+      // 4) Interest is paid in cash whenever cash exists; only the unpaid
+      //    remainder capitalises into the balance.
+      const intPaid = Math.min(interest, totalCash);
+      totalCash -= intPaid;
+      const intCapitalised = interest - intPaid;
 
-    // Force-clear any residual at the project's natural exit month —
-    // from remaining cash first, else as a final equity deficiency call.
-    if (m === projectExitMonth) {
-      const projected = outstanding + draw + interest - repay;
-      if (projected > 0.01) {
-        const extraFromCash = Math.min(Math.max(0, totalCash - repayFromCash), projected);
-        repayFromCash += extraFromCash;
-        const fromEquity = projected - extraFromCash;
-        if (fromEquity > 0.01) deficiencyFlow[m] = fromEquity;
-        repay += projected;
+      // 5) ALL remaining cash sweeps the principal immediately — even during
+      //    construction — since repaid amounts can be redrawn later.
+      const balancePreSweep = outstanding + draw + intCapitalised;
+      const principalPaid = Math.min(balancePreSweep, totalCash);
+      totalCash -= principalPaid;
+      let newOutstanding = balancePreSweep - principalPaid;
+      let repay = intPaid + principalPaid;
+      let forcedPrincipal = 0;
+
+      // Force-clear any residual at the project's natural exit month —
+      // from remaining cash first, else as a final equity deficiency call.
+      if (m === projectExitMonth && newOutstanding > 0.01) {
+        const extraFromCash = Math.min(totalCash, newOutstanding);
+        totalCash -= extraFromCash;
+        const fromEquity = newOutstanding - extraFromCash;
+        if (fromEquity > 0.01) F.deficiencyFlow[m] = fromEquity;
+        forcedPrincipal = newOutstanding;
+        repay += newOutstanding;
+        newOutstanding = 0;
       }
+      if (newOutstanding < 0.01) newOutstanding = 0;
+      outstanding = newOutstanding;
+
+      // 6) Distribute only cash beyond what future needs can't get from the
+      //    (re-opened) facility — and never before the locked month.
+      const futureCapacity = Math.max(0, debtFacility - outstanding);
+      const retainTarget = (m >= projectExitMonth) ? 0 : Math.max(0, futureNeed[m] - futureCapacity);
+      const distribute = (m >= noDistBefore) ? Math.max(0, totalCash - retainTarget) : 0;
+      cashBalance = totalCash - distribute;
+
+      F.debtDrawFlow[m] = draw;
+      F.debtRepayFlow[m] = -repay;
+      F.interestFlow[m] = -interest;
+      F.debtBalance[m] = outstanding;
+      F.interestPaidFlow[m] = intPaid;
+      F.principalRepayFlow[m] = principalPaid + forcedPrincipal;
+      // Cash that was available for debt service this month (after costs).
+      F.cashAvailableFlow[m] = cashForService;
+      F.intCapitalisedFlow[m] = intCapitalised;
+      F.distributionFlow[m] = distribute;
+      F.cashBalanceFlow[m] = cashBalance;
+
+      F.equityNeedCashFlow[m] = equityNeeded;
+      F.totalEquity += equityNeeded;
+      if (equityNeeded > 0.01 || (F.deficiencyFlow[m] || 0) > 0.01) F.lastCall = m;
     }
+    // Safety nets (defensive — only reached if projectExitMonth fell out of bounds)
+    if (outstanding > 0) {
+      F.debtRepayFlow[horizon] -= outstanding;
+    }
+    if (cashBalance > 0.01) {
+      // Any cash still retained at the horizon flows out to equity.
+      F.distributionFlow[horizon] += cashBalance;
+      F.cashBalanceFlow[horizon] = 0;
+    }
+    return F;
+  };
 
-    // 6) Whatever cash remains above the retention target is distributed.
-    const remainingCash = totalCash - repayFromCash;
-    const distribute = Math.max(0, remainingCash - retainTarget);
-    cashBalance = remainingCash - distribute;
-
-    // Split the cash sweep into interest paid first, then principal
-    const intPaid = Math.min(interest, repay);
-    const principalPaid = Math.max(0, repay - intPaid);
-
-    outstanding = outstanding + draw + interest - repay;
-    if (outstanding < 0.01) outstanding = 0;
-
-    debtDrawFlow[m] = draw;
-    debtRepayFlow[m] = -repay;
-    interestFlow[m] = -interest;
-    debtBalance[m] = outstanding;
-    interestPaidFlow[m] = intPaid;
-    principalRepayFlow[m] = principalPaid;
-    // Cash available for debt service = cash beyond the retention target.
-    cashAvailableFlow[m] = sweepable;
-    intCapitalisedFlow[m] = intCapitalised;
-    distributionFlow[m] = distribute;
-    cashBalanceFlow[m] = cashBalance;
-
-    equityNeedCashFlow[m] = equityNeeded;
-    totalEquity += equityNeeded;
+  // Iterate to a fixed point: lock distributions before the last equity
+  // call and re-run. Locking only retains more cash, which can only reduce
+  // (or advance) equity needs — so the lock is monotone and converges.
+  let lock = 0;
+  let pass = runFundingPass(lock);
+  for (let iter = 0; iter < 6; iter++) {
+    const newLock = pass.lastCall + 1;
+    if (newLock <= lock) break;
+    lock = newLock;
+    pass = runFundingPass(lock);
   }
-  // Safety nets (defensive — only reached if projectExitMonth fell out of bounds)
-  if (outstanding > 0) {
-    debtRepayFlow[horizon] -= outstanding;
-    outstanding = 0;
-  }
-  if (cashBalance > 0.01) {
-    // Any cash still retained at the horizon flows out to equity.
-    distributionFlow[horizon] += cashBalance;
-    cashBalanceFlow[horizon] = 0;
-    cashBalance = 0;
-  }
+  const debtDrawFlow = pass.debtDrawFlow;
+  const debtRepayFlow = pass.debtRepayFlow;
+  const interestFlow = pass.interestFlow;
+  const debtBalance = pass.debtBalance;
+  const interestPaidFlow = pass.interestPaidFlow;
+  const principalRepayFlow = pass.principalRepayFlow;
+  const cashAvailableFlow = pass.cashAvailableFlow;
+  const intCapitalisedFlow = pass.intCapitalisedFlow;
+  const equityNeedCashFlow = pass.equityNeedCashFlow;
+  const distributionFlow = pass.distributionFlow;
+  const cashBalanceFlow = pass.cashBalanceFlow;
+  const deficiencyFlow = pass.deficiencyFlow;
+  const totalEquity = pass.totalEquity;
 
   /* ---------- Per-month Sources & Uses coverage ----------
      For each month, decompose all outflows ("uses incurred") into the funding

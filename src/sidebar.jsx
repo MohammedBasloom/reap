@@ -1139,7 +1139,7 @@ function Sidebar({ input, setInput }) {
           borderLeft: "3px solid var(--ad-navy-700)",
         }}>
           <strong style={{ color: "var(--fg-1)" }}>Funding order:</strong>{" "}
-          each month's income (e.g. off-plan sales) covers that month's costs first; any shortfall is drawn from the facility with interest capitalising until the cap, and equity covers the remainder. Surplus cash is retained to fund later periods and sweep the loan — equity takes distributions only when no further contributions are needed.
+          each month's income (e.g. off-plan sales) covers that month's costs first; any shortfall is drawn from the facility (interest capitalises only when no cash can pay it), and equity covers the remainder. Surplus cash pays interest and sweeps the loan at any time — repaid amounts can be redrawn — and equity takes distributions only when no further contributions are needed.
         </div>
       </Section>
 
