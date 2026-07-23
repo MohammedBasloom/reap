@@ -1038,6 +1038,7 @@ function WaterfallPanel({ result, input }) {
   // Chart-first presentation with a Table flip, same as the Cash Flow tab.
   const [covView, setCovView] = React.useState("chart");
   const [usesView, setUsesView] = React.useState("chart");
+  const [debtView, setDebtView] = React.useState("chart");
 
   return (
     <div style={{ padding: 32 }}>
@@ -1084,12 +1085,16 @@ function WaterfallPanel({ result, input }) {
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 16 }}>
-        <Eyebrow>Debt schedule · balance, draws & repayments</Eyebrow>
-        <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
-          Outstanding balance (top) · monthly draws and repayments (bottom)
-        </h3>
-        <DebtChart cf={cf} input={input} />
-        <DebtScheduleTable cf={cf} input={input} k={k} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <Eyebrow>Debt schedule · balance, draws & repayments</Eyebrow>
+            <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
+              Outstanding balance (top) · monthly draws and repayments (bottom)
+            </h3>
+          </div>
+          <ChartTableToggle view={debtView} setView={setDebtView} />
+        </div>
+        {debtView === "chart" ? <DebtChart cf={cf} input={input} /> : <DebtScheduleTable cf={cf} input={input} k={k} />}
         <CashSweepTable cf={cf} />
       </div>
 
