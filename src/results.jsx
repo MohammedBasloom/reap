@@ -1774,6 +1774,15 @@ function ReturnsPanel({ result, input }) {
   const equityMultiple = k.totalEquity > 0 ? 1 + (k.profit / k.totalEquity) : null;
   const projectMultiple = k.totalCost > 0 ? 1 + (k.profitUnlevered / k.totalCost) : 0;
 
+  // Chart payback marker: the engine's payback needs a dip below zero. When
+  // no equity is ever at risk (cumulative never negative), mark break-even —
+  // the first month cash actually reaches equity.
+  let paybackMarker = k.equityPayback;
+  if (paybackMarker == null && cumEquity.every(v => v > -0.5)) {
+    const i = cumEquity.findIndex(v => v > 0.5);
+    if (i >= 0) paybackMarker = i;
+  }
+
   return (
     <div style={{ padding: 32 }}>
       <Eyebrow>Returns</Eyebrow>
@@ -1790,13 +1799,22 @@ function ReturnsPanel({ result, input }) {
         }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
             <Eyebrow>Equity · Levered</Eyebrow>
-            <span style={{
-              fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase",
-              color: irrTone === "positive" ? "var(--ad-success)" : "var(--ad-danger)",
-              fontWeight: 600,
-            }}>
-              {irrTone === "positive" ? "Clears hurdle" : "Below hurdle"}
-            </span>
+            {/* With zero equity called, IRR-vs-hurdle is meaningless — show a
+                neutral badge instead of a false "below hurdle". */}
+            {(k.totalEquity || 0) < 0.5 && k.equityIRR == null ? (
+              <span style={{
+                fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: "var(--fg-3)", fontWeight: 600,
+              }}>No equity called</span>
+            ) : (
+              <span style={{
+                fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase",
+                color: irrTone === "positive" ? "var(--ad-success)" : "var(--ad-danger)",
+                fontWeight: 600,
+              }}>
+                {irrTone === "positive" ? "Clears hurdle" : "Below hurdle"}
+              </span>
+            )}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
             <ReturnsMetric eyebrow="IRR" value={fp(k.equityIRR)} sub={`Hurdle ${fp(hurdle)}`} tone={irrTone} />
@@ -1833,7 +1851,7 @@ function ReturnsPanel({ result, input }) {
             months={cf.months}
             equityCum={cumEquity}
             projectCum={cumProject}
-            equityPayback={k.equityPayback}
+            equityPayback={paybackMarker}
             projectPayback={k.projectPayback}
             horizon={k.horizonMonths}
           />
@@ -1844,7 +1862,7 @@ function ReturnsPanel({ result, input }) {
           </div>
         </div>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <Eyebrow>Profit decomposition</Eyebrow>
+          <Eyebrow>Profit decomposition (after financing)</Eyebrow>
           <ProfitWaterfall k={k} />
         </div>
       </div>

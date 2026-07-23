@@ -396,6 +396,7 @@
     "IRR": "IRR", "Multiple": "المضاعف", "Payback": "فترة الاسترداد",
     "Cumulative cashflow — equity vs project": "التدفق التراكمي — الملكية مقابل المشروع",
     "Profit decomposition": "تفكيك الربح", "Revenue → Profit waterfall": "شلال الإيراد → الربح",
+    "Profit decomposition (after financing)": "تفكيك الربح (بعد التمويل)",
     "Total revenue": "إجمالي الإيرادات", "Project costs": "تكاليف المشروع",
     "Finance interest": "فوائد التمويل", "Net profit": "صافي الربح",
     "Margin on revenue": "الهامش على الإيراد", "Margin on cost": "الهامش على التكلفة",
