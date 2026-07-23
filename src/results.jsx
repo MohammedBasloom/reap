@@ -1035,6 +1035,9 @@ function MonteCarloPanel({ input }) {
 function WaterfallPanel({ result, input }) {
   const cf = result.cashflow;
   const k = result.kpi;
+  // Chart-first presentation with a Table flip, same as the Cash Flow tab.
+  const [covView, setCovView] = React.useState("chart");
+  const [usesView, setUsesView] = React.useState("chart");
 
   return (
     <div style={{ padding: 32 }}>
@@ -1055,19 +1058,29 @@ function WaterfallPanel({ result, input }) {
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 16 }}>
-        <Eyebrow>Sources cover uses · over time</Eyebrow>
-        <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
-          Cumulative funding stack vs cumulative project spend
-        </h3>
-        <CoverageChart cf={cf} k={k} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <Eyebrow>Sources cover uses · over time</Eyebrow>
+            <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
+              Cumulative funding stack vs cumulative project spend
+            </h3>
+          </div>
+          <ChartTableToggle view={covView} setView={setCovView} />
+        </div>
+        {covView === "chart" ? <CoverageChart cf={cf} k={k} /> : <CoverageYearTable cf={cf} />}
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 16 }}>
-        <Eyebrow>Uses incurred · over time</Eyebrow>
-        <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
-          Cumulative spend broken down by category
-        </h3>
-        <UsesChart cf={cf} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <Eyebrow>Uses incurred · over time</Eyebrow>
+            <h3 style={{ fontSize: 14, fontWeight: 500, color: "var(--fg-2)", margin: "6px 0 14px" }}>
+              Cumulative spend broken down by category
+            </h3>
+          </div>
+          <ChartTableToggle view={usesView} setView={setUsesView} />
+        </div>
+        {usesView === "chart" ? <UsesChart cf={cf} /> : <UsesYearTable cf={cf} />}
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 16 }}>
@@ -1084,6 +1097,147 @@ function WaterfallPanel({ result, input }) {
         <Eyebrow>Uses &amp; Sources</Eyebrow>
         <ReturnsSplit k={k} input={input} />
       </div>
+    </div>
+  );
+}
+
+/* ---------- Shared Chart/Table toggle (same pattern as the Cash Flow tab) ---------- */
+
+function ChartTableToggle({ view, setView }) {
+  return (
+    <div style={{ display: "flex", border: "1px solid var(--border-1)", flexShrink: 0 }}>
+      {["chart", "table"].map((v, i) => (
+        <button key={v} type="button" onClick={() => setView(v)} style={{
+          padding: "5px 14px", cursor: "pointer", border: "none",
+          borderInlineStart: i > 0 ? "1px solid var(--border-1)" : "none",
+          background: view === v ? "var(--ad-navy-800)" : "transparent",
+          color: view === v ? "white" : "var(--fg-2)",
+          fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600,
+          fontFamily: "var(--font-body)",
+        }}>{v === "chart" ? "Chart" : "Table"}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ---------- Yearly table twins of the Capital coverage charts ---------- */
+
+function CoverageYearTable({ cf }) {
+  const n = cf.months.length;
+  const years = Math.ceil(n / 12);
+  const slice = (arr, y) => (arr || []).slice(y * 12, (y + 1) * 12).reduce((s, v) => s + v, 0);
+  let cumUses = 0;
+  const rows = [];
+  for (let y = 0; y < years; y++) {
+    const equity = slice(cf.equityInjected, y);
+    const uses = slice(cf.totalUses, y);
+    const revenue = slice(cf.revenueApplied, y);
+    // Same residual identity the chart uses: uses ≡ equity + debt + revenue
+    const debt = Math.max(0, uses - equity - revenue);
+    cumUses += uses;
+    if (uses < 0.5 && equity < 0.5 && revenue < 0.5) continue;
+    rows.push({ y, equity, debt, revenue, uses, cumUses });
+  }
+  const tot = rows.reduce((t, r) => ({ equity: t.equity + r.equity, debt: t.debt + r.debt, revenue: t.revenue + r.revenue, uses: t.uses + r.uses }), { equity: 0, debt: 0, revenue: 0, uses: 0 });
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
+        <thead>
+          <tr style={{ background: "var(--bg-2)" }}>
+            <th style={thStyle}>Year</th>
+            <th style={thStyleNum}>Equity injected</th>
+            <th style={thStyleNum}>Debt drawn (incl. capitalised interest)</th>
+            <th style={thStyleNum}>Revenue applied to costs</th>
+            <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>Total uses</th>
+            <th style={thStyleNum}>Cumulative</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.y} style={{ borderBottom: "1px solid var(--border-2)" }}>
+              <td style={tdStyle}>Y{r.y + 1}</td>
+              <td style={{ ...tdNum(r.equity), color: r.equity > 0.5 ? "var(--ad-navy-900)" : "var(--fg-4)" }}>{r.equity > 0.5 ? fc(r.equity) : "—"}</td>
+              <td style={{ ...tdNum(r.debt), color: r.debt > 0.5 ? "var(--ad-navy-500)" : "var(--fg-4)" }}>{r.debt > 0.5 ? fc(r.debt) : "—"}</td>
+              <td style={{ ...tdNum(r.revenue), color: r.revenue > 0.5 ? "var(--ad-gold-600)" : "var(--fg-4)" }}>{r.revenue > 0.5 ? fc(r.revenue) : "—"}</td>
+              <td style={{ ...tdNum(r.uses), fontWeight: 600, background: "var(--ad-navy-50)" }}>{fc(r.uses)}</td>
+              <td style={{ ...tdNum(r.cumUses), color: "var(--fg-2)", fontSize: 11 }}>{fc(r.cumUses)}</td>
+            </tr>
+          ))}
+          <tr style={{ background: "var(--bg-2)", borderTop: "2px solid var(--border-strong)" }}>
+            <td style={{ ...tdStyle, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", fontSize: 10 }}>Total</td>
+            <td style={{ ...tdNum(tot.equity), fontWeight: 700, color: "var(--ad-navy-900)" }}>{fc(tot.equity)}</td>
+            <td style={{ ...tdNum(tot.debt), fontWeight: 700, color: "var(--ad-navy-500)" }}>{fc(tot.debt)}</td>
+            <td style={{ ...tdNum(tot.revenue), fontWeight: 700, color: "var(--ad-gold-600)" }}>{fc(tot.revenue)}</td>
+            <td style={{ ...tdNum(tot.uses), fontWeight: 700, background: "var(--ad-navy-50)" }}>{fc(tot.uses)}</td>
+            <td style={tdStyle} />
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function UsesYearTable({ cf }) {
+  const cats = cf.usesByCat || {};
+  const n = cf.months.length;
+  const years = Math.ceil(n / 12);
+  const slice = (arr, y) => (arr || []).slice(y * 12, (y + 1) * 12).reduce((s, v) => s + v, 0);
+  let cum = 0;
+  const rows = [];
+  for (let y = 0; y < years; y++) {
+    const r = {
+      y,
+      land: slice(cats.land, y),
+      construction: slice(cats.construction, y),
+      siteWork: slice(cats.siteWork, y),
+      soft: slice(cats.soft, y),
+      contingency: slice(cats.contingency, y),
+      selling: slice(cats.marketing, y),
+      interest: slice(cats.interest, y),
+    };
+    r.total = r.land + r.construction + r.siteWork + r.soft + r.contingency + r.selling + r.interest;
+    cum += r.total;
+    r.cum = cum;
+    if (r.total < 0.5) continue;
+    rows.push(r);
+  }
+  const keys = ["land", "construction", "siteWork", "soft", "contingency", "selling", "interest", "total"];
+  const tot = rows.reduce((t, r) => { keys.forEach(kk => t[kk] += r[kk]); return t; }, { land: 0, construction: 0, siteWork: 0, soft: 0, contingency: 0, selling: 0, interest: 0, total: 0 });
+  const cell = (v, extra) => <td style={{ ...tdNum(v), ...(extra || {}) }}>{v > 0.5 ? fc(v) : "—"}</td>;
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
+        <thead>
+          <tr style={{ background: "var(--bg-2)" }}>
+            <th style={thStyle}>Year</th>
+            <th style={thStyleNum}>Land</th>
+            <th style={thStyleNum}>Construction</th>
+            <th style={thStyleNum}>Site work</th>
+            <th style={thStyleNum}>Soft costs</th>
+            <th style={thStyleNum}>Contingency</th>
+            <th style={thStyleNum}>Selling costs</th>
+            <th style={thStyleNum}>Interest</th>
+            <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>Total uses</th>
+            <th style={thStyleNum}>Cumulative</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.y} style={{ borderBottom: "1px solid var(--border-2)" }}>
+              <td style={tdStyle}>Y{r.y + 1}</td>
+              {cell(r.land)}{cell(r.construction)}{cell(r.siteWork)}{cell(r.soft)}{cell(r.contingency)}{cell(r.selling)}{cell(r.interest)}
+              <td style={{ ...tdNum(r.total), fontWeight: 600, background: "var(--ad-navy-50)" }}>{fc(r.total)}</td>
+              <td style={{ ...tdNum(r.cum), color: "var(--fg-2)", fontSize: 11 }}>{fc(r.cum)}</td>
+            </tr>
+          ))}
+          <tr style={{ background: "var(--bg-2)", borderTop: "2px solid var(--border-strong)" }}>
+            <td style={{ ...tdStyle, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", fontSize: 10 }}>Total</td>
+            {cell(tot.land, { fontWeight: 700 })}{cell(tot.construction, { fontWeight: 700 })}{cell(tot.siteWork, { fontWeight: 700 })}{cell(tot.soft, { fontWeight: 700 })}{cell(tot.contingency, { fontWeight: 700 })}{cell(tot.selling, { fontWeight: 700 })}{cell(tot.interest, { fontWeight: 700 })}
+            <td style={{ ...tdNum(tot.total), fontWeight: 700, background: "var(--ad-navy-50)" }}>{fc(tot.total)}</td>
+            <td style={tdStyle} />
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 }
