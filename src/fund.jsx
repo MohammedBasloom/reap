@@ -20,6 +20,30 @@ function FundEyebrow({ children }) {
   }}>{children}</div>;
 }
 
+/* Section header — numbered badge + strong title, so each block on this
+   long tab reads as its own section instead of blurring together. */
+function FundSection({ n, title, sub, children, tight }) {
+  return (
+    <section style={{ marginBottom: 32 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: sub ? 4 : 12 }}>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+          padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+          background: "var(--ad-navy-800)", color: "#FFFFFF",
+        }}>{String(n).padStart(2, "0")}</span>
+        <h3 style={{
+          margin: 0, fontSize: 14, fontWeight: 600, letterSpacing: "0.08em",
+          textTransform: "uppercase", color: "var(--fg-1)",
+        }}>{title}</h3>
+      </div>
+      {sub && (
+        <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 12, maxWidth: 760 }}>{sub}</div>
+      )}
+      <div style={tight ? undefined : { marginTop: 2 }}>{children}</div>
+    </section>
+  );
+}
+
 function FundPanel({ result, waterfall, input }) {
   if (!waterfall || !waterfall.enabled) return null;
 
@@ -67,7 +91,8 @@ function FundPanel({ result, waterfall, input }) {
       </div>
 
       {/* Party returns - three big cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
+      <FundSection n={1} title="Returns by party" sub="What each party puts in, takes out, and earns over the fund's life.">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
         <PartyCard
           who="lp" label="LP · Cash investors"
           contrib={totals.lp.contributed} dist={totals.lp.distributed} profit={totals.lp.profit}
@@ -91,50 +116,114 @@ function FundPanel({ result, waterfall, input }) {
           accent
         />
       </div>
+      </FundSection>
 
       {/* Fund-level Sources & Uses — distinct from the Capital tab's project-level
           S&U. Here, Sources are broken out BY PARTY (LP/Dev/GP/Debt) and Uses
-          include the fund fees (acq, AM, dev) that the project ledger omits. */}
-      <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", marginBottom: 24 }}>
-        <div style={{ padding: "14px 24px 0" }}>
-          <FundEyebrow>Fund-level Sources & Uses</FundEyebrow>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4, marginBottom: 4 }}>
-            Who funded the spend (equity by party, debt, and revenue the project retained) → where it went
-            (project costs <em>and</em> fund fees). Cash basis — the Capital tab shows the project-level
-            accounting ledger, which excludes fund fees.
+          include the fund fees (subscription, AM, dev) the project ledger omits. */}
+      <FundSection n={2} title="Fund-level sources & uses"
+        sub="Who funded the spend (equity by party, debt, and revenue the project retained) → where it went, including the fund fees the project ledger omits.">
+        <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)" }}>
+          <SourcesUsesTable w={w} result={result} fund={fund} />
+        </div>
+      </FundSection>
+
+      <FundSection n={3} title="Capital & distribution waterfall"
+        sub="Equity contributed by each party, and how every distributed riyal is split across the three tiers.">
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 24 }}>
+          <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
+            <FundEyebrow>Equity contributions</FundEyebrow>
+            <CapitalStack w={w} />
+          </div>
+          <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
+            <FundEyebrow>Distribution buckets</FundEyebrow>
+            <BucketBars w={w} fund={fund} />
           </div>
         </div>
-        <SourcesUsesTable w={w} result={result} fund={fund} />
-      </div>
+      </FundSection>
 
-      {/* Two-column: capital stack + distribution buckets */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 24, marginBottom: 24 }}>
+      <FundSection n={4} title="Fees — rates & totals"
+        sub="What each fee is charged on, and how much it comes to over the fund's life.">
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <FundEyebrow>Equity contributions</FundEyebrow>
-          <CapitalStack w={w} />
+          <FeeTable w={w} fund={fund} />
         </div>
-        <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-          <FundEyebrow>Distribution waterfall — buckets</FundEyebrow>
-          <BucketBars w={w} fund={fund} />
-        </div>
-      </div>
+      </FundSection>
 
-      {/* Fee breakdown */}
-      <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
-        <FundEyebrow>Fees collected</FundEyebrow>
-        <FeeTable w={w} fund={fund} />
-      </div>
-
-      {/* Annual cashflow table */}
-      <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)" }}>
-        <div style={{ padding: "12px 20px", borderBottom: "1px solid var(--border-1)" }}>
-          <FundEyebrow>Annual cashflow by party</FundEyebrow>
+      <FundSection n={5} title="Fee timeline — when each fee accrues"
+        sub="Year by year, so you can see exactly when the subscription, asset management, development and performance fees are charged.">
+        <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", overflowX: "auto" }}>
+          <FeeTimeline w={w} />
         </div>
-        <div style={{ overflowX: "auto" }}>
+      </FundSection>
+
+      <FundSection n={6} title="Annual cashflow by party"
+        sub="Every call and distribution for LP, Developer and GP, year by year.">
+        <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", overflowX: "auto" }}>
           <AnnualPartyTable w={w} />
         </div>
-      </div>
+      </FundSection>
     </div>
+  );
+}
+
+/* ---------- Fee timeline — when each fee accrues, year by year ---------- */
+
+function FeeTimeline({ w }) {
+  const ff = w.feeFlows || {};
+  const life = w.fundLifeMonths || w.horizon;
+  const years = Math.max(1, Math.ceil(life / 12));
+  const slice = (arr, y) => (arr || []).slice(y * 12, Math.min((y + 1) * 12, life)).reduce((s, v) => s + v, 0);
+
+  const rows = [];
+  for (let y = 0; y < years; y++) {
+    const sub = slice(ff.subscription, y);
+    const am = slice(ff.assetMgmt, y);
+    const dev = slice(ff.development, y);
+    const promote = slice(ff.promote, y);
+    const total = sub + am + dev + promote;
+    rows.push({ y, sub, am, dev, promote, total });
+  }
+  const tot = rows.reduce((t, r) => ({
+    sub: t.sub + r.sub, am: t.am + r.am, dev: t.dev + r.dev,
+    promote: t.promote + r.promote, total: t.total + r.total,
+  }), { sub: 0, am: 0, dev: 0, promote: 0, total: 0 });
+
+  const th = { padding: "10px 12px", textAlign: "start", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 500, fontFamily: "var(--font-body)" };
+  const thN = { ...th, textAlign: "end" };
+  const td = { padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 12 };
+  const tdN = (v) => ({ ...td, textAlign: "end", color: v > 0.5 ? "var(--fg-1)" : "var(--fg-4)", fontVariantNumeric: "tabular-nums" });
+  const cell = (v) => <td style={tdN(v)}>{v > 0.5 ? fcF(v) : "—"}</td>;
+
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+      <thead>
+        <tr style={{ background: "var(--bg-2)" }}>
+          <th style={th}>Year</th>
+          <th style={thN}>Subscription fee</th>
+          <th style={thN}>Asset management</th>
+          <th style={thN}>Development fee</th>
+          <th style={thN}>Performance fee</th>
+          <th style={{ ...thN, background: "var(--ad-navy-50)" }}>Total fees</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map(r => (
+          <tr key={r.y} style={{ borderBottom: "1px solid var(--border-2)" }}>
+            <td style={{ ...td, color: "var(--fg-2)" }}>{`Y${r.y + 1}`}</td>
+            {cell(r.sub)}{cell(r.am)}{cell(r.dev)}{cell(r.promote)}
+            <td style={{ ...tdN(r.total), fontWeight: 600, background: "var(--ad-navy-50)" }}>{r.total > 0.5 ? fcF(r.total) : "—"}</td>
+          </tr>
+        ))}
+        <tr style={{ background: "var(--bg-2)", borderTop: "2px solid var(--border-strong)" }}>
+          <td style={{ ...td, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", fontSize: 10, color: "var(--fg-2)", fontFamily: "var(--font-body)" }}>Total</td>
+          <td style={{ ...tdN(tot.sub), fontWeight: 700 }}>{fcF(tot.sub)}</td>
+          <td style={{ ...tdN(tot.am), fontWeight: 700 }}>{fcF(tot.am)}</td>
+          <td style={{ ...tdN(tot.dev), fontWeight: 700 }}>{fcF(tot.dev)}</td>
+          <td style={{ ...tdN(tot.promote), fontWeight: 700 }}>{fcF(tot.promote)}</td>
+          <td style={{ ...tdN(tot.total), fontWeight: 700, background: "var(--ad-navy-50)" }}>{fcF(tot.total)}</td>
+        </tr>
+      </tbody>
+    </table>
   );
 }
 

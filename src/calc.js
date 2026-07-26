@@ -943,6 +943,13 @@ function runWaterfall(input, result) {
 
   // Fee totals + bucket aggregates
   const fees = { subscription: 0, assetMgmt: 0, development: 0, promote: 0 };
+  // Per-month fee streams — so the UI can show WHEN each fee accrues
+  const feeFlows = {
+    subscription: new Array(horizon).fill(0),
+    assetMgmt: new Array(horizon).fill(0),
+    development: new Array(horizon).fill(0),
+    promote: new Array(horizon).fill(0),
+  };
   const buckets = {
     returnOfCapital: 0,
     preferredReturn: 0,
@@ -964,6 +971,8 @@ function runWaterfall(input, result) {
 
     fees.development += devFeeM;
     fees.assetMgmt += mgmtFeeM;
+    feeFlows.development[m] += devFeeM;
+    feeFlows.assetMgmt[m] += mgmtFeeM;
 
     // Fees paid out to recipients immediately
     party.gp.cashflow[m]  += mgmtFeeM;
@@ -988,6 +997,7 @@ function runWaterfall(input, result) {
     const subFeeM = totalCall - baseCall;
     if (subFeeM > 0) {
       fees.subscription += subFeeM;
+      feeFlows.subscription[m] += subFeeM;
       party.gp.cashflow[m] += subFeeM;
       party.gp.feeFlow[m]  += subFeeM;
     }
@@ -1058,6 +1068,7 @@ function runWaterfall(input, result) {
         party.gp.cashflow[m]    += gpShare;
         party.gp.promoteFlow[m] += gpShare;
         fees.promote += gpShare;
+        feeFlows.promote[m] += gpShare;
         buckets.promoteToGP += gpShare;
 
         party.lp.cashflow[m]    += invShare * lpInv;
@@ -1086,6 +1097,7 @@ function runWaterfall(input, result) {
                      total: party.lp.contrib + party.dev.contrib + party.gp.contrib },
     splits: { lp, dev, gp },
     fees,
+    feeFlows,
     buckets,
     party,
     totals: { lp: lpT, dev: devT, gp: gpT },

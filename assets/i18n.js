@@ -207,6 +207,29 @@
     "Asset management fee": "رسوم إدارة الأصول",
     "Paid-in capital · accrued monthly, every year": "رأس المال المدفوع · تُحتسب شهريًا وعلى مدار كل سنة",
     "Subscription + asset mgmt + dev": "الاكتتاب + إدارة الأصول + التطوير",
+    /* Fund tab — section headers */
+    "Returns by party": "العوائد حسب الطرف",
+    "What each party puts in, takes out, and earns over the fund's life.":
+      "ما يضخّه كل طرف وما يستلمه وما يحققه من أرباح على مدى عمر الصندوق.",
+    "Fund-level sources & uses": "مصادر واستخدامات الصندوق",
+    "Who funded the spend (equity by party, debt, and revenue the project retained) → where it went, including the fund fees the project ledger omits.":
+      "من موّل الإنفاق (الملكية حسب الطرف، والدين، والإيراد المحتجز في المشروع) ← وأين صُرف، شاملًا رسوم الصندوق التي لا يتضمنها سجل المشروع.",
+    "Capital & distribution waterfall": "رأس المال وشلال التوزيعات",
+    "Equity contributed by each party, and how every distributed riyal is split across the three tiers.":
+      "مساهمة كل طرف في رأس المال، وكيف يُقسّم كل ريال موزَّع على المراتب الثلاث.",
+    "Distribution buckets": "مراتب التوزيع",
+    "Fees — rates & totals": "الرسوم — النسب والإجماليات",
+    "What each fee is charged on, and how much it comes to over the fund's life.":
+      "على أي أساس تُحتسب كل رسوم، وكم تبلغ على مدى عمر الصندوق.",
+    "Fee timeline — when each fee accrues": "الجدول الزمني للرسوم — متى تُستحق كل رسوم",
+    "Year by year, so you can see exactly when the subscription, asset management, development and performance fees are charged.":
+      "سنة بسنة، لترى بدقة متى تُحتسب رسوم الاكتتاب وإدارة الأصول والتطوير والأداء.",
+    "Every call and distribution for LP, Developer and GP, year by year.":
+      "كل استدعاء وتوزيع للشريك المحدود والمطوّر والشريك العام، سنة بسنة.",
+    "Asset management": "إدارة الأصول",
+    "Development fee": "رسوم التطوير",
+    "Performance fee": "رسوم الأداء",
+    "Total fees": "إجمالي الرسوم",
     "To GP · annual · on unreturned equity": "للشريك العام · سنويًا · على الملكية غير المستردة",
     "To Developer · % of constr. + site": "للمطوّر · ٪ من الإنشاء + الموقع",
     "Distribution waterfall": "شلال التوزيعات",
