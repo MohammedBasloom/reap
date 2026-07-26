@@ -197,7 +197,8 @@ function Section({ title, n, children, defaultOpen = true, alarm }) {
         </div>
       </button>
       {open && (
-        <div style={{ padding: "0 24px 24px" }}>
+        /* Breathing room under the header band so fields don't crowd it */
+        <div style={{ padding: "18px 24px 24px" }}>
           {children}
         </div>
       )}
