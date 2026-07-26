@@ -12,7 +12,7 @@ const SAMPLE_INPUT = {
   // Land — intentionally blank: the user sets the site first.
   landArea: null, // m²
   landPricePerSqm: null, // SAR
-  landTransferFeesPct: 0.03, // 3% transfer / gov
+  landTransferFeesPct: 0.05, // 5% transfer / gov
   landType: "net", // "net" (serviced) | "raw" (needs infrastructure)
   developablePct: 0.70, // raw only: share of gross land the program can build on
   landInfraCostPerSqm: 0, // SAR/m² on gross land — roads, utilities (raw or net)
@@ -24,15 +24,15 @@ const SAMPLE_INPUT = {
   horizonMonths: 120,
 
   // General costs (project-level %s)
-  softCostsPct: 0.12,
-  contingencyPct: 0.07,
+  softCostsPct: 0.10,
+  contingencyPct: 0.05,
   marketingPct: 0.025,
   salesCommissionPct: 0.025,
   govFeesPct: 0.025,
 
   // Financing
   ltc: 0.55,
-  interestRate: 0.0625,
+  interestRate: 0.075,
 
   // Valuation
   discountRate: 0.10,
