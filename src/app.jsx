@@ -360,7 +360,9 @@ function AppFooter() {
 function DashboardEmptyState({ input }) {
   const landArea = +input.landArea || 0;
   const landPrice = +input.landPricePerSqm || 0;
-  const hasLand = landArea > 0;
+  // Step 1 counts as done only when BOTH the area and the price are in —
+  // area alone can't cost the land.
+  const hasLand = landArea > 0 && landPrice > 0;
   const comps = (input.components || []).filter((c) => c.enabled);
   const hasComponents = comps.length > 0;
   const allocated = comps.reduce((s, c) => s + (+c.allocationPct || 0), 0);
