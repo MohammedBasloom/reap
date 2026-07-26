@@ -1768,18 +1768,20 @@ function ReturnsSplit({ k, input }) {
         <div>
           <Eyebrow>Sources</Eyebrow>
           {sourcesItems.map(s => (
-            <Bar key={s.label} label={s.label} value={s.value} max={scaleMax} color={s.color} />
+            <Bar key={s.label} label={s.label} value={s.value} max={scaleMax} color={s.color}
+                 share={totalSources > 0 ? s.value / totalSources : 0} />
           ))}
-          <TotalRow label="Total sources" value={totalSources} />
+          <TotalRow label="Total sources" value={totalSources} share={totalSources > 0 ? 1 : undefined} />
         </div>
 
         {/* Uses */}
         <div>
           <Eyebrow>Uses</Eyebrow>
           {usesItems.map(u => (
-            <Bar key={u.label} label={u.label} value={u.value} max={scaleMax} color={u.color} />
+            <Bar key={u.label} label={u.label} value={u.value} max={scaleMax} color={u.color}
+                 share={totalUses > 0 ? u.value / totalUses : 0} />
           ))}
-          <TotalRow label="Total uses" value={totalUses} />
+          <TotalRow label="Total uses" value={totalUses} share={totalUses > 0 ? 1 : undefined} />
         </div>
 
       </div>
@@ -1807,27 +1809,41 @@ function ReturnsSplit({ k, input }) {
   );
 }
 
-function TotalRow({ label, value }) {
+function TotalRow({ label, value, share }) {
   return (
     <div style={{
-      display: "flex", justifyContent: "space-between",
+      display: "flex", justifyContent: "space-between", gap: 10,
       marginTop: 10, paddingTop: 8,
       borderTop: "1px solid var(--border-1)",
       fontSize: 11, fontWeight: 500,
     }}>
       <span style={{ textTransform: "uppercase", letterSpacing: "0.14em", color: "var(--fg-2)" }}>{label}</span>
-      <span className="tabnum" style={{ color: "var(--fg-1)" }}>{fc(value)}</span>
+      <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
+        <span className="tabnum" style={{ color: "var(--fg-1)" }}>{fc(value)}</span>
+        {share !== undefined && (
+          <span className="tabnum" style={{ color: "var(--fg-3)", fontSize: 10, minWidth: 34, textAlign: "end" }}>
+            {fp(share, 1)}
+          </span>
+        )}
+      </span>
     </div>
   );
 }
 
-function Bar({ label, value, max, color }) {
+function Bar({ label, value, max, color, share }) {
   const pct = max > 0 ? value / max : 0;
   return (
     <div style={{ marginTop: 8 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
-        <span style={{ color: "var(--fg-2)" }}>{label}</span>
-        <span className="tabnum" style={{ color: "var(--fg-1)" }}>{fc(value)}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 11, marginBottom: 3 }}>
+        <span style={{ color: "var(--fg-2)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+        <span style={{ display: "inline-flex", alignItems: "baseline", gap: 6, flexShrink: 0 }}>
+          <span className="tabnum" style={{ color: "var(--fg-1)" }}>{fc(value)}</span>
+          {share !== undefined && (
+            <span className="tabnum" style={{ color: "var(--fg-3)", fontSize: 10, minWidth: 34, textAlign: "end" }}>
+              {fp(share, 1)}
+            </span>
+          )}
+        </span>
       </div>
       <div style={{ height: 8, background: "var(--bg-3)" }}>
         <div style={{ height: "100%", background: color, width: `${pct * 100}%` }} />
