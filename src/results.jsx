@@ -1885,31 +1885,95 @@ function RiskPanel({ result, input }) {
         })}
       </div>
 
-      <div style={{ marginTop: 24, padding: 20, border: "1px solid var(--border-1)", background: "var(--bg-2)" }}>
-        <Eyebrow>Quick diagnostics</Eyebrow>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 32px", marginTop: 14, fontSize: 12 }}>
-          <Diag label="Land as % of dev cost" value={fp(k.landCost / k.devCostExFinance)} ok={(k.landCost / k.devCostExFinance) < 0.30} />
-          <Diag label="Construction as % of dev cost" value={fp(k.constructionCost / k.devCostExFinance)} ok={true} />
-          {/* Same definitions as the Returns tab: levered profit over
-              revenue, and over ALL-IN cost (incl. financing interest) —
-              mixing bases here made the two tabs disagree. */}
-          <Diag label="Margin on revenue" value={k.totalRevenue > 0 ? fp(k.profit / k.totalRevenue) : "—"} ok={(k.profit / Math.max(1, k.totalRevenue)) > 0.12} />
-          <Diag label="Margin on cost" value={(k.totalCost + k.totalInterest) > 0 ? fp(k.profit / (k.totalCost + k.totalInterest)) : "—"} ok={(k.profit / Math.max(1, k.totalCost + k.totalInterest)) > 0.15} />
-          <Diag label="Interest / dev cost" value={fp(k.totalInterest / k.devCostExFinance)} ok={(k.totalInterest / k.devCostExFinance) < 0.10} />
-          <Diag label="Selling cost / revenue" value={fp((k.marketing + k.salesCommission + k.govFees) / Math.max(1, k.totalRevenue))} ok={true} />
-        </div>
-      </div>
+      {(() => {
+        const dev = Math.max(1, k.devCostExFinance);
+        const allInCost = k.totalCost + k.totalInterest;
+        const facility = k.devCostExFinance * (input.ltc || 0);
+        const cov = (result.cashflow && result.cashflow.coverageTotals) || { equity: 0, debt: 0, revenue: 0 };
+        const funded = Math.max(1, cov.equity + cov.debt + cov.revenue);
+        const groups = [
+          {
+            name: "Cost structure",
+            rows: [
+              { label: "Land as % of dev cost", value: fp(k.landCost / dev), ok: (k.landCost / dev) < 0.30,
+                note: "Land's share of development cost. Much above 30% and the deal is land-heavy, which squeezes the margin." },
+              { label: "Construction as % of dev cost", value: fp(k.constructionCost / dev), ok: true,
+                note: "Hard construction as a share of development cost — normally the largest single line." },
+              { label: "Soft costs & contingency", value: fp((k.softCosts + k.contingency) / dev), ok: ((k.softCosts + k.contingency) / dev) < 0.25,
+                note: "Design, permits, management and the risk buffer, as a share of development cost." },
+              { label: "Build cost per m² GFA", value: k.gfa > 0 ? `${fn((k.constructionCost + k.siteWorkCost) / k.gfa)} SAR/m²` : "—", ok: true,
+                note: "All-in construction and site work per m² of built area — compare it against local benchmarks." },
+            ],
+          },
+          {
+            name: "Profitability",
+            rows: [
+              /* Same definitions as the Returns tab: levered profit over
+                 revenue, and over ALL-IN cost (incl. financing interest). */
+              { label: "Margin on revenue", value: k.totalRevenue > 0 ? fp(k.profit / k.totalRevenue) : "—", ok: (k.profit / Math.max(1, k.totalRevenue)) > 0.12,
+                note: "Profit after financing as a share of total revenue. Under ~12% leaves little room for error." },
+              { label: "Margin on cost", value: allInCost > 0 ? fp(k.profit / allInCost) : "—", ok: (k.profit / Math.max(1, allInCost)) > 0.15,
+                note: "Profit after financing over all-in cost including interest — the return on every riyal spent." },
+              { label: "Revenue per m² sellable / leasable", value: k.nsa > 0 ? `${fn(k.totalRevenue / k.nsa)} SAR/m²` : "—", ok: true,
+                note: "Total revenue per m² of saleable or leasable area — a quick sanity check against market pricing." },
+            ],
+          },
+          {
+            name: "Financing & liquidity",
+            rows: [
+              { label: "Interest / dev cost", value: fp(k.totalInterest / dev), ok: (k.totalInterest / dev) < 0.10,
+                note: "Financing cost as a share of development cost. High values point to heavy leverage or a long build." },
+              { label: "Peak debt vs facility", value: facility > 0 ? fp((k.peakDebt || 0) / facility) : "—", ok: facility <= 0 || (k.peakDebt || 0) / facility < 1.001,
+                note: "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left." },
+              { label: "Equity share of funding", value: fp(cov.equity / funded), ok: true,
+                note: "Share of project spending funded by investor cash, rather than by debt or by sales and rental income." },
+              { label: "Min DSCR", value: k.minDSCR ? `${k.minDSCR.toFixed(2)}×` : "—", ok: k.minDSCR === null || k.minDSCR >= 1.2,
+                note: "Lowest ratio of operating cash to debt service in any month. Lenders usually want at least 1.2×." },
+            ],
+          },
+        ];
+        return (
+          <div style={{ marginTop: 24, padding: 20, border: "1px solid var(--border-1)", background: "var(--bg-2)" }}>
+            <Eyebrow>Quick diagnostics</Eyebrow>
+            {groups.map((g) => (
+              <div key={g.name} style={{ marginTop: 16 }}>
+                <div style={{
+                  fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600,
+                  color: "var(--fg-1)", paddingInlineStart: 8,
+                  borderInlineStart: "3px solid var(--ad-gold-500)", marginBottom: 8,
+                }}>{g.name}</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "2px 32px", fontSize: 12 }}>
+                  {g.rows.map((r) => <Diag key={r.label} {...r} />)}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
     </div>
   );
 }
 
-function Diag({ label, value, ok }) {
+function Diag({ label, value, ok, note }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px dashed var(--border-1)" }}>
-      <span style={{ color: "var(--fg-2)" }}>{label}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, padding: "5px 0", borderBottom: "1px dashed var(--border-1)" }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--fg-2)", minWidth: 0 }}>
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+        {note && (
+          <span
+            title={note}
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+              border: "1px solid var(--ad-gold-500)", color: "var(--ad-gold-600)",
+              fontSize: 9, fontWeight: 700, lineHeight: 1, cursor: "help",
+            }}
+          >!</span>
+        )}
+      </span>
       <span className="tabnum" style={{
         color: ok ? "var(--fg-1)" : "var(--ad-warning)",
-        fontWeight: 500,
+        fontWeight: 500, flexShrink: 0,
       }}>{value}</span>
     </div>
   );

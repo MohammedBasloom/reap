@@ -420,6 +420,37 @@
     "ROI on cost": "العائد على التكلفة",
     "Interest / dev cost": "الفوائد / تكلفة التطوير",
     "Selling cost / revenue": "تكاليف البيع / الإيراد",
+    /* Diagnostics — categories, new metrics and their explanations */
+    "Cost structure": "تركيبة التكاليف",
+    "Profitability": "الربحية",
+    "Financing & liquidity": "التمويل والسيولة",
+    "Soft costs & contingency": "التكاليف غير المباشرة والاحتياطي",
+    "Build cost per m² GFA": "تكلفة البناء لكل م² إجمالي",
+    "Revenue per m² sellable / leasable": "الإيراد لكل م² قابل للبيع أو التأجير",
+    "Peak debt vs facility": "ذروة الدين مقابل سقف التسهيلات",
+    "Equity share of funding": "حصة الملكية من التمويل",
+    "Land's share of development cost. Much above 30% and the deal is land-heavy, which squeezes the margin.":
+      "حصة الأرض من تكلفة التطوير. وتجاوزها 30% كثيرًا يعني ثقل تكلفة الأرض مما يضغط على الهامش.",
+    "Hard construction as a share of development cost — normally the largest single line.":
+      "تكلفة الإنشاء المباشرة كنسبة من تكلفة التطوير — وهي عادةً أكبر بند منفرد.",
+    "Design, permits, management and the risk buffer, as a share of development cost.":
+      "التصميم والتراخيص والإدارة واحتياطي المخاطر، كنسبة من تكلفة التطوير.",
+    "All-in construction and site work per m² of built area — compare it against local benchmarks.":
+      "إجمالي تكلفة الإنشاء وأعمال الموقع لكل م² مبني — قارنها بالمعدلات السائدة في السوق.",
+    "Profit after financing as a share of total revenue. Under ~12% leaves little room for error.":
+      "الربح بعد التمويل كنسبة من إجمالي الإيراد. وأقل من نحو 12% يترك هامش خطأ ضيقًا.",
+    "Profit after financing over all-in cost including interest — the return on every riyal spent.":
+      "الربح بعد التمويل مقسومًا على إجمالي التكلفة شاملة الفوائد — أي العائد على كل ريال منفق.",
+    "Total revenue per m² of saleable or leasable area — a quick sanity check against market pricing.":
+      "إجمالي الإيراد لكل م² قابل للبيع أو التأجير — فحص سريع لمنطقية الأسعار مقابل السوق.",
+    "Financing cost as a share of development cost. High values point to heavy leverage or a long build.":
+      "تكلفة التمويل كنسبة من تكلفة التطوير. وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
+    "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left.":
+      "أعلى رصيد للقرض مقابل سقف التسهيلات. وعند 100% تكون التسهيلات مستنفدة بالكامل دون أي متسع.",
+    "Share of project spending funded by investor cash, rather than by debt or by sales and rental income.":
+      "نسبة الإنفاق على المشروع المموّلة من نقد المستثمرين، بدلًا من الدين أو من إيرادات البيع والإيجار.",
+    "Lowest ratio of operating cash to debt service in any month. Lenders usually want at least 1.2×.":
+      "أدنى نسبة بين النقد التشغيلي وخدمة الدين في أي شهر. ويطلب المموّلون عادةً 1.2× على الأقل.",
     "Equity · Levered": "الملكية · بعد التمويل", "Project · Unlevered": "المشروع · قبل التمويل",
     "IRR": "IRR", "Multiple": "المضاعف", "Payback": "فترة الاسترداد",
     "Cumulative cashflow — equity vs project": "التدفق التراكمي — الملكية مقابل المشروع",
