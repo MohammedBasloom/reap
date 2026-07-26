@@ -298,13 +298,16 @@ function HBars({ data, height = 240, formatV }) {
 }
 
 /* ---------- Tornado chart ---------- */
-function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey = "baseIRR", format, baseLabel = "Base IRR" }) {
+function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey = "baseIRR", format, formatBar, baseLabel = "Base IRR" }) {
   // data: [{ label, <loKey>, <hiKey>, <baseKey> }] — defaults read the IRR
   // fields; pass the keys + a formatter to chart any other metric.
+  // `formatBar` is the short form used on the bars (currency symbols and
+  // bidi marks scramble inside the LTR-forced SVG, so keep them out).
   const fmt = format || ((v) => `${(v * 100).toFixed(1)}%`);
+  const fmtBar = formatBar || fmt;
   const W = 800;
   const H = height;
-  const padL = 200, padR = 60, padT = 16, padB = 26;
+  const padL = 218, padR = 64, padT = 16, padB = 26;
   const rowH = (H - padT - padB) / Math.max(1, data.length);
   // Centered on base
   const base = data[0]?.[baseKey] ?? 0;
@@ -329,19 +332,46 @@ function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey
         const vHi = d[hiKey];
         const downColor = "var(--ad-danger)";
         const upColor = "var(--ad-success)";
+        // Bar geometry (signed offsets from the centre line)
+        const loW = Math.abs((base - vLo) * scaleX);
+        const hiW = Math.abs((vHi - base) * scaleX);
+        const loX = Math.min(cx, cx - (base - vLo) * scaleX);
+        const hiX = Math.min(cx, cx + (vHi - base) * scaleX);
+        const loTxt = fmtBar(vLo);
+        const hiTxt = fmtBar(vHi);
+        // Labels sit inside the bar when it is wide enough, otherwise just
+        // outside it — this is what stops the two ends colliding on short bars.
+        const charW = 5.6;
+        const wide = (txt, w) => w >= txt.length * charW + 10;
+        const loInside = wide(loTxt, loW);
+        const hiInside = wide(hiTxt, hiW);
+        const truncate = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + "…" : s);
+        // Resolve the case where both shocks land on the same side of base:
+        // one label ends up inside its bar and the other outside, in the
+        // same spot. Nudge the high label clear of the low one.
+        let loX2 = loInside ? loX + 6 : loX - 6;
+        let hiX2 = hiInside ? hiX + hiW - 6 : hiX + hiW + 6;
+        const loBox = loInside ? [loX2, loX2 + loTxt.length * charW] : [loX2 - loTxt.length * charW, loX2];
+        const hiBox = hiInside ? [hiX2 - hiTxt.length * charW, hiX2] : [hiX2, hiX2 + hiTxt.length * charW];
+        if (loBox[0] < hiBox[1] && hiBox[0] < loBox[1]) {
+          hiX2 += (loBox[1] - hiBox[0]) + 6;
+        }
         return (
           <g key={i}>
-            <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{d.label}</text>
+            <title>{`${d.label}: ${fmt(vLo)} → ${fmt(vHi)}`}</title>
+            <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{truncate(d.label, 30)}</text>
             {/* down side bar */}
-            <rect x={Math.min(cx, cx - (base - vLo) * scaleX)} y={yC - barH / 2}
-                  width={Math.abs((base - vLo) * scaleX)} height={barH}
+            <rect x={loX} y={yC - barH / 2} width={loW} height={barH}
                   fill={vLo < base ? downColor : upColor} opacity={0.85} />
             {/* up side bar */}
-            <rect x={Math.min(cx, cx + (vHi - base) * scaleX)} y={yC - barH / 2}
-                  width={Math.abs((vHi - base) * scaleX)} height={barH}
+            <rect x={hiX} y={yC - barH / 2} width={hiW} height={barH}
                   fill={vHi > base ? upColor : downColor} opacity={0.85} />
-            <text x={cx - (base - vLo) * scaleX - 6} y={yC + 3} textAnchor="end" fontSize="10" fill="var(--fg-3)">{fmt(vLo)}</text>
-            <text x={cx + (vHi - base) * scaleX + 6} y={yC + 3} fontSize="10" fill="var(--fg-3)">{fmt(vHi)}</text>
+            <text x={loX2} y={yC + 3}
+                  textAnchor={loInside ? "start" : "end"} fontSize="10"
+                  fill={loInside ? "#FFFFFF" : "var(--fg-3)"}>{loTxt}</text>
+            <text x={hiX2} y={yC + 3}
+                  textAnchor={hiInside ? "end" : "start"} fontSize="10"
+                  fill={hiInside ? "#FFFFFF" : "var(--fg-3)"}>{hiTxt}</text>
           </g>
         );
       })}

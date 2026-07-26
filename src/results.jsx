@@ -893,7 +893,17 @@ function SensitivityPanel({ result, input }) {
           data={tornadoProfit.slice(0, 10)}
           height={chartH(tornadoProfit)}
           loKey="profitLo" hiKey="profitHi" baseKey="baseProfit"
-          format={fc} baseLabel="Base profit"
+          format={fc}
+          /* Bars use a compact, symbol-free number: currency strings carry
+             bidi isolate marks that scramble inside the LTR-forced SVG. */
+          formatBar={(v) => {
+            const a = Math.abs(v), sign = v < 0 ? "-" : "";
+            if (a >= 1e9) return `${sign}${(a / 1e9).toFixed(2)}B`;
+            if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(1)}M`;
+            if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(0)}K`;
+            return `${sign}${a.toFixed(0)}`;
+          }}
+          baseLabel="Base profit"
         />
       </div>
     </div>
