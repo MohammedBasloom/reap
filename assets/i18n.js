@@ -123,6 +123,11 @@
     "% of net developable area": "٪ من صافي المساحة القابلة للتطوير",
     "Allocate the land": "وزّع الأرض",
     "Give each component its share (%) of the net developable area": "امنح كل مكوّن حصته (٪) من صافي المساحة القابلة للتطوير",
+    "Each component lands with sensible defaults — names, sizing and pricing are all editable.":
+      "يأتي كل مكوّن بقيم افتراضية منطقية — والأسماء والمساحات والأسعار كلها قابلة للتعديل.",
+    /* Rendered as a separate JSX child after the number, so it is translated
+       on its own rather than as "<n> m² to allocate". */
+    "m² to allocate": "م² للتوزيع",
     "Efficiency": "الكفاءة", "NSA / GFA": "الصافي / الإجمالي",
     "FAR": "معامل البناء FAR", "Land coverage": "نسبة تغطية الأرض", "Max floors": "عدد الأدوار",
     "Upper-floor coverage": "تغطية الأدوار العليا", "Last floor": "الدور الأخير",
@@ -683,6 +688,7 @@
     [/^(\d+b?) · Performance fee → GP \((.+)\)$/, "$1 · رسوم الأداء → المدير ($2)"],
     [/^(\d+b?) · Pro-rata to investors \((.+)\)$/, "$1 · الحصة النسبية للمستثمرين ($2)"],
     [/^(.+) of remaining distributions — the GP's promote \/ carry$/, "$1 من التوزيعات المتبقية — حافز المدير"],
+    [/^([\d,.]+) m² to allocate$/, "$1 م² للتوزيع"],
     [/^Sources exceed uses by (.+)$/, "المصادر تتجاوز الاستخدامات بمقدار $1"],
     [/^Uses exceed sources by (.+)$/, "الاستخدامات تتجاوز المصادر بمقدار $1"],
     /* Auto-numbered duplicates of a known term — e.g. component names like

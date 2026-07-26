@@ -156,17 +156,32 @@ function AutoHorizonDisplay({ input }) {
 function Section({ title, n, children, defaultOpen = true, alarm }) {
   const [open, setOpen] = useStateS(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border-1)" }}>
+    <div style={{ borderTop: "1px solid var(--border-strong)" }}>
+      {/* Section header reads as a distinct band: tinted background, gold
+          accent when open, numbered badge and a full-size title. */}
       <button
         type="button"
         onClick={() => setOpen(!open)}
         style={{
           width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "16px 24px", background: "transparent", border: "none", cursor: "pointer",
-          textAlign: "left",
+          padding: "14px 24px", background: "var(--bg-2)", border: "none", cursor: "pointer",
+          textAlign: "start", fontFamily: "inherit",
+          borderInlineStart: `3px solid ${open ? "var(--ad-gold-500)" : "transparent"}`,
+          transition: "border-color var(--t-fast) var(--ease-out)",
         }}
       >
-        <Eyebrow n={n}>{title}</Eyebrow>
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <span style={{
+            fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+            padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+            background: open ? "var(--ad-navy-800)" : "var(--bg-3)",
+            color: open ? "#FFFFFF" : "var(--fg-3)",
+          }}>{String(n).padStart(2, "0")}</span>
+          <span style={{
+            fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>{title}</span>
+        </span>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {alarm && (
             <span style={{
@@ -1040,10 +1055,20 @@ function Sidebar({ input, setInput }) {
       overflowY: "auto",
       minWidth: 0,
     }}>
-      {/* Project header */}
-      <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--border-1)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Eyebrow n="01">Project</Eyebrow>
+      {/* Project header — styled to match the collapsible section bands */}
+      <div style={{ padding: "14px 24px 18px", borderBottom: "1px solid var(--border-1)", borderInlineStart: "3px solid var(--ad-gold-500)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginInlineStart: -3 }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <span style={{
+              fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+              padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+              background: "var(--ad-navy-800)", color: "#FFFFFF",
+            }}>01</span>
+            <span style={{
+              fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+              color: "var(--fg-1)",
+            }}>Project</span>
+          </span>
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}
