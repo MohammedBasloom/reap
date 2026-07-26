@@ -298,17 +298,19 @@ function HBars({ data, height = 240, formatV }) {
 }
 
 /* ---------- Tornado chart ---------- */
-function Tornado({ data, height = 280 }) {
-  // data: [{ label, irrLo, irrHi, baseIRR }]
+function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey = "baseIRR", format, baseLabel = "Base IRR" }) {
+  // data: [{ label, <loKey>, <hiKey>, <baseKey> }] — defaults read the IRR
+  // fields; pass the keys + a formatter to chart any other metric.
+  const fmt = format || ((v) => `${(v * 100).toFixed(1)}%`);
   const W = 800;
   const H = height;
   const padL = 200, padR = 60, padT = 16, padB = 26;
   const rowH = (H - padT - padB) / Math.max(1, data.length);
   // Centered on base
-  const base = data[0]?.baseIRR ?? 0;
+  const base = data[0]?.[baseKey] ?? 0;
   let maxDelta = 0;
   data.forEach(d => {
-    maxDelta = Math.max(maxDelta, Math.abs(d.irrLo - base), Math.abs(d.irrHi - base));
+    maxDelta = Math.max(maxDelta, Math.abs(d[loKey] - base), Math.abs(d[hiKey] - base));
   });
   if (maxDelta === 0) maxDelta = 0.01;
   const cx = padL + (W - padL - padR) / 2;
@@ -318,32 +320,28 @@ function Tornado({ data, height = 280 }) {
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
       {/* Center line */}
       <line x1={cx} x2={cx} y1={padT} y2={H - padB} stroke="var(--ad-navy-700)" strokeWidth="1" />
-      <text x={cx} y={H - 10} textAnchor="middle" fontSize="10" fill="var(--fg-3)">Base IRR {(base * 100).toFixed(1)}%</text>
+      <text x={cx} y={H - 10} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{baseLabel} {fmt(base)}</text>
 
       {data.map((d, i) => {
         const yC = padT + i * rowH + rowH / 2;
         const barH = Math.min(20, rowH * 0.55);
-        const lo = base - d.irrLo;
-        const hi = d.irrHi - base;
-        const xLo = cx + Math.min(0, (d.irrLo - base) * scaleX);
-        const wLo = Math.abs((d.irrLo - base) * scaleX);
-        const xHi = cx + Math.min(0, (d.irrHi - base) * scaleX);
-        const wHi = Math.abs((d.irrHi - base) * scaleX);
+        const vLo = d[loKey];
+        const vHi = d[hiKey];
         const downColor = "var(--ad-danger)";
         const upColor = "var(--ad-success)";
         return (
           <g key={i}>
             <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{d.label}</text>
             {/* down side bar */}
-            <rect x={Math.min(cx, cx - (base - d.irrLo) * scaleX)} y={yC - barH / 2}
-                  width={Math.abs((base - d.irrLo) * scaleX)} height={barH}
-                  fill={d.irrLo < base ? downColor : upColor} opacity={0.85} />
+            <rect x={Math.min(cx, cx - (base - vLo) * scaleX)} y={yC - barH / 2}
+                  width={Math.abs((base - vLo) * scaleX)} height={barH}
+                  fill={vLo < base ? downColor : upColor} opacity={0.85} />
             {/* up side bar */}
-            <rect x={Math.min(cx, cx + (d.irrHi - base) * scaleX)} y={yC - barH / 2}
-                  width={Math.abs((d.irrHi - base) * scaleX)} height={barH}
-                  fill={d.irrHi > base ? upColor : downColor} opacity={0.85} />
-            <text x={cx - (base - d.irrLo) * scaleX - 6} y={yC + 3} textAnchor="end" fontSize="10" fill="var(--fg-3)">{(d.irrLo * 100).toFixed(1)}%</text>
-            <text x={cx + (d.irrHi - base) * scaleX + 6} y={yC + 3} fontSize="10" fill="var(--fg-3)">{(d.irrHi * 100).toFixed(1)}%</text>
+            <rect x={Math.min(cx, cx + (vHi - base) * scaleX)} y={yC - barH / 2}
+                  width={Math.abs((vHi - base) * scaleX)} height={barH}
+                  fill={vHi > base ? upColor : downColor} opacity={0.85} />
+            <text x={cx - (base - vLo) * scaleX - 6} y={yC + 3} textAnchor="end" fontSize="10" fill="var(--fg-3)">{fmt(vLo)}</text>
+            <text x={cx + (vHi - base) * scaleX + 6} y={yC + 3} fontSize="10" fill="var(--fg-3)">{fmt(vHi)}</text>
           </g>
         );
       })}

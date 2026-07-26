@@ -177,6 +177,9 @@
     "On": "مفعّل", "Off": "معطّل",
     /* Fund structure — splits, fees, waterfall */
     "Hotel keys": "مفاتيح الفندق", "NOI / yr": "صافي دخل تشغيلي / سنة",
+    "Tornado · Equity IRR sensitivity (±10%)": "تورنادو · حساسية IRR للملكية (±10%)",
+    "Tornado · Profit sensitivity (±10%)": "تورنادو · حساسية الربح (±10%)",
+    "Base profit": "الربح الأساس",
     "Equity contribution split": "توزيع مساهمات الملكية",
     "Cash investors": "مستثمرون نقديون", "Co-invest": "مساهمة مشتركة", "Fund manager": "مدير الصندوق",
     "Dev": "المطوّر", "Fees": "الرسوم",

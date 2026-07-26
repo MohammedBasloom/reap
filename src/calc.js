@@ -1160,15 +1160,26 @@ function patch(input, path, fn) {
   return clone;
 }
 
-function tornado(input, drivers, deltaPct = 0.15) {
+/* Both metrics come from the SAME two simulations per driver — computing
+   profit alongside IRR is free, and keeps the two tornado charts consistent. */
+function tornado(input, drivers, deltaPct = 0.10) {
   const base = runFeasibility(input);
   const baseIRR = base.kpi.equityIRR ?? 0;
+  const baseProfit = base.kpi.profit ?? 0;
   return drivers.map(({ key, label, path }) => {
     const lo = patch(input, path || key, (v) => v * (1 - deltaPct));
     const hi = patch(input, path || key, (v) => v * (1 + deltaPct));
-    const irrLo = runFeasibility(lo).kpi.equityIRR ?? 0;
-    const irrHi = runFeasibility(hi).kpi.equityIRR ?? 0;
-    return { key, label, baseIRR, irrLo, irrHi, delta: Math.abs(irrHi - irrLo) };
+    const resLo = runFeasibility(lo);
+    const resHi = runFeasibility(hi);
+    const irrLo = resLo.kpi.equityIRR ?? 0;
+    const irrHi = resHi.kpi.equityIRR ?? 0;
+    const profitLo = resLo.kpi.profit ?? 0;
+    const profitHi = resHi.kpi.profit ?? 0;
+    return {
+      key, label,
+      baseIRR, irrLo, irrHi, delta: Math.abs(irrHi - irrLo),
+      baseProfit, profitLo, profitHi, deltaProfit: Math.abs(profitHi - profitLo),
+    };
   }).sort((a, b) => b.delta - a.delta);
 }
 

@@ -870,35 +870,12 @@ function SensitivityPanel({ result, input }) {
     }
   });
 
-  const tornado = useMemoR(() => Feas.tornado(input, drivers, 0.15), [input]);
-  const baseIRR = result.kpi.equityIRR || 0;
-
-  // Two-way heatmap (price shock × construction shock)
-  const heatData = useMemoR(() => {
-    const priceShifts = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
-    const costShifts = [-0.15, -0.10, -0.05, 0, 0.05, 0.10, 0.15];
-    const grid = [];
-    for (let r = 0; r < priceShifts.length; r++) {
-      const row = [];
-      for (let c = 0; c < costShifts.length; c++) {
-        const sim = JSON.parse(JSON.stringify(input));
-        sim.components = sim.components.map(comp => ({
-          ...comp,
-          costPerSqmGFA: comp.costPerSqmGFA ? comp.costPerSqmGFA * (1 + costShifts[c]) : comp.costPerSqmGFA,
-          pricePerSqm: comp.pricePerSqm ? comp.pricePerSqm * (1 + priceShifts[r]) : comp.pricePerSqm,
-          pricePerUnit: comp.pricePerUnit ? comp.pricePerUnit * (1 + priceShifts[r]) : comp.pricePerUnit,
-          pricePerKey: comp.pricePerKey ? comp.pricePerKey * (1 + priceShifts[r]) : comp.pricePerKey,
-          rentPerSqmYr: comp.rentPerSqmYr ? comp.rentPerSqmYr * (1 + priceShifts[r]) : comp.rentPerSqmYr,
-          rentPerUnitYr: comp.rentPerUnitYr ? comp.rentPerUnitYr * (1 + priceShifts[r]) : comp.rentPerUnitYr,
-          adr: comp.adr ? comp.adr * (1 + priceShifts[r]) : comp.adr,
-        }));
-        const res = Feas.runFeasibility(sim);
-        row.push(res.kpi.equityIRR || 0);
-      }
-      grid.push(row);
-    }
-    return { grid, priceShifts, costShifts };
-  }, [input]);
+  // One pass gives both metrics; each chart is sorted by its own impact.
+  const tornado = useMemoR(() => Feas.tornado(input, drivers, 0.10), [input]);
+  const tornadoProfit = useMemoR(
+    () => tornado.slice().sort((a, b) => b.deltaProfit - a.deltaProfit),
+    [tornado]);
+  const chartH = (rows) => Math.max(220, 30 * Math.min(rows.length, 10) + 40);
 
   return (
     <div style={{ padding: 32 }}>
@@ -906,69 +883,20 @@ function SensitivityPanel({ result, input }) {
       <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 24 }}>What moves the needle</h2>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
-        <Eyebrow>Tornado · Equity IRR sensitivity (±15%)</Eyebrow>
-        <Tornado data={tornado.slice(0, 10)} height={Math.max(220, 30 * Math.min(tornado.length, 10) + 40)} />
+        <Eyebrow>Tornado · Equity IRR sensitivity (±10%)</Eyebrow>
+        <Tornado data={tornado.slice(0, 10)} height={chartH(tornado)} />
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-        <Eyebrow>Two-way: Price (rows) × Construction cost (cols)</Eyebrow>
-        <div style={{ marginTop: 16, overflowX: "auto" }}>
-          <Heatmap data={heatData} hurdle={input.discountRate} />
-        </div>
+        <Eyebrow>Tornado · Profit sensitivity (±10%)</Eyebrow>
+        <Tornado
+          data={tornadoProfit.slice(0, 10)}
+          height={chartH(tornadoProfit)}
+          loKey="profitLo" hiKey="profitHi" baseKey="baseProfit"
+          format={fc} baseLabel="Base profit"
+        />
       </div>
     </div>
-  );
-}
-
-function Heatmap({ data, hurdle }) {
-  const { grid, priceShifts, costShifts } = data;
-  const flat = grid.flat();
-  const max = Math.max(...flat);
-  const min = Math.min(...flat);
-
-  const color = (v) => {
-    if (v >= hurdle) {
-      // green range
-      const t = (v - hurdle) / Math.max(0.001, max - hurdle);
-      return `oklch(${60 - t * 12}% ${0.10 + t * 0.06} 150)`;
-    } else {
-      const t = (hurdle - v) / Math.max(0.001, hurdle - min);
-      return `oklch(${70 - t * 18}% ${0.05 + t * 0.10} 30)`;
-    }
-  };
-
-  return (
-    <table style={{ borderCollapse: "collapse", fontSize: 11, fontFamily: "var(--font-mono)" }}>
-      <thead>
-        <tr>
-          <th style={{ padding: 6, color: "var(--fg-3)" }}></th>
-          {costShifts.map((s, i) => (
-            <th key={i} style={{ padding: 6, color: "var(--fg-3)", textAlign: "center", fontWeight: 400, fontSize: 10 }}>
-              {s >= 0 ? "+" : ""}{(s * 100).toFixed(0)}%
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {grid.map((row, r) => (
-          <tr key={r}>
-            <td style={{ padding: 6, color: "var(--fg-3)", textAlign: "right", fontWeight: 400, fontSize: 10 }}>
-              {priceShifts[r] >= 0 ? "+" : ""}{(priceShifts[r] * 100).toFixed(0)}%
-            </td>
-            {row.map((v, c) => (
-              <td key={c} style={{
-                padding: "10px 14px", background: color(v), color: "white",
-                fontWeight: 500, textAlign: "center", minWidth: 56,
-                border: "1px solid rgba(255,255,255,0.4)",
-                fontVariantNumeric: "tabular-nums",
-              }}>
-                {(v * 100).toFixed(1)}%
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
   );
 }
 
