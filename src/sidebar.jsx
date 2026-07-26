@@ -392,31 +392,8 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         }}>×</button>
       </div>
 
-      {/* Land allocation — prominent, right where the component is set up */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12,
-        padding: "10px 12px", background: "var(--ad-navy-50)",
-        border: "1px solid var(--border-1)", borderInlineStart: "3px solid var(--ad-gold-500)",
-        marginBottom: 12,
-      }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-1)", fontWeight: 600 }}>Allocation of serviced land</div>
-          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>% of net developable area</div>
-        </div>
-        <div style={{ width: 92, flexShrink: 0 }}>
-          <FieldInput
-            type="number"
-            step={0.5}
-            mono
-            value={comp.allocationPct === null || comp.allocationPct === undefined ? "" : +(+comp.allocationPct * 100).toFixed(4)}
-            onChange={(v) => update("allocationPct", +v / 100)}
-          />
-        </div>
-        <span style={{ fontSize: 12, color: "var(--fg-2)", flexShrink: 0 }}>%</span>
-        <span className="tabnum" style={{ fontSize: 12, color: "var(--ad-navy-900)", fontWeight: 600, flexShrink: 0 }}>
-          = {Feas.formatNumber(land)} m²
-        </span>
-      </div>
+      {/* Land allocation lives in the Allocate-the-land panel above, right
+          under the program tiles — one place, seen immediately after picking. */}
 
       {/* Mode toggle */}
       <div style={{ marginBottom: 10 }}>
@@ -712,6 +689,62 @@ function ComponentEmptyState() {
       <div style={{ fontSize: 12, color: "var(--fg-2)", lineHeight: 1.5 }}>
         Pick from the tiles above to build your program.<br />
         Each component lands with sensible defaults — names, sizing and pricing are all editable.
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Land allocation panel — sits right under the program tiles so
+   allocating the site is the first thing asked after picking a component. --- */
+
+function AllocationPanel({ components, totalLand, onChange }) {
+  if (!components.length) return null;
+  return (
+    <div style={{
+      marginTop: 14, border: "1px solid var(--border-1)",
+      borderInlineStart: "3px solid var(--ad-gold-500)", background: "var(--ad-navy-50)",
+    }}>
+      <div style={{ padding: "10px 12px 8px" }}>
+        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-1)", fontWeight: 600 }}>
+          Allocate the land
+        </div>
+        <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>
+          Give each component its share (%) of the net developable area
+        </div>
+      </div>
+      <div style={{ padding: "0 12px 12px" }}>
+        {components.map((c, i) => {
+          const preset = COMPONENT_PRESETS[c.kind] || {};
+          const area = totalLand * (+c.allocationPct || 0);
+          return (
+            <div key={c.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "6px 0", borderTop: i === 0 ? "none" : "1px dashed var(--border-1)",
+              opacity: c.enabled ? 1 : 0.45,
+            }}>
+              <span style={{ fontSize: 13, color: "var(--ad-navy-700)", width: 14, textAlign: "center", flexShrink: 0 }}>
+                {preset.icon || "◇"}
+              </span>
+              <span style={{
+                flex: 1, minWidth: 0, fontSize: 12, color: "var(--fg-1)", fontWeight: 500,
+                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+              }}>{c.name}</span>
+              <div style={{ width: 74, flexShrink: 0 }}>
+                <FieldInput
+                  type="number"
+                  step={0.5}
+                  mono
+                  value={c.allocationPct === null || c.allocationPct === undefined ? "" : +(+c.allocationPct * 100).toFixed(4)}
+                  onChange={(v) => onChange(i, +v / 100)}
+                />
+              </div>
+              <span style={{ fontSize: 11, color: "var(--fg-2)", flexShrink: 0 }}>%</span>
+              <span className="tabnum" style={{ fontSize: 11, color: "var(--ad-navy-900)", fontWeight: 600, flexShrink: 0, width: 78, textAlign: "end" }}>
+                {Feas.formatNumber(area)} m²
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1102,6 +1135,11 @@ function Sidebar({ input, setInput }) {
 
         {hasComponents ? (
           <>
+            <AllocationPanel
+              components={input.components}
+              totalLand={netDevelopableArea}
+              onChange={(i, pct) => updComp(i, { ...input.components[i], allocationPct: pct })}
+            />
             <AllocationAlarm
               totalPct={totalAllocationPct}
               totalLand={netDevelopableArea}

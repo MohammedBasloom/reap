@@ -130,6 +130,8 @@
     "Allocation of land": "حصة الأرض", "% of total land": "% من إجمالي الأرض",
     "Allocation of serviced land": "حصة الأرض المخدومة",
     "% of net developable area": "٪ من صافي المساحة القابلة للتطوير",
+    "Allocate the land": "وزّع الأرض",
+    "Give each component its share (%) of the net developable area": "امنح كل مكوّن حصته (٪) من صافي المساحة القابلة للتطوير",
     "Efficiency": "الكفاءة", "NSA / GFA": "الصافي / الإجمالي",
     "FAR": "معامل البناء FAR", "Land coverage": "نسبة تغطية الأرض", "Max floors": "عدد الأدوار",
     "Upper-floor coverage": "تغطية الأدوار العليا", "Last floor": "الدور الأخير",
