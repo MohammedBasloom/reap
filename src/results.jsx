@@ -1894,6 +1894,7 @@ function RiskPanel({ result, input }) {
         const groups = [
           {
             name: "Cost structure",
+            note: "\"Development cost\" here = land + transfer fees + construction + site work and infrastructure + soft costs + contingency. It EXCLUDES financing interest and selling costs (marketing, sales commission, government fees). It is also the base for the debt facility (LTC × development cost).",
             rows: [
               { label: "Land as % of dev cost", value: fp(k.landCost / dev), ok: (k.landCost / dev) < 0.30,
                 note: "Land's share of development cost. Much above 30% and the deal is land-heavy, which squeezes the margin." },
@@ -1922,7 +1923,7 @@ function RiskPanel({ result, input }) {
             name: "Financing & liquidity",
             rows: [
               { label: "Interest / dev cost", value: fp(k.totalInterest / dev), ok: (k.totalInterest / dev) < 0.10,
-                note: "Financing cost as a share of development cost. High values point to heavy leverage or a long build." },
+                note: "Total financing interest as a share of development cost (land, construction, site work, soft costs and contingency — interest itself is not in that base). High values point to heavy leverage or a long build." },
               { label: "Peak debt vs facility", value: facility > 0 ? fp((k.peakDebt || 0) / facility) : "—", ok: facility <= 0 || (k.peakDebt || 0) / facility < 1.001,
                 note: "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left." },
               { label: "Equity share of funding", value: fp(cov.equity / funded), ok: true,
@@ -1938,10 +1939,24 @@ function RiskPanel({ result, input }) {
             {groups.map((g) => (
               <div key={g.name} style={{ marginTop: 16 }}>
                 <div style={{
+                  display: "flex", alignItems: "center", gap: 7,
                   fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600,
                   color: "var(--fg-1)", paddingInlineStart: 8,
                   borderInlineStart: "3px solid var(--ad-gold-500)", marginBottom: 8,
-                }}>{g.name}</div>
+                }}>
+                  {g.name}
+                  {g.note && (
+                    <span
+                      title={g.note}
+                      style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+                        border: "1px solid var(--ad-gold-500)", color: "var(--ad-gold-600)",
+                        fontSize: 9, fontWeight: 700, lineHeight: 1, cursor: "help", letterSpacing: 0,
+                      }}
+                    >!</span>
+                  )}
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "2px 32px", fontSize: 12 }}>
                   {g.rows.map((r) => <Diag key={r.label} {...r} />)}
                 </div>

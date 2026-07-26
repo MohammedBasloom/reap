@@ -445,6 +445,10 @@
       "إجمالي الإيراد لكل م² قابل للبيع أو التأجير — فحص سريع لمنطقية الأسعار مقابل السوق.",
     "Financing cost as a share of development cost. High values point to heavy leverage or a long build.":
       "تكلفة التمويل كنسبة من تكلفة التطوير. وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
+    "\"Development cost\" here = land + transfer fees + construction + site work and infrastructure + soft costs + contingency. It EXCLUDES financing interest and selling costs (marketing, sales commission, government fees). It is also the base for the debt facility (LTC × development cost).":
+      "المقصود بـ«تكلفة التطوير» هنا: الأرض + رسوم النقل + الإنشاء + أعمال الموقع والبنية التحتية + التكاليف غير المباشرة + الاحتياطي. ولا تشمل فوائد التمويل ولا تكاليف البيع (التسويق وعمولة البيع والرسوم الحكومية). وهي أيضًا الأساس الذي يُحتسب عليه سقف التمويل (نسبة التمويل إلى التكلفة × تكلفة التطوير).",
+    "Total financing interest as a share of development cost (land, construction, site work, soft costs and contingency — interest itself is not in that base). High values point to heavy leverage or a long build.":
+      "إجمالي فوائد التمويل كنسبة من تكلفة التطوير (الأرض والإنشاء وأعمال الموقع والتكاليف غير المباشرة والاحتياطي — والفوائد نفسها ليست ضمن هذا الأساس). وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
     "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left.":
       "أعلى رصيد للقرض مقابل سقف التسهيلات. وعند 100% تكون التسهيلات مستنفدة بالكامل دون أي متسع.",
     "Share of project spending funded by investor cash, rather than by debt or by sales and rental income.":
