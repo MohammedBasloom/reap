@@ -729,7 +729,7 @@ function ProgramPanel({ result, input }) {
                       <span style={{ color: "var(--ad-sand-900)" }}>{fc(c.opex)}</span>
                       <span style={{ color: "var(--fg-3)", margin: "0 6px" }}>→</span>
                       <span style={{ fontWeight: 600 }}>{fc(c.noi)}</span>
-                      <span style={{ color: "var(--fg-3)", fontSize: 10, marginLeft: 6 }}>NOI /yr</span>
+                      <span style={{ color: "var(--fg-3)", fontSize: 10, marginInlineStart: 6 }}>NOI / yr</span>
                     </span>
                   </div>
                   {/* Full bar length = gross income; the solid part is the NOI

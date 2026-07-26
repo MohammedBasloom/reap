@@ -1182,7 +1182,9 @@ function Sidebar({ input, setInput }) {
               isRawLand={isRawLand}
             />
             <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", margin: "16px 0 8px" }}>
-              Your program · {input.components.length} component{input.components.length === 1 ? "" : "s"}
+              {/* Whole words, not a split "component"+"s" — the trailing
+                  suffix can't be translated on its own. */}
+              Your program · {input.components.length} {input.components.length === 1 ? "component" : "components"}
             </div>
             <div>
               {input.components.map((c, i) => (

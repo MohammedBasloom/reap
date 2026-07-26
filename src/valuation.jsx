@@ -466,7 +466,9 @@ function ValResults({ result, sens, input }) {
           <div style={{ textAlign: "right", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)" }}>{input.name}</div>
             <div>{typeDef.label}{input.property.city ? ` · ${input.property.city}` : ""}{input.property.district ? ` · ${input.property.district}` : ""}</div>
-            <div>{new Date().toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}</div>
+            <div>{new Date().toLocaleDateString(
+              (window.I18N && I18N.lang === "ar") ? "ar-SA-u-nu-latn" : "en-GB",
+              { year: "numeric", month: "long", day: "numeric" })}</div>
           </div>
         </div>
       </div>
