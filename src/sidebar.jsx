@@ -392,6 +392,32 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         }}>×</button>
       </div>
 
+      {/* Land allocation — prominent, right where the component is set up */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12,
+        padding: "10px 12px", background: "var(--ad-navy-50)",
+        border: "1px solid var(--border-1)", borderInlineStart: "3px solid var(--ad-gold-500)",
+        marginBottom: 12,
+      }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-1)", fontWeight: 600 }}>Allocation of serviced land</div>
+          <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 2 }}>% of net developable area</div>
+        </div>
+        <div style={{ width: 92, flexShrink: 0 }}>
+          <FieldInput
+            type="number"
+            step={0.5}
+            mono
+            value={comp.allocationPct === null || comp.allocationPct === undefined ? "" : +(+comp.allocationPct * 100).toFixed(4)}
+            onChange={(v) => update("allocationPct", +v / 100)}
+          />
+        </div>
+        <span style={{ fontSize: 12, color: "var(--fg-2)", flexShrink: 0 }}>%</span>
+        <span className="tabnum" style={{ fontSize: 12, color: "var(--ad-navy-900)", fontWeight: 600, flexShrink: 0 }}>
+          = {Feas.formatNumber(land)} m²
+        </span>
+      </div>
+
       {/* Mode toggle */}
       <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>Mode</div>
@@ -405,8 +431,8 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {/* Land & massing */}
       <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Land & massing</div>
       <Row cols={2}>
-        <PctField label="Allocation of land" value={comp.allocationPct} onChange={v => update("allocationPct", v)} step={0.5} hint="% of total land" />
         <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" />
+        <div />
       </Row>
 
       <div style={{ marginBottom: 8 }}>

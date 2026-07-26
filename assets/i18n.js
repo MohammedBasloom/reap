@@ -95,6 +95,8 @@
     "+ ADD": "+ إضافة", "+ Add": "+ إضافة", "on": "مفعّل",
     "Land & massing": "الأرض والكتلة العمرانية",
     "Allocation of land": "حصة الأرض", "% of total land": "% من إجمالي الأرض",
+    "Allocation of serviced land": "حصة الأرض المخدومة",
+    "% of net developable area": "٪ من صافي المساحة القابلة للتطوير",
     "Efficiency": "الكفاءة", "NSA / GFA": "الصافي / الإجمالي",
     "FAR": "معامل البناء FAR", "Land coverage": "نسبة تغطية الأرض", "Max floors": "عدد الأدوار",
     "Upper-floor coverage": "تغطية الأدوار العليا", "Last floor": "الدور الأخير",
