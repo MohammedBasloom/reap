@@ -43,6 +43,39 @@
 
     /* Empty state */
     "Awaiting program": "بانتظار البرنامج",
+    "Getting started": "لنبدأ",
+    "Now choose your program components.": "الآن اختر مكوّنات برنامجك العقاري.",
+    "Start by setting your land, then build the program.": "ابدأ بتحديد الأرض، ثم ابنِ البرنامج.",
+    "Work down the sidebar in order — the checklist below follows the same sequence. Every dashboard (cashflow, cost stack, returns, sensitivity, Monte Carlo and risk) fills in automatically as you go.":
+      "اتبع القائمة الجانبية بالترتيب — والقائمة أدناه تسير بالتسلسل نفسه. وتمتلئ جميع اللوحات (التدفقات النقدية والتكاليف والعوائد والحساسية ومونت كارلو والمخاطر) تلقائيًا كلما تقدّمت.",
+    "How to build your model": "كيف تبني نموذجك",
+    "Set the land": "حدّد الأرض",
+    "Area, price per m², transfer fees, and whether the site is serviced or raw.":
+      "المساحة، وسعر المتر، ورسوم النقل، وهل الأرض مخدومة أم خام.",
+    "Choose your program": "اختر برنامجك",
+    "Pick component tiles in the sidebar — villas, townhouses, apartments, retail, office, hotel.":
+      "اختر بطاقات المكوّنات من القائمة الجانبية — فلل، تاون هاوس، شقق، تجزئة، مكاتب، فندق.",
+    "Allocate the land": "وزّع الأرض",
+    "Give each component its share (%) of the serviced land, at the top of its block.":
+      "امنح كل مكوّن حصته (٪) من الأرض المخدومة، في أعلى بطاقته.",
+    "Fill each component's assumptions": "أدخل فرضيات كل مكوّن",
+    "Massing (FAR or coverage), build cost, efficiency, then sale price or rent, and its sales / operating period.":
+      "أسلوب البناء (معامل البناء أو التغطية)، وتكلفة البناء، والكفاءة، ثم سعر البيع أو الإيجار، وفترة البيع أو التشغيل.",
+    "Set the project timeline": "حدّد الجدول الزمني",
+    "Pre-design and construction months, and when pre-sales start.":
+      "أشهر ما قبل التصميم والإنشاء، وموعد بدء البيع على الخارطة.",
+    "Add general & indirect costs": "أضف التكاليف العامة وغير المباشرة",
+    "Soft costs, contingency, marketing, sales commission and government fees.":
+      "التكاليف غير المباشرة، والاحتياطي، والتسويق، وعمولة البيع، والرسوم الحكومية.",
+    "Set financing": "حدّد التمويل",
+    "Loan-to-cost (LTC) and interest rate. Income funds costs first, then debt, then equity.":
+      "نسبة التمويل إلى التكلفة (LTC) ومعدل الفائدة. الدخل يموّل التكاليف أولًا، ثم الدين، ثم الملكية.",
+    "Set the hurdle rate": "حدّد معدل العائد المستهدف",
+    "The discount rate used for NPV and to judge the equity IRR.":
+      "معدل الخصم المستخدم في صافي القيمة الحالية ولتقييم عائد الملكية IRR.",
+    "Optional — fund structure": "اختياري — هيكل الصندوق",
+    "Turn it on for an LP / Developer / GP split with fees and a promote waterfall.":
+      "فعّله لتقسيم بين الشريك المحدود والمطوّر والشريك العام مع الرسوم وشلال التوزيعات.",
     "Select your program components to model the deal.": "اختر مكوّنات برنامجك العقاري لبدء نمذجة الصفقة.",
     "Land is set. Now pick from the program tiles in the sidebar — villas, apartments, retail, hotel —\n        and the cashflow, cost stack, sensitivity and risk views will populate from your selection.":
       "الأرض جاهزة. اختر الآن من بطاقات البرنامج في القائمة الجانبية — فلل، شقق، تجزئة، فندق — وستمتلئ لوحات التدفقات النقدية والتكاليف والحساسية والمخاطر تلقائيًا.",

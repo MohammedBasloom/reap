@@ -9,9 +9,9 @@ const SAMPLE_INPUT = {
   location: "—",
   projectType: "",
 
-  // Land
-  landArea: 100000, // m²
-  landPricePerSqm: 1250, // SAR
+  // Land — intentionally blank: the user sets the site first.
+  landArea: null, // m²
+  landPricePerSqm: null, // SAR
   landTransferFeesPct: 0.03, // 3% transfer / gov
   landType: "net", // "net" (serviced) | "raw" (needs infrastructure)
   developablePct: 0.70, // raw only: share of gross land the program can build on
@@ -358,47 +358,103 @@ function AppFooter() {
 }
 
 function DashboardEmptyState({ input }) {
-  const totalLandCost = (input.landArea || 0) * (input.landPricePerSqm || 0);
+  const landArea = +input.landArea || 0;
+  const landPrice = +input.landPricePerSqm || 0;
+  const hasLand = landArea > 0;
+  const comps = (input.components || []).filter((c) => c.enabled);
+  const hasComponents = comps.length > 0;
+  const allocated = comps.reduce((s, c) => s + (+c.allocationPct || 0), 0);
+  const totalLandCost = landArea * landPrice;
   const totalLandIn = totalLandCost * (1 + (input.landTransferFeesPct || 0));
+
+  // Steps 1–3 track live; the rest are pre-filled with sensible defaults the
+  // user reviews, so they stay as plain numbered guidance.
+  const steps = [
+    { done: hasLand, title: "Set the land",
+      body: "Area, price per m², transfer fees, and whether the site is serviced or raw." },
+    { done: hasComponents, title: "Choose your program",
+      body: "Pick component tiles in the sidebar — villas, townhouses, apartments, retail, office, hotel." },
+    { done: allocated > 0, title: "Allocate the land",
+      body: "Give each component its share (%) of the serviced land, at the top of its block." },
+    { title: "Fill each component's assumptions",
+      body: "Massing (FAR or coverage), build cost, efficiency, then sale price or rent, and its sales / operating period." },
+    { title: "Set the project timeline",
+      body: "Pre-design and construction months, and when pre-sales start." },
+    { title: "Add general & indirect costs",
+      body: "Soft costs, contingency, marketing, sales commission and government fees." },
+    { title: "Set financing",
+      body: "Loan-to-cost (LTC) and interest rate. Income funds costs first, then debt, then equity." },
+    { title: "Set the hurdle rate",
+      body: "The discount rate used for NPV and to judge the equity IRR." },
+    { title: "Optional — fund structure",
+      body: "Turn it on for an LP / Developer / GP split with fees and a promote waterfall." },
+  ];
+
   return (
-    <div style={{ padding: "64px 48px", maxWidth: 880, margin: "0 auto" }}>
+    <div style={{ padding: "56px 48px", maxWidth: 900, margin: "0 auto" }}>
       <div style={{
         fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase",
         fontWeight: 500, color: "var(--fg-3)"
-      }}>Awaiting program</div>
+      }}>{hasLand ? "Awaiting program" : "Getting started"}</div>
       <h2 style={{
         fontSize: 32, fontFamily: "var(--font-display)", fontWeight: 600,
         letterSpacing: "-0.02em", color: "var(--fg-1)", marginTop: 8
       }}>
-        Select your program components to model the deal.
+        {hasLand
+          ? "Now choose your program components."
+          : "Start by setting your land, then build the program."}
       </h2>
-      <p style={{ fontSize: 15, color: "var(--fg-2)", marginTop: 12, maxWidth: 620, lineHeight: 1.5 }}>
-        Land is set. Now pick from the program tiles in the sidebar — villas, apartments, retail, hotel —
-        and the cashflow, cost stack, sensitivity and risk views will populate from your selection.
+      <p style={{ fontSize: 15, color: "var(--fg-2)", marginTop: 12, maxWidth: 640, lineHeight: 1.5 }}>
+        Work down the sidebar in order — the checklist below follows the same sequence. Every
+        dashboard (cashflow, cost stack, returns, sensitivity, Monte Carlo and risk) fills in
+        automatically as you go.
       </p>
 
-      <div style={{
-        marginTop: 36, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12
-      }}>
-        <FactTile label="Land area" value={`${Feas.formatNumber(input.landArea || 0)} m²`} />
-        <FactTile label="Land price" value={`${Feas.formatNumber(input.landPricePerSqm || 0)} SAR/m²`} />
-        <FactTile label="Land cost" value={Feas.formatCurrency(totalLandCost)} />
-        <FactTile label="Land in (w/ fees)" value={Feas.formatCurrency(totalLandIn)} accent />
-      </div>
+      {hasLand && (
+        <div style={{
+          marginTop: 32, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12
+        }}>
+          <FactTile label="Land area" value={`${Feas.formatNumber(landArea)} m²`} />
+          <FactTile label="Land price" value={`${Feas.formatNumber(landPrice)} SAR/m²`} />
+          <FactTile label="Land cost" value={Feas.formatCurrency(totalLandCost)} />
+          <FactTile label="Land in (w/ fees)" value={Feas.formatCurrency(totalLandIn)} accent />
+        </div>
+      )}
 
       <div style={{
-        marginTop: 36, padding: "20px 24px",
+        marginTop: 32, padding: "22px 26px",
         border: "1px solid var(--border-1)", background: "var(--bg-1)"
       }}>
         <div style={{
           fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-          fontWeight: 500, color: "var(--fg-3)", marginBottom: 12
-        }}>What happens next</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
-          <Step n="01" title="Pick components" body="From the sidebar tiles. Each adds an instance to your program." />
-          <Step n="02" title="Tune & allocate" body="Set land share, FAR, pricing. Rename anything generic (e.g. ‘Villa’ → ‘Beachfront Villas’)." />
-          <Step n="03" title="Read the dashboard" body="Cashflow, cost stack, sensitivity, Monte Carlo, scenarios, and risk register populate live." />
+          fontWeight: 500, color: "var(--fg-3)", marginBottom: 16
+        }}>How to build your model</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 32px" }}>
+          {steps.map((s, i) => <StepRow key={i} n={i + 1} {...s} />)}
         </div>
+      </div>
+    </div>);
+
+}
+
+function StepRow({ n, title, body, done }) {
+  return (
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+      <span style={{
+        flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 600,
+        background: done ? "var(--ad-success)" : "var(--bg-3)",
+        color: done ? "#FFFFFF" : "var(--fg-3)",
+        border: done ? "none" : "1px solid var(--border-1)",
+      }}>{done ? "✓" : String(n).padStart(2, "0")}</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{
+          fontSize: 13, fontWeight: 600, marginBottom: 2,
+          color: done ? "var(--fg-3)" : "var(--fg-1)",
+          textDecoration: done ? "line-through" : "none",
+        }}>{title}</div>
+        <div style={{ fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.5 }}>{body}</div>
       </div>
     </div>);
 
