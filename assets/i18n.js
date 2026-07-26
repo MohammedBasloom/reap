@@ -659,6 +659,10 @@
     [/^(.+) of remaining distributions — the GP's promote \/ carry$/, "$1 من التوزيعات المتبقية — حافز المدير"],
     [/^Sources exceed uses by (.+)$/, "المصادر تتجاوز الاستخدامات بمقدار $1"],
     [/^Uses exceed sources by (.+)$/, "الاستخدامات تتجاوز المصادر بمقدار $1"],
+    /* Auto-numbered duplicates of a known term — e.g. component names like
+       "Villa 2" → «فيلا 2». Keep LAST: it matches any "<term> <n>" and
+       returns the string unchanged when the base isn't a known term. */
+    [/^(.+?) (\d+)$/, (m, base, n) => (D[base] !== undefined ? `${D[base]} ${n}` : m)],
   ];
 
   /* Case-insensitive index — CSS text-transform means some sources differ

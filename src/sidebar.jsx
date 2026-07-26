@@ -975,8 +975,11 @@ function Sidebar({ input, setInput }) {
   const addComp = (kind) => {
     const preset = COMPONENT_PRESETS[kind];
     // Auto-number duplicates: "Villa", "Villa 2", "Villa 3"...
+    // Name in the ACTIVE language — the name lives in an <input>, which the
+    // i18n layer can't translate on render (it only handles children/props).
+    const baseLabel = (window.I18N ? I18N.t(preset.label) : preset.label);
     const sameKindCount = input.components.filter(c => c.kind === kind).length;
-    const name = sameKindCount === 0 ? preset.label : `${preset.label} ${sameKindCount + 1}`;
+    const name = sameKindCount === 0 ? baseLabel : `${baseLabel} ${sameKindCount + 1}`;
     const newComp = {
       id: Math.random().toString(36).slice(2, 9),
       kind,
