@@ -313,7 +313,8 @@ function FloorBreakdown({ comp, land }) {
               display: "grid", gridTemplateColumns: "44px 60px 1fr 90px",
               alignItems: "center", gap: 8, fontSize: 11, fontFamily: "var(--font-mono)",
             }}>
-              <span style={{ color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.08em" }}>F{r.f}</span>
+              {/* One token so it can be translated (F1 → د1) */}
+              <span style={{ color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.08em" }}>{`F${r.f}`}</span>
               <span style={{
                 fontSize: 9, letterSpacing: "0.10em", textTransform: "uppercase",
                 color: tone, fontWeight: 600,
@@ -454,10 +455,11 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       ) : (
         <>
           <Row cols={2}>
-            <PctField label="Land coverage" value={comp.landCoveragePct} onChange={v => update("landCoveragePct", v)} hint="Ground floor area ÷ land area" />
+            {/* Naming only — the massing maths is unchanged. */}
+            <PctField label="Ground floor coverage" value={comp.landCoveragePct} onChange={v => update("landCoveragePct", v)} hint="Ground floor area ÷ land area" />
             <Field label="Max floors" suffix="incl. last" value={comp.maxFloors} onChange={v => update("maxFloors", v)} step={1} min={0} />
-            <PctField label="Upper-floor coverage" value={comp.upperFloorCoveragePct} onChange={v => update("upperFloorCoveragePct", v)} hint="Each upper floor ÷ land area (not ÷ ground)" />
-            <PctField label="Last floor" value={comp.lastFloorPct} onChange={v => update("lastFloorPct", v)} hint="Last floor as % of floor below" />
+            <PctField label="Upper floors coverage" value={comp.upperFloorCoveragePct} onChange={v => update("upperFloorCoveragePct", v)} hint="Floors above the ground floor, excluding the last floor. Each floor ÷ land area" />
+            <PctField label="Last floor (penthouse)" value={comp.lastFloorPct} onChange={v => update("lastFloorPct", v)} hint="Last floor as % of the floor below" />
           </Row>
           <FloorBreakdown comp={comp} land={land} />
         </>

@@ -135,6 +135,20 @@
     "Basement coverage": "تغطية القبو", "Basement cost": "تكلفة القبو",
     /* Component editor — labels, suffixes and hints */
     "Build-up area methodology": "أسلوب احتساب المسطحات",
+    /* Coverage massing — labels renamed for clarity (maths unchanged) */
+    "Ground floor coverage": "تغطية الدور الأرضي",
+    "Ground floor area ÷ land area": "مساحة الدور الأرضي ÷ مساحة الأرض",
+    "incl. last": "شاملًا الأخير",
+    "Upper floors coverage": "تغطية الأدوار العليا",
+    "Floors above the ground floor, excluding the last floor. Each floor ÷ land area":
+      "الأدوار التي تعلو الدور الأرضي، ولا تشمل الدور الأخير. كل دور ÷ مساحة الأرض",
+    "Last floor (penthouse)": "الدور الأخير (الملحق)",
+    "Last floor as % of the floor below": "الدور الأخير كنسبة من الدور الذي تحته",
+    /* Floor-by-floor breakdown */
+    "Floor-by-floor build-up": "توزيع المسطحات دورًا بدور",
+    "Ground": "أرضي", "Upper": "علوي", "Last": "الأخير",
+    "Enter a land allocation and max floors to see the floor-by-floor breakdown.":
+      "أدخل حصة الأرض وعدد الأدوار لعرض توزيع المسطحات دورًا بدور.",
     "Coverage": "التغطية", "ratio": "نسبة",
     "GFA = Land × FAR": "الإجمالي = الأرض × معامل البناء",
     "SAR/m² GFA": "ر.س/م² إجمالي",
@@ -757,6 +771,7 @@
     [/^(\d+b?) · Pro-rata to investors \((.+)\)$/, "$1 · الحصة النسبية للمستثمرين ($2)"],
     [/^(.+) of remaining distributions — the GP's promote \/ carry$/, "$1 من التوزيعات المتبقية — حافز المدير"],
     [/^([\d,.]+) m² to allocate$/, "$1 م² للتوزيع"],
+    [/^F(\d+)$/, "د$1"],
     [/^([\d.]+) yrs?$/, "$1 سنة"],
     [/^([\d.,]+%) LTC$/, "‏LTC ‏$1"],
     [/^vs ([\d.,]+%)$/, "مقابل $1"],
