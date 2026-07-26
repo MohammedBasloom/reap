@@ -1,0 +1,122 @@
+/* =============================================================
+   REAP — shared styling for the static legal pages
+   (privacy.html, terms.html). Depends on tokens.css.
+   ============================================================= */
+
+body {
+  background: var(--bg-2);
+  color: var(--fg-1);
+  font-family: var(--font-body);
+  margin: 0;
+}
+
+/* ---------- Top bar (mirrors the landing page chrome) ---------- */
+.lgl-top {
+  background: var(--ad-navy-900);
+  border-bottom: 1px solid var(--ad-navy-700);
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.lgl-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.lgl-brand .mark { width: 22px; height: 20px; }
+.lgl-brand b {
+  color: #fff; font-size: 17px; font-weight: 600; letter-spacing: 0.16em;
+}
+html[dir="rtl"] .lgl-brand b { letter-spacing: 0; }
+.lgl-brand .tag {
+  color: rgba(255, 255, 255, 0.55); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.lgl-actions { display: flex; align-items: center; gap: 10px; }
+.lgl-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  font-family: var(--font-body);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 8px 14px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: background var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out);
+}
+.lgl-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.4); }
+.lgl-btn.icon { padding: 8px 10px; }
+
+/* ---------- Document ---------- */
+.lgl-doc {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 28px 72px;
+}
+.lgl-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ad-gold-600); margin-bottom: 10px;
+}
+.lgl-doc h1 {
+  font-size: 34px; font-weight: 600; line-height: 1.2;
+  margin: 0 0 10px; color: var(--fg-1);
+}
+.lgl-updated {
+  font-size: 12px; color: var(--fg-3);
+  padding-bottom: 24px; margin-bottom: 32px;
+  border-bottom: 1px solid var(--border-1);
+}
+.lgl-doc h2 {
+  font-size: 15px; font-weight: 600; color: var(--fg-1);
+  margin: 36px 0 12px; padding-inline-start: 12px;
+  border-inline-start: 3px solid var(--ad-gold-600);
+  line-height: 1.4;
+}
+.lgl-doc h2 .n {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--ad-gold-600); margin-inline-end: 8px;
+}
+.lgl-doc p, .lgl-doc li {
+  font-size: 14px; line-height: 1.85; color: var(--fg-2);
+}
+.lgl-doc p { margin: 0 0 14px; }
+.lgl-doc ul { margin: 0 0 14px; padding-inline-start: 22px; }
+.lgl-doc li { margin-bottom: 8px; }
+.lgl-doc strong { color: var(--fg-1); font-weight: 600; }
+.lgl-doc a { color: var(--ad-navy-700); text-decoration: underline; text-underline-offset: 2px; }
+.lgl-doc a:hover { color: var(--ad-gold-700); }
+
+/* Callout for the material warnings. */
+.lgl-note {
+  background: var(--bg-1);
+  border: 1px solid var(--border-1);
+  border-inline-start: 3px solid var(--ad-gold-600);
+  padding: 16px 18px; margin: 0 0 20px;
+}
+.lgl-note p:last-child { margin-bottom: 0; }
+
+/* Contact block. */
+.lgl-contact {
+  background: var(--bg-1); border: 1px solid var(--border-1);
+  padding: 18px; margin-top: 12px;
+}
+.lgl-contact div { font-size: 13px; line-height: 1.9; color: var(--fg-2); }
+
+/* ---------- Footer (shared with the landing page) ---------- */
+.lgl-foot {
+  background: var(--ad-navy-900);
+  border-top: 1px solid var(--ad-navy-700);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  padding: 16px 28px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 14px;
+}
+.lgl-foot a { color: rgba(255, 255, 255, 0.7); text-decoration: none; }
+.lgl-foot a:hover { color: var(--ad-gold-400); }
+.lgl-foot .sep { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.18); }
+.lgl-foot .copy { color: rgba(255, 255, 255, 0.5); }
+
+@media (max-width: 620px) {
+  .lgl-doc { padding: 32px 20px 56px; }
+  .lgl-doc h1 { font-size: 26px; }
+  .lgl-brand .tag { display: none; }
+}

@@ -229,6 +229,9 @@
       "سنة بسنة، لترى بدقة متى تُحتسب رسوم الاكتتاب وإدارة الأصول والتطوير والأداء.",
     "Every call and distribution for LP, Developer and GP, year by year.":
       "كل استدعاء وتوزيع للشريك المحدود والمطوّر والشريك العام، سنة بسنة.",
+    "Privacy Policy": "سياسة الخصوصية",
+    "Terms of Use": "شروط الاستخدام",
+    "© 2026 REAP. All rights reserved.": "© 2026 REAP. جميع الحقوق محفوظة.",
     "New tab unlocked": "تبويب جديد متاح",
     "Fund tab is now available": "تبويب الصندوق أصبح متاحًا",
     "Fund structuring is on, so tab 11 · Fund has been added — capital calls, the distribution waterfall, fees and returns for each party.":

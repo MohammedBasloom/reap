@@ -5,29 +5,35 @@
   <script>
     // The github.io mirror forwards to the primary domain.
     if (location.hostname.endsWith("github.io")) {
-      location.replace("https://reapapp.pages.dev" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
+      location.replace("https://www.reapinsights.com" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
     }
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>REAP — Financial Modeling</title>
   <meta name="description" content="REAP — Real Estate Assessment Platform. Live feasibility modeling: program, cost, cashflow, returns, sensitivity, and fund waterfall." />
-  <meta property="og:title" content="REAP Platform" />
-  <meta property="og:description" content="Real Estate Assessment Platform — live feasibility modeling." />
+  <link rel="canonical" href="https://www.reapinsights.com/model" />
+  <meta property="og:site_name" content="REAP" />
+  <meta property="og:title" content="REAP — Financial Modeling" />
+  <meta property="og:description" content="A full development feasibility studio: program, cost, cashflow, returns, sensitivity, Monte Carlo and fund waterfall." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://reapapp.netlify.app/" />
-  <meta property="og:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <meta property="og:url" content="https://www.reapinsights.com/model" />
+  <meta property="og:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="REAP — Real Estate Assessment Platform" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="ar_SA" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="REAP Platform" />
-  <meta name="twitter:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <meta name="twitter:title" content="REAP — Financial Modeling" />
+  <meta name="twitter:description" content="A full development feasibility studio: program, cost, cashflow, returns, sensitivity, Monte Carlo and fund waterfall." />
+  <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
 
   <!-- Auth gate: session or guest access required, else back to landing -->
   <script src="vendor/supabase.js"></script>
-  <script src="assets/config.js?v=20260781"></script>
-  <script src="assets/auth.js?v=20260781"></script>
-  <script src="assets/i18n.js?v=20260781"></script>
+  <script src="assets/config.js?v=20260782"></script>
+  <script src="assets/auth.js?v=20260782"></script>
+  <script src="assets/i18n.js?v=20260782"></script>
   <script>
     document.documentElement.style.visibility = "hidden";
     reapAuth.requireAuth().then(() => { document.documentElement.style.visibility = ""; });
@@ -59,7 +65,7 @@
       console.warn  = function(...a){ if (a[0] && String(a[0]).indexOf(RO) !== -1) return; return cw.apply(console, a); };
     })();
   </script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260781" />
+  <link rel="stylesheet" href="assets/tokens.css?v=20260782" />
   <style>
     body { background: var(--bg-2); overflow: hidden; }
     #root { height: 100vh; }
@@ -81,7 +87,7 @@
   </style>
 </head>
 <body>
-  <script src="assets/mobile-notice.js?v=20260781"></script>
+  <script src="assets/mobile-notice.js?v=20260782"></script>
   <div id="root"></div>
 
   <template id="__bundler_thumbnail" data-bg-color="#0f2a22">
@@ -114,14 +120,14 @@
   <script src="vendor/babel.min.js"></script>
 
   <!-- Calc engine (plain JS, no JSX) -->
-  <script src="src/calc.js?v=20260781"></script>
+  <script src="src/calc.js?v=20260782"></script>
 
   <!-- Components (JSX) -->
-  <script type="text/babel" src="src/usermenu.jsx?v=20260781"></script>
-  <script type="text/babel" src="src/charts.jsx?v=20260781"></script>
-  <script type="text/babel" src="src/sidebar.jsx?v=20260781"></script>
-  <script type="text/babel" src="src/results.jsx?v=20260781"></script>
-  <script type="text/babel" src="src/fund.jsx?v=20260781"></script>
-  <script type="text/babel" src="src/app.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/usermenu.jsx?v=20260782"></script>
+  <script type="text/babel" src="src/charts.jsx?v=20260782"></script>
+  <script type="text/babel" src="src/sidebar.jsx?v=20260782"></script>
+  <script type="text/babel" src="src/results.jsx?v=20260782"></script>
+  <script type="text/babel" src="src/fund.jsx?v=20260782"></script>
+  <script type="text/babel" src="src/app.jsx?v=20260782"></script>
 </body>
 </html>

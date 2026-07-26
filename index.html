@@ -5,25 +5,31 @@
   <script>
     // The github.io mirror forwards to the primary domain.
     if (location.hostname.endsWith("github.io")) {
-      location.replace("https://reapapp.pages.dev" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
+      location.replace("https://www.reapinsights.com" + location.pathname.replace(/^\/reap/, "") + location.search + location.hash);
     }
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>REAP Platform</title>
-  <meta name="description" content="REAP — Real Estate Assessment Platform. Feasibility modeling and property valuation, built for everyone." />
-  <meta property="og:title" content="REAP Platform" />
-  <meta property="og:description" content="Real Estate Assessment Platform — feasibility modeling and property valuation." />
+  <title>REAP — Real Estate Assessment Platform</title>
+  <meta name="description" content="REAP — Real Estate Assessment Platform. Development feasibility modeling and IVS-aligned property valuation, in Arabic and English." />
+  <link rel="canonical" href="https://www.reapinsights.com/" />
+  <meta property="og:site_name" content="REAP" />
+  <meta property="og:title" content="REAP — Real Estate Assessment Platform" />
+  <meta property="og:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://reapapp.netlify.app/" />
-  <meta property="og:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <meta property="og:url" content="https://www.reapinsights.com/" />
+  <meta property="og:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="REAP — Real Estate Assessment Platform" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="ar_SA" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="REAP Platform" />
-  <meta name="twitter:image" content="https://reapapp.netlify.app/assets/og-card.png" />
+  <meta name="twitter:title" content="REAP — Real Estate Assessment Platform" />
+  <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
+  <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260781"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260781" />
+  <script src="assets/i18n.js?v=20260782"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260782" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -215,6 +221,8 @@
     .footer a { color: rgba(255,255,255,0.7); text-decoration: none; display: inline-flex; align-items: center; }
     .footer a:hover { color: var(--ad-gold-400); }
     .footer .sep { width: 1px; height: 16px; background: rgba(255,255,255,0.18); }
+    .footer .copy { color: rgba(255,255,255,0.5); }
+    @media (max-width: 760px) { .footer { flex-wrap: wrap; gap: 10px 12px; } }
 
     /* ---------- Auth modal ---------- */
     .overlay {
@@ -292,7 +300,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260781"></script>
+<script src="assets/mobile-notice.js?v=20260782"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -570,6 +578,12 @@
     <a href="https://linkedin.com/in/mohammedbasloom1" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
     </a>
+    <span class="sep"></span>
+    <a href="privacy.html" data-ar="سياسة الخصوصية">Privacy Policy</a>
+    <span class="sep"></span>
+    <a href="terms.html" data-ar="شروط الاستخدام">Terms of Use</a>
+    <span class="sep"></span>
+    <span class="copy" data-ar="© 2026 REAP. جميع الحقوق محفوظة.">© 2026 REAP. All rights reserved.</span>
   </div>
 </div>
 
@@ -618,8 +632,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260781"></script>
-<script src="assets/auth.js?v=20260781"></script>
+<script src="assets/config.js?v=20260782"></script>
+<script src="assets/auth.js?v=20260782"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
