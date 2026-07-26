@@ -194,6 +194,9 @@
     "Tornado · Equity IRR sensitivity (±10%)": "تورنادو · حساسية IRR للملكية (±10%)",
     "Tornado · Profit sensitivity (±10%)": "تورنادو · حساسية الربح (±10%)",
     "Base profit": "الربح الأساس",
+    "No equity was called.": "لم تُستدعَ أي مساهمة من الملكية.",
+    "Project income and the debt facility cover every funding need, so no investor cash is required and there is no equity IRR to measure — which is why shifting any driver leaves it unchanged. Use the profit sensitivity below to compare what moves the return.":
+      "إذ تغطي إيرادات المشروع والتسهيلات الائتمانية كامل احتياجات التمويل، فلا يُطلب نقد من المستثمرين ولا يوجد عائد ملكية IRR لقياس حساسيته — ولهذا لا يتغيّر عند تحريك أي عامل. استخدم حساسية الربح أدناه لمقارنة أثر العوامل على العائد.",
     "Equity contribution split": "توزيع مساهمات الملكية",
     "Cash investors": "مستثمرون نقديون", "Co-invest": "مساهمة مشتركة", "Fund manager": "مدير الصندوق",
     "Dev": "المطوّر", "Fees": "الرسوم",

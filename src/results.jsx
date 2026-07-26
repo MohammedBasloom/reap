@@ -884,7 +884,22 @@ function SensitivityPanel({ result, input }) {
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
         <Eyebrow>Tornado · Equity IRR sensitivity (±10%)</Eyebrow>
-        <Tornado data={tornado.slice(0, 10)} height={chartH(tornado)} />
+        {/* With no equity called there is no equity IRR to flex — every bar
+            would read 0.0%. Explain it instead of drawing an empty chart. */}
+        {(result.kpi.totalEquity || 0) < 0.5 ? (
+          <div style={{
+            marginTop: 16, padding: "14px 18px", background: "var(--bg-2)",
+            borderInlineStart: "3px solid var(--ad-gold-500)",
+            fontSize: 12.5, color: "var(--fg-2)", lineHeight: 1.6,
+          }}>
+            <strong style={{ color: "var(--fg-1)" }}>No equity was called.</strong>{" "}
+            Project income and the debt facility cover every funding need, so no investor cash is
+            required and there is no equity IRR to measure — which is why shifting any driver leaves
+            it unchanged. Use the profit sensitivity below to compare what moves the return.
+          </div>
+        ) : (
+          <Tornado data={tornado.slice(0, 10)} height={chartH(tornado)} />
+        )}
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
