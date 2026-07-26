@@ -158,8 +158,11 @@ function FundPanel({ result, waterfall, input }) {
 
       <FundSection n={6} title="Annual cashflow by party"
         sub="Every call and distribution for LP, Developer and GP, year by year.">
-        <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", overflowX: "auto" }}>
-          <AnnualPartyTable w={w} />
+        <div style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)" }}>
+          <PartyLegend />
+          <div style={{ overflowX: "auto" }}>
+            <AnnualPartyTable w={w} />
+          </div>
         </div>
       </FundSection>
     </div>
@@ -693,6 +696,34 @@ function FeeTable({ w, fund }) {
 
 /* ---------- Annual table ---------- */
 
+function PartyLegend() {
+  const items = [
+    { who: "lp",  label: "LP · Cash investors" },
+    { who: "dev", label: "Developer" },
+    { who: "gp",  label: "GP · Fund manager" },
+  ];
+  return (
+    <div style={{
+      display: "flex", flexWrap: "wrap", gap: 18, alignItems: "center",
+      padding: "10px 14px", borderBottom: "1px solid var(--border-2)", background: "var(--bg-2)",
+    }}>
+      {items.map((it) => (
+        <span key={it.who} style={{ display: "inline-flex", alignItems: "center", gap: 7, fontSize: 11, color: "var(--fg-2)" }}>
+          <span style={{ width: 12, height: 12, borderRadius: 2, background: PARTY_TINT[it.who], borderInlineStart: "3px solid " + FUND_COLORS[it.who] }} />
+          {it.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Soft per-party fills used to band the annual cashflow columns.
+const PARTY_TINT = {
+  lp:  "color-mix(in oklab, var(--ad-navy-700) 7%, transparent)",
+  dev: "color-mix(in oklab, var(--ad-sand-700) 10%, transparent)",
+  gp:  "color-mix(in oklab, var(--ad-gold-600) 9%, transparent)",
+};
+
 function AnnualPartyTable({ w }) {
   const horizon = w.horizon;
   const years = Math.ceil(horizon / 12);
@@ -709,29 +740,46 @@ function AnnualPartyTable({ w }) {
     rows.push({ y, lp, dev, gp, cumLP, cumDev, cumGP });
   }
 
+  // Each party gets its own tinted column group + coloured header, so the
+  // three pairs read as blocks instead of one undifferentiated grid.
+  const tint = PARTY_TINT;
+  const headCell = (who, label, first) => (
+    <th style={{
+      ...fThR, background: tint[who], color: FUND_COLORS[who], fontWeight: 700,
+      borderInlineStart: first ? "2px solid " + FUND_COLORS[who] : "none",
+    }}>{label}</th>
+  );
+  const cell = (who, v, first, cum) => (
+    <td style={{
+      ...fTdN(v), background: tint[who],
+      borderInlineStart: first ? "2px solid " + FUND_COLORS[who] : "none",
+      color: cum ? (v < 0 ? "var(--ad-danger)" : "var(--ad-success)") : fTdN(v).color,
+    }}>{!cum && v === 0 ? "—" : fcF(v)}</td>
+  );
+
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
       <thead>
         <tr style={{ background: "var(--bg-2)" }}>
           <th style={fTh}>Year</th>
-          <th style={fThR}>LP</th>
-          <th style={fThR}>LP cum.</th>
-          <th style={fThR}>Developer</th>
-          <th style={fThR}>Dev cum.</th>
-          <th style={fThR}>GP</th>
-          <th style={fThR}>GP cum.</th>
+          {headCell("lp", "LP", true)}
+          {headCell("lp", "LP cum.")}
+          {headCell("dev", "Developer", true)}
+          {headCell("dev", "Dev cum.")}
+          {headCell("gp", "GP", true)}
+          {headCell("gp", "GP cum.")}
         </tr>
       </thead>
       <tbody>
         {rows.map((r) => (
           <tr key={r.y} style={{ borderBottom: "1px solid var(--border-2)" }}>
             <td style={fTd}>Y{r.y + 1}</td>
-            <td style={fTdN(r.lp)}>{r.lp === 0 ? "—" : fcF(r.lp)}</td>
-            <td style={fTdN(r.cumLP)}><span style={{ color: r.cumLP < 0 ? "var(--ad-danger)" : "var(--ad-success)" }}>{fcF(r.cumLP)}</span></td>
-            <td style={fTdN(r.dev)}>{r.dev === 0 ? "—" : fcF(r.dev)}</td>
-            <td style={fTdN(r.cumDev)}><span style={{ color: r.cumDev < 0 ? "var(--ad-danger)" : "var(--ad-success)" }}>{fcF(r.cumDev)}</span></td>
-            <td style={fTdN(r.gp)}>{r.gp === 0 ? "—" : fcF(r.gp)}</td>
-            <td style={fTdN(r.cumGP)}><span style={{ color: r.cumGP < 0 ? "var(--ad-danger)" : "var(--ad-success)" }}>{fcF(r.cumGP)}</span></td>
+            {cell("lp", r.lp, true)}
+            {cell("lp", r.cumLP, false, true)}
+            {cell("dev", r.dev, true)}
+            {cell("dev", r.cumDev, false, true)}
+            {cell("gp", r.gp, true)}
+            {cell("gp", r.cumGP, false, true)}
           </tr>
         ))}
       </tbody>

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -9,10 +9,10 @@
     }
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>REAP — Financial Modeling</title>
-  <meta name="description" content="REAP — Real Estate Assessment Platform. Live feasibility modeling: program, cost, cashflow, returns, sensitivity, and fund waterfall." />
+  <title>REAP â€” Financial Modeling</title>
+  <meta name="description" content="REAP â€” Real Estate Assessment Platform. Live feasibility modeling: program, cost, cashflow, returns, sensitivity, and fund waterfall." />
   <meta property="og:title" content="REAP Platform" />
-  <meta property="og:description" content="Real Estate Assessment Platform — live feasibility modeling." />
+  <meta property="og:description" content="Real Estate Assessment Platform â€” live feasibility modeling." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://reapapp.netlify.app/" />
   <meta property="og:image" content="https://reapapp.netlify.app/assets/og-card.png" />
@@ -25,9 +25,9 @@
 
   <!-- Auth gate: session or guest access required, else back to landing -->
   <script src="vendor/supabase.js"></script>
-  <script src="assets/config.js?v=20260780"></script>
-  <script src="assets/auth.js?v=20260780"></script>
-  <script src="assets/i18n.js?v=20260780"></script>
+  <script src="assets/config.js?v=20260781"></script>
+  <script src="assets/auth.js?v=20260781"></script>
+  <script src="assets/i18n.js?v=20260781"></script>
   <script>
     document.documentElement.style.visibility = "hidden";
     reapAuth.requireAuth().then(() => { document.documentElement.style.visibility = ""; });
@@ -59,7 +59,7 @@
       console.warn  = function(...a){ if (a[0] && String(a[0]).indexOf(RO) !== -1) return; return cw.apply(console, a); };
     })();
   </script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260780" />
+  <link rel="stylesheet" href="assets/tokens.css?v=20260781" />
   <style>
     body { background: var(--bg-2); overflow: hidden; }
     #root { height: 100vh; }
@@ -81,7 +81,7 @@
   </style>
 </head>
 <body>
-  <script src="assets/mobile-notice.js?v=20260780"></script>
+  <script src="assets/mobile-notice.js?v=20260781"></script>
   <div id="root"></div>
 
   <template id="__bundler_thumbnail" data-bg-color="#0f2a22">
@@ -107,21 +107,21 @@
     });
   </script>
 
-  <!-- React + Babel (pinned, vendored locally — react@18.3.1, @babel/standalone@7.29.0) -->
+  <!-- React + Babel (pinned, vendored locally â€” react@18.3.1, @babel/standalone@7.29.0) -->
   <script src="vendor/react.development.js"></script>
   <script src="vendor/react-dom.development.js"></script>
   <script>I18N.patchReact();</script>
   <script src="vendor/babel.min.js"></script>
 
   <!-- Calc engine (plain JS, no JSX) -->
-  <script src="src/calc.js?v=20260780"></script>
+  <script src="src/calc.js?v=20260781"></script>
 
   <!-- Components (JSX) -->
-  <script type="text/babel" src="src/usermenu.jsx?v=20260780"></script>
-  <script type="text/babel" src="src/charts.jsx?v=20260780"></script>
-  <script type="text/babel" src="src/sidebar.jsx?v=20260780"></script>
-  <script type="text/babel" src="src/results.jsx?v=20260780"></script>
-  <script type="text/babel" src="src/fund.jsx?v=20260780"></script>
-  <script type="text/babel" src="src/app.jsx?v=20260780"></script>
+  <script type="text/babel" src="src/usermenu.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/charts.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/sidebar.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/results.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/fund.jsx?v=20260781"></script>
+  <script type="text/babel" src="src/app.jsx?v=20260781"></script>
 </body>
 </html>

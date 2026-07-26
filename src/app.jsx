@@ -131,6 +131,28 @@ function App() {
     if (!fundEnabled && tab === "fund") setTab("summary");
   }, [fundEnabled, tab]);
 
+  // Turning fund structure on quietly appends an 11th tab — announce it, and
+  // badge the tab until the user has actually visited it.
+  const [fundToast, setFundToast] = useState(false);
+  const [fundSeen, setFundSeen] = useState(false);
+  const prevFundEnabled = useRef(fundEnabled);
+  useEffect(() => {
+    if (fundEnabled && !prevFundEnabled.current) {
+      setFundSeen(false);
+      setFundToast(true);
+    }
+    if (!fundEnabled) setFundToast(false);
+    prevFundEnabled.current = fundEnabled;
+  }, [fundEnabled]);
+  useEffect(() => {
+    if (tab === "fund") { setFundSeen(true); setFundToast(false); }
+  }, [tab]);
+  useEffect(() => {
+    if (!fundToast) return;
+    const id = setTimeout(() => setFundToast(false), 9000);
+    return () => clearTimeout(id);
+  }, [fundToast]);
+
 
   const k = result.kpi;
   const irrTone = (k.equityIRR ?? 0) >= (input.discountRate || 0) ? "positive" : "negative";
@@ -286,6 +308,13 @@ function App() {
               color: tab === t.id ? "var(--ad-gold-600)" : "var(--fg-4)"
             }}>{t.n}</span>
               {t.label}
+              {t.id === "fund" && !fundSeen &&
+            <span style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: "var(--ad-gold-600)", marginInlineStart: -2,
+              animation: "reap-dot-pulse 1.8s ease-in-out infinite"
+            }} />
+            }
               {tab === t.id &&
             <span style={{
               position: "absolute", bottom: -1, left: 0, right: 0,
@@ -317,9 +346,60 @@ function App() {
         </div>
       </main>
 
+      {fundToast &&
+      <FundTabToast onOpen={() => setTab("fund")} onClose={() => setFundToast(false)} />
+      }
+
       <AppFooter />
     </div>);
 
+}
+
+/* Toast announcing the Fund tab that appears when fund structuring is enabled. */
+function FundTabToast({ onOpen, onClose }) {
+  return (
+    <div className="no-print reap-toast" style={{
+      position: "fixed", bottom: 56, insetInlineEnd: 28, zIndex: 90,
+      width: 340, maxWidth: "calc(100vw - 56px)",
+      background: "var(--ad-navy-900)", color: "white",
+      border: "1px solid var(--ad-navy-700)",
+      borderInlineStart: "3px solid var(--ad-gold-600)",
+      boxShadow: "0 18px 40px rgba(11,25,44,0.28)",
+      padding: "16px 18px",
+    }}>
+      <button
+        onClick={onClose}
+        aria-label="Dismiss"
+        style={{
+          position: "absolute", top: 10, insetInlineEnd: 10,
+          background: "none", border: "none", cursor: "pointer",
+          color: "rgba(255,255,255,0.55)", fontSize: 16, lineHeight: 1, padding: 4,
+        }}>×</button>
+
+      <div style={{
+        fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.14em",
+        textTransform: "uppercase", color: "var(--ad-gold-600)", marginBottom: 6,
+      }}>New tab unlocked</div>
+
+      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 6 }}>
+        Fund tab is now available
+      </div>
+
+      <div style={{ fontSize: 12, lineHeight: 1.6, color: "rgba(255,255,255,0.78)", marginBottom: 12 }}>
+        Fund structuring is on, so tab 11 · Fund has been added — capital calls, the distribution waterfall, fees and returns for each party.
+      </div>
+
+      <button
+        onClick={onOpen}
+        style={{
+          background: "var(--ad-gold-600)", color: "var(--ad-navy-900)",
+          border: "none", cursor: "pointer",
+          padding: "8px 14px", fontSize: 11, fontWeight: 600,
+          letterSpacing: "0.08em", textTransform: "uppercase",
+          fontFamily: "var(--font-body)",
+        }}>Open the Fund tab</button>
+    </div>
+  );
 }
 
 function AppFooter() {

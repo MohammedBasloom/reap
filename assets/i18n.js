@@ -229,6 +229,12 @@
       "سنة بسنة، لترى بدقة متى تُحتسب رسوم الاكتتاب وإدارة الأصول والتطوير والأداء.",
     "Every call and distribution for LP, Developer and GP, year by year.":
       "كل استدعاء وتوزيع للشريك المحدود والمطوّر والشريك العام، سنة بسنة.",
+    "New tab unlocked": "تبويب جديد متاح",
+    "Fund tab is now available": "تبويب الصندوق أصبح متاحًا",
+    "Fund structuring is on, so tab 11 · Fund has been added — capital calls, the distribution waterfall, fees and returns for each party.":
+      "تمّ تفعيل هيكلة الصندوق، فأُضيف التبويب 11 · الصندوق — استدعاءات رأس المال وشلال التوزيعات والرسوم وعوائد كل طرف.",
+    "Open the Fund tab": "افتح تبويب الصندوق",
+    "Dismiss": "إغلاق",
     "Asset management": "إدارة الأصول",
     "Development fee": "رسوم التطوير",
     "Performance fee": "رسوم الأداء",
