@@ -367,28 +367,25 @@ function DashboardEmptyState({ input }) {
   const totalLandCost = landArea * landPrice;
   const totalLandIn = totalLandCost * (1 + (input.landTransferFeesPct || 0));
 
-  // Steps 1–3 track live; the rest are pre-filled with sensible defaults the
-  // user reviews, so they stay as plain numbered guidance.
+  // Six steps in sidebar order. The first three track live; the rest come
+  // pre-filled with sensible defaults the user reviews.
   const steps = [
     { done: hasLand, title: "Set the land",
-      body: "Area, price per m², transfer fees, and whether the site is serviced or raw." },
+      body: "Area, price per m², transfer fees — and whether the site is serviced or raw." },
     { done: hasComponents, title: "Choose your program",
-      body: "Pick component tiles in the sidebar — villas, townhouses, apartments, retail, office, hotel." },
+      body: "Pick component tiles — villas, townhouses, apartments, retail, office, hotel." },
     { done: allocated > 0, title: "Allocate the land",
-      body: "Give each component its share (%) of the serviced land, at the top of its block." },
-    { title: "Fill each component's assumptions",
-      body: "Massing (FAR or coverage), build cost, efficiency, then sale price or rent, and its sales / operating period." },
-    { title: "Set the project timeline",
-      body: "Pre-design and construction months, and when pre-sales start." },
-    { title: "Add general & indirect costs",
-      body: "Soft costs, contingency, marketing, sales commission and government fees." },
-    { title: "Set financing",
-      body: "Loan-to-cost (LTC) and interest rate. Income funds costs first, then debt, then equity." },
-    { title: "Set the hurdle rate",
-      body: "The discount rate used for NPV and to judge the equity IRR." },
-    { title: "Optional — fund structure",
-      body: "Turn it on for an LP / Developer / GP split with fees and a promote waterfall." },
+      body: "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site." },
+    { title: "Tune each component",
+      body: "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates." },
+    { title: "Set timing & general costs",
+      body: "Pre-design, construction and pre-sales start — then soft costs, contingency, marketing and fees." },
+    { title: "Set financing & targets",
+      body: "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure." },
   ];
+  const doneCount = steps.filter((s) => s.done).length;
+  // The step to nudge: first one not yet done.
+  const currentIdx = steps.findIndex((s) => !s.done);
 
   return (
     <div style={{ padding: "56px 48px", maxWidth: 900, margin: "0 auto" }}>
@@ -422,39 +419,81 @@ function DashboardEmptyState({ input }) {
       )}
 
       <div style={{
-        marginTop: 32, padding: "22px 26px",
+        marginTop: 32, padding: "22px 26px 8px",
         border: "1px solid var(--border-1)", background: "var(--bg-1)"
       }}>
         <div style={{
-          fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-          fontWeight: 500, color: "var(--fg-3)", marginBottom: 16
-        }}>How to build your model</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 32px" }}>
-          {steps.map((s, i) => <StepRow key={i} n={i + 1} {...s} />)}
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 16, marginBottom: 18
+        }}>
+          <div style={{
+            fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+            fontWeight: 500, color: "var(--fg-3)"
+          }}>How to build your model</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 84, height: 4, background: "var(--bg-3)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{
+                width: `${(doneCount / steps.length) * 100}%`, height: "100%",
+                background: "var(--ad-success)", borderRadius: 999,
+                transition: "width 420ms var(--ease-out)"
+              }} />
+            </div>
+            <span className="tabnum" style={{ fontSize: 11, color: "var(--fg-3)", fontWeight: 600 }}>
+              {doneCount}/{steps.length}
+            </span>
+          </div>
+        </div>
+        <div>
+          {steps.map((s, i) => (
+            <StepRow
+              key={i}
+              n={i + 1}
+              index={i}
+              last={i === steps.length - 1}
+              current={i === currentIdx}
+              {...s}
+            />
+          ))}
         </div>
       </div>
     </div>);
 
 }
 
-function StepRow({ n, title, body, done }) {
+function StepRow({ n, title, body, done, index, last, current }) {
+  const DOT = 26;
   return (
-    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-      <span style={{
-        flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 600,
-        background: done ? "var(--ad-success)" : "var(--bg-3)",
-        color: done ? "#FFFFFF" : "var(--fg-3)",
-        border: done ? "none" : "1px solid var(--border-1)",
-      }}>{done ? "✓" : String(n).padStart(2, "0")}</span>
-      <div style={{ minWidth: 0 }}>
+    <div
+      className={`reap-step${current ? " is-current" : ""}`}
+      style={{ display: "flex", gap: 14, position: "relative", paddingBottom: last ? 16 : 20, animationDelay: `${index * 70}ms` }}>
+      {/* Connector to the next step — filled green once this one is done */}
+      {!last && (
+        <span style={{
+          position: "absolute", insetInlineStart: (DOT - 2) / 2, top: DOT + 2, bottom: 0,
+          width: 2, background: "var(--border-1)"
+        }}>
+          {done && <span className="reap-line-fill" style={{ position: "absolute", inset: 0, background: "var(--ad-success)" }} />}
+        </span>
+      )}
+      <span
+        className="reap-dot"
+        style={{
+          flexShrink: 0, width: DOT, height: DOT, borderRadius: "50%",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, zIndex: 1,
+          background: done ? "var(--ad-success)" : current ? "var(--ad-gold-500)" : "var(--bg-1)",
+          color: done || current ? "#FFFFFF" : "var(--fg-3)",
+          border: done || current ? "none" : "1px solid var(--border-strong)"
+        }}>{done ? "✓" : n}</span>
+      <div style={{ minWidth: 0, paddingTop: 3 }}>
         <div style={{
-          fontSize: 13, fontWeight: 600, marginBottom: 2,
-          color: done ? "var(--fg-3)" : "var(--fg-1)",
-          textDecoration: done ? "line-through" : "none",
+          fontSize: 13.5, fontWeight: 600, marginBottom: 3,
+          color: done ? "var(--fg-3)" : "var(--fg-1)"
         }}>{title}</div>
-        <div style={{ fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.5 }}>{body}</div>
+        <div className="reap-body" style={{
+          fontSize: 12, lineHeight: 1.55,
+          color: done ? "var(--fg-4)" : "var(--fg-2)"
+        }}>{body}</div>
       </div>
     </div>);
 

@@ -248,6 +248,30 @@ html[dir="rtl"] svg { direction: ltr; }
 html[dir="rtl"] th, html[dir="rtl"] td { text-align: right !important; }
 html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
 
+/* Onboarding roadmap (dashboard empty state) — staggered entrance, and a
+   soft pulse on the step the user is on. */
+@keyframes reap-step-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes reap-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 146, 96, 0.5); }
+  50%      { box-shadow: 0 0 0 7px rgba(184, 146, 96, 0); }
+}
+@keyframes reap-fill-in {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.reap-step { animation: reap-step-in 460ms var(--ease-out) both; }
+.reap-step .reap-dot { transition: background var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out), border-color var(--t-base) var(--ease-out); }
+.reap-step.is-current .reap-dot { animation: reap-dot-pulse 2.4s ease-in-out infinite; }
+.reap-step .reap-line-fill { transform-origin: top; animation: reap-fill-in 520ms var(--ease-out) both; }
+.reap-step .reap-body { transition: color var(--t-base) var(--ease-out); }
+@media (prefers-reduced-motion: reduce) {
+  .reap-step, .reap-step .reap-line-fill { animation: none; }
+  .reap-step.is-current .reap-dot { animation: none; }
+}
+
 /* Mobile compatibility notice (injected by assets/mobile-notice.js) —
    hidden on desktop, shown as a slim band above the header on phones.
    Never printed: paper width can match the phone media query, which

@@ -50,32 +50,23 @@
       "اتبع القائمة الجانبية بالترتيب — والقائمة أدناه تسير بالتسلسل نفسه. وتمتلئ جميع اللوحات (التدفقات النقدية والتكاليف والعوائد والحساسية ومونت كارلو والمخاطر) تلقائيًا كلما تقدّمت.",
     "How to build your model": "كيف تبني نموذجك",
     "Set the land": "حدّد الأرض",
-    "Area, price per m², transfer fees, and whether the site is serviced or raw.":
-      "المساحة، وسعر المتر، ورسوم النقل، وهل الأرض مخدومة أم خام.",
+    "Area, price per m², transfer fees — and whether the site is serviced or raw.":
+      "المساحة، وسعر المتر، ورسوم النقل — وهل الأرض مخدومة أم خام.",
     "Choose your program": "اختر برنامجك",
-    "Pick component tiles in the sidebar — villas, townhouses, apartments, retail, office, hotel.":
-      "اختر بطاقات المكوّنات من القائمة الجانبية — فلل، تاون هاوس، شقق، تجزئة، مكاتب، فندق.",
+    "Pick component tiles — villas, townhouses, apartments, retail, office, hotel.":
+      "اختر بطاقات المكوّنات — فلل، تاون هاوس، شقق، تجزئة، مكاتب، فندق.",
     "Allocate the land": "وزّع الأرض",
-    "Give each component its share (%) of the serviced land, at the top of its block.":
-      "امنح كل مكوّن حصته (٪) من الأرض المخدومة، في أعلى بطاقته.",
-    "Fill each component's assumptions": "أدخل فرضيات كل مكوّن",
-    "Massing (FAR or coverage), build cost, efficiency, then sale price or rent, and its sales / operating period.":
-      "أسلوب البناء (معامل البناء أو التغطية)، وتكلفة البناء، والكفاءة، ثم سعر البيع أو الإيجار، وفترة البيع أو التشغيل.",
-    "Set the project timeline": "حدّد الجدول الزمني",
-    "Pre-design and construction months, and when pre-sales start.":
-      "أشهر ما قبل التصميم والإنشاء، وموعد بدء البيع على الخارطة.",
-    "Add general & indirect costs": "أضف التكاليف العامة وغير المباشرة",
-    "Soft costs, contingency, marketing, sales commission and government fees.":
-      "التكاليف غير المباشرة، والاحتياطي، والتسويق، وعمولة البيع، والرسوم الحكومية.",
-    "Set financing": "حدّد التمويل",
-    "Loan-to-cost (LTC) and interest rate. Income funds costs first, then debt, then equity.":
-      "نسبة التمويل إلى التكلفة (LTC) ومعدل الفائدة. الدخل يموّل التكاليف أولًا، ثم الدين، ثم الملكية.",
-    "Set the hurdle rate": "حدّد معدل العائد المستهدف",
-    "The discount rate used for NPV and to judge the equity IRR.":
-      "معدل الخصم المستخدم في صافي القيمة الحالية ولتقييم عائد الملكية IRR.",
-    "Optional — fund structure": "اختياري — هيكل الصندوق",
-    "Turn it on for an LP / Developer / GP split with fees and a promote waterfall.":
-      "فعّله لتقسيم بين الشريك المحدود والمطوّر والشريك العام مع الرسوم وشلال التوزيعات.",
+    "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site.":
+      "تظهر لوحة التوزيع أسفل البطاقات فور اختيارك أي مكوّن — امنح كل مكوّن حصته (٪) من الأرض.",
+    "Tune each component": "اضبط كل مكوّن",
+    "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates.":
+      "أسلوب البناء وتكلفته والكفاءة، ثم سعر البيع أو الإيجار ومدة البيع أو التشغيل.",
+    "Set timing & general costs": "حدّد الجدول الزمني والتكاليف العامة",
+    "Pre-design, construction and pre-sales start — then soft costs, contingency, marketing and fees.":
+      "ما قبل التصميم والإنشاء وبدء البيع على الخارطة — ثم التكاليف غير المباشرة والاحتياطي والتسويق والرسوم.",
+    "Set financing & targets": "حدّد التمويل والمستهدفات",
+    "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure.":
+      "نسبة التمويل إلى التكلفة ومعدل الفائدة، ومعدل العائد المستهدف لصافي القيمة الحالية، واختياريًا هيكل صندوق بين الشريك المحدود والشريك العام.",
     "Select your program components to model the deal.": "اختر مكوّنات برنامجك العقاري لبدء نمذجة الصفقة.",
     "Land is set. Now pick from the program tiles in the sidebar — villas, apartments, retail, hotel —\n        and the cashflow, cost stack, sensitivity and risk views will populate from your selection.":
       "الأرض جاهزة. اختر الآن من بطاقات البرنامج في القائمة الجانبية — فلل، شقق، تجزئة، فندق — وستمتلئ لوحات التدفقات النقدية والتكاليف والحساسية والمخاطر تلقائيًا.",
