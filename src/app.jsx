@@ -47,9 +47,7 @@ const SAMPLE_INPUT = {
     assetMgmtFeePctYr: 0.015,  // annual % of unreturned equity — paid to GP
     developmentFeePct: 0.03,   // % of construction + site cost — paid to Developer
     preferredReturnPct: 0.08,  // compounded hurdle IRR before promote kicks in
-    catchUpEnabled: true,      // GP catch-up after pref
-    catchUpPct: 1.00,          // 100% = full catch-up; 50% = 50/50 catch-up
-    promoteSplit: 0.20,        // performance fee — GP's share after catch-up
+    promoteSplit: 0.20,        // performance fee — GP's share of profit above pref
   },
 
   // No components by default — user picks from the program tiles.

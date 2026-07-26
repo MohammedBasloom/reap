@@ -62,7 +62,7 @@ function FundPanel({ result, waterfall, input }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
         <FundKPI eyebrow="Total equity" value={fcF(totalEquity)} sub={`LP ${fpF(w.splits.lp,0)} · Dev ${fpF(w.splits.dev,0)} · GP ${fpF(w.splits.gp,0)}`} large />
         <FundKPI eyebrow="Total distributed" value={fcF(totalDistributed)} sub="Across all three parties" large />
-        <FundKPI eyebrow="GP promote earned" value={fcF(w.buckets.promoteToGP + w.buckets.catchUpToGP)} sub={`${fpF(fund.promoteSplit, 0)} performance fee${fund.catchUpEnabled ? ` · ${fpF(fund.catchUpPct,0)} catch-up` : ""}`} tone="accent" large />
+        <FundKPI eyebrow="GP promote earned" value={fcF(w.buckets.promoteToGP)} sub={`${fpF(fund.promoteSplit, 0)} performance fee`} tone="accent" large />
         <FundKPI eyebrow="Total fees" value={fcF(totalFees)} sub={`Acq + asset mgmt + dev`} large />
       </div>
 
@@ -301,15 +301,12 @@ function CapitalStack({ w }) {
 
 function BucketBars({ w, fund }) {
   const b = w.buckets;
-  const totalProfit = b.preferredReturn + b.catchUpToGP + b.promoteToGP + b.proRataResidual;
+  const totalProfit = b.preferredReturn + b.promoteToGP + b.proRataResidual;
   const items = [
     { label: "1 · Return of capital",        value: b.returnOfCapital, color: "var(--ad-navy-300)", note: "Pro-rata to whoever contributed cash (LP + Dev + GP co-invest)" },
     { label: `2 · Preferred return (${fpF(fund.preferredReturnPct, 0)} compounded)`, value: b.preferredReturn, color: "var(--ad-navy-700)", note: "Pro-rata to all equity on unreturned capital balances" },
-    ...(fund.catchUpEnabled && b.catchUpToGP > 0 ? [
-      { label: `3 · GP catch-up (${fpF(fund.catchUpPct, 0)})`, value: b.catchUpToGP, color: "var(--ad-sand-500)", note: "GP receives its catch-up share until cumulative promote matches the performance fee target" }
-    ] : []),
-    { label: `${fund.catchUpEnabled ? "4" : "3"} · Performance fee → GP (${fpF(fund.promoteSplit, 0)})`, value: b.promoteToGP, color: "var(--ad-gold-600)", note: `${fpF(fund.promoteSplit, 0)} of remaining distributions — the GP's promote / carry` },
-    { label: `${fund.catchUpEnabled ? "4b" : "3b"} · Pro-rata to investors (${fpF(1 - fund.promoteSplit, 0)})`, value: b.proRataResidual, color: "var(--ad-sand-700)", note: "Remaining distribution pro-rata to LP + Developer (cash contributors only). GP is rewarded via promote." },
+    { label: `3 · Performance fee → GP (${fpF(fund.promoteSplit, 0)})`, value: b.promoteToGP, color: "var(--ad-gold-600)", note: `${fpF(fund.promoteSplit, 0)} of remaining distributions — the GP's promote / carry` },
+    { label: `3b · Pro-rata to investors (${fpF(1 - fund.promoteSplit, 0)})`, value: b.proRataResidual, color: "var(--ad-sand-700)", note: "Remaining distribution pro-rata to LP + Developer (cash contributors only). GP is rewarded via promote." },
   ];
   const max = Math.max(1, ...items.map(i => i.value));
   return (
@@ -334,7 +331,7 @@ function BucketBars({ w, fund }) {
         marginTop: 16, padding: "10px 14px", background: "var(--ad-navy-50)",
         display: "flex", justifyContent: "space-between", fontSize: 11,
       }}>
-        <span style={{ color: "var(--fg-2)", fontWeight: 500 }}>Profit above ROC → GP take-home {totalProfit > 0 ? fpF((b.promoteToGP + b.catchUpToGP) / totalProfit, 0) : "—"}</span>
+        <span style={{ color: "var(--fg-2)", fontWeight: 500 }}>Profit above ROC → GP take-home {totalProfit > 0 ? fpF(b.promoteToGP / totalProfit, 0) : "—"}</span>
         <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>{fcF(totalProfit)}</span>
       </div>
     </div>
@@ -562,10 +559,7 @@ function FeeTable({ w, fund }) {
     { who: "GP",        label: "Acquisition fee",   rate: fpF(fund.acquisitionFeePct, 2),  base: "Total project cost · one-time", value: w.fees.acquisition,  color: FUND_COLORS.gp },
     { who: "GP",        label: "Asset mgmt fee",    rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr`, base: "Unreturned equity balance · monthly", value: w.fees.assetMgmt,     color: FUND_COLORS.gp },
     { who: "Developer", label: "Development fee",   rate: fpF(fund.developmentFeePct, 2),  base: "Construction + site cost · S-curve", value: w.fees.development, color: FUND_COLORS.dev },
-    ...(fund.catchUpEnabled && w.buckets.catchUpToGP > 0 ? [
-      { who: "GP", label: "Catch-up", rate: fpF(fund.catchUpPct, 0), base: "Of each $ distributed until promote share is reached", value: w.buckets.catchUpToGP, color: FUND_COLORS.gp }
-    ] : []),
-    { who: "GP",        label: "Performance fee (promote)",   rate: fpF(fund.promoteSplit, 0), base: "Of distributions after pref + catch-up", value: w.buckets.promoteToGP, color: FUND_COLORS.gp },
+    { who: "GP",        label: "Performance fee (promote)",   rate: fpF(fund.promoteSplit, 0), base: "Of distributions after return of capital + preferred return", value: w.buckets.promoteToGP, color: FUND_COLORS.gp },
   ];
   const total = rows.reduce((s, r) => s + r.value, 0);
   return (

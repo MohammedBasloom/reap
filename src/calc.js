@@ -868,16 +868,12 @@ function computeRisks(ctx) {
 }
 
 /* ---------- Fund waterfall — LP / Developer / GP ----------
-   European waterfall, tiered:
+   European waterfall, three tiers:
      (1) Return of capital — pro-rata of unreturned contributions to ALL who
          contributed cash (LP + Dev + GP co-invest)
      (2) Preferred return — compounded monthly at preferredReturnPct, pro-rata
          on unreturned capital balances
-     (3) GP catch-up (optional) — GP receives catchUpPct of each $ until GP's
-         cumulative promote equals promoteSplit/(1-promoteSplit) × (pref paid
-         to LP+Dev) … i.e. until GP has caught up to its promote share of the
-         "profit above pref" pool
-     (4) Performance split — promoteSplit to GP; (1 - promoteSplit) pro-rata
+     (3) Performance split — promoteSplit to GP; (1 - promoteSplit) pro-rata
          to investors only (LP + Developer), NOT to GP co-invest             */
 
 function runWaterfall(input, result) {
@@ -914,13 +910,7 @@ function runWaterfall(input, result) {
   const acqFeePct = +f.acquisitionFeePct || 0;
   const devFeePct = +f.developmentFeePct || 0;
 
-  const catchUpOn = !!f.catchUpEnabled;
-  const catchUpPct = Math.max(0, Math.min(1, +f.catchUpPct || 0));
   const promote = Math.max(0, Math.min(1, +f.promoteSplit || 0));
-  // GP's target ratio of profit (above pref) — i.e. promote% of (pref + promote)
-  // Catch-up target: cumulative GP promote = (promote / (1-promote)) × pref
-  // already paid to LP+Dev. (Standard European catch-up math.)
-  const targetGpRatio = promote > 0 && promote < 1 ? promote / (1 - promote) : 0;
 
   // Fee bases
   const k = result.kpi;
@@ -944,7 +934,6 @@ function runWaterfall(input, result) {
     contribFlow: new Array(horizon).fill(0),
     returnOfCapFlow: new Array(horizon).fill(0),
     prefFlow: new Array(horizon).fill(0),
-    catchUpFlow: new Array(horizon).fill(0),
     promoteFlow: new Array(horizon).fill(0),
     proRataFlow: new Array(horizon).fill(0),
     feeFlow: new Array(horizon).fill(0),
@@ -956,12 +945,9 @@ function runWaterfall(input, result) {
   const buckets = {
     returnOfCapital: 0,
     preferredReturn: 0,
-    catchUpToGP: 0,
     promoteToGP: 0,
     proRataResidual: 0,
   };
-  let prefPaidLpDev = 0;
-  let gpPromoteCum = 0;
 
   for (let m = 0; m < horizon; m++) {
     // === Fees this month — paid as incurred (standard treatment) ===
@@ -1049,43 +1035,11 @@ function runWaterfall(input, result) {
           party.dev.prefAccrued -= devPay; party.dev.cashflow[m] += devPay; party.dev.prefFlow[m] += devPay;
           party.gp.prefAccrued  -= gpPay;  party.gp.cashflow[m]  += gpPay;  party.gp.prefFlow[m]  += gpPay;
           buckets.preferredReturn += pay;
-          prefPaidLpDev += lpPay + devPay;
           dist -= pay;
         }
       }
 
-      // (d) GP catch-up — optional. GP receives catchUpPct of each $ until
-      //     gpPromoteCum reaches targetGpRatio × prefPaidLpDev.
-      if (catchUpOn && dist > 0 && promote > 0 && promote < 1) {
-        const targetCum = prefPaidLpDev * targetGpRatio;
-        const gpDeficit = Math.max(0, targetCum - gpPromoteCum);
-        if (gpDeficit > 0 && catchUpPct > 0) {
-          // The "catch-up" stream is catchUpPct of every distributed $; the
-          // remaining (1-catchUpPct) goes pro-rata to investors during the
-          // catch-up. We solve for the maximum X (distribution closed) such
-          // that catchUpPct × X ≤ gpDeficit, i.e. X = gpDeficit / catchUpPct.
-          const maxClosed = catchUpPct > 0 ? gpDeficit / catchUpPct : Infinity;
-          const closed = Math.min(dist, maxClosed);
-          const gpShare = closed * catchUpPct;
-          const invShare = closed * (1 - catchUpPct);
-          // GP catch-up
-          party.gp.cashflow[m]   += gpShare;
-          party.gp.catchUpFlow[m] += gpShare;
-          buckets.catchUpToGP += gpShare;
-          gpPromoteCum += gpShare;
-          // Investor portion during catch-up
-          if (invShare > 0) {
-            party.lp.cashflow[m]    += invShare * lpInv;
-            party.dev.cashflow[m]   += invShare * devInv;
-            party.lp.proRataFlow[m]  += invShare * lpInv;
-            party.dev.proRataFlow[m] += invShare * devInv;
-            buckets.proRataResidual += invShare;
-          }
-          dist -= closed;
-        }
-      }
-
-      // (e) Performance split — promote% to GP, rest pro-rata to INVESTORS
+      // (d) Performance split — promote% to GP, rest pro-rata to INVESTORS
       //     (LP + Developer). GP co-invest does NOT receive any residual; GP
       //     is rewarded via promote only.
       if (dist > 0) {
@@ -1095,7 +1049,6 @@ function runWaterfall(input, result) {
         party.gp.promoteFlow[m] += gpShare;
         fees.promote += gpShare;
         buckets.promoteToGP += gpShare;
-        gpPromoteCum += gpShare;
 
         party.lp.cashflow[m]    += invShare * lpInv;
         party.dev.cashflow[m]   += invShare * devInv;
@@ -1130,8 +1083,6 @@ function runWaterfall(input, result) {
     fundLifeMonths: fundLife,
     config: {
       preferredReturnPct: prefAnnual,
-      catchUpEnabled: catchUpOn,
-      catchUpPct: catchUpPct,
       promoteSplit: promote,
     },
   };

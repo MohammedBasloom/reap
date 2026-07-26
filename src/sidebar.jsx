@@ -902,37 +902,17 @@ function FundStructureSection({ input, upd }) {
           </div>
           <Row cols={2}>
             <PctField label="Preferred return" value={fund.preferredReturnPct} onChange={v => updFund("preferredReturnPct", v)} hint="Compounded · pro-rata to all equity" />
-            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share after pref / catch-up" />
+            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share of profit above the preferred return" />
           </Row>
 
-          {/* Catch-up sub-section */}
           <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "8px 10px", border: "1px solid var(--border-1)", background: "var(--bg-2)",
-            marginTop: 4, marginBottom: fund.catchUpEnabled ? 8 : 12,
-          }}>
-            <span style={{ fontSize: 11, color: "var(--fg-2)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 500 }}>
-              GP catch-up
-            </span>
-            <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer", fontSize: 11, color: "var(--fg-3)" }}>
-              <input type="checkbox" checked={!!fund.catchUpEnabled} onChange={e => updFund("catchUpEnabled", e.target.checked)} />
-              {fund.catchUpEnabled ? "On" : "Off"}
-            </label>
-          </div>
-          {fund.catchUpEnabled && (
-            <Row cols={2}>
-              <PctField label="Catch-up %" value={fund.catchUpPct} onChange={v => updFund("catchUpPct", v)} hint="100% = full catch-up · 50% = 50/50" />
-              <div />
-            </Row>
-          )}
-
-          <div style={{
+            marginTop: 4,
             padding: "10px 14px", background: "var(--bg-2)",
             fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5,
-            borderLeft: "3px solid var(--ad-gold-600)",
+            borderInlineStart: "3px solid var(--ad-gold-600)",
           }}>
             <strong style={{ color: "var(--fg-1)" }}>European waterfall:</strong>{" "}
-            (1) <em>return of capital</em> pro-rata to whoever contributed cash, (2) <em>compounded preferred return</em> pro-rata, (3) {fund.catchUpEnabled ? "GP catch-up at the chosen % until promote share is reached, " : ""}(4) <em>performance fee</em> — {fpFsidebar(fund.promoteSplit)} to GP, {fpFsidebar(1 - (+fund.promoteSplit || 0))} pro-rata to investors (LP + Dev only — GP is rewarded via promote).
+            (1) <em>return of capital</em> pro-rata to whoever contributed cash, (2) <em>compounded preferred return</em> pro-rata, (3) <em>performance fee</em> — {fpFsidebar(fund.promoteSplit)} to GP, {fpFsidebar(1 - (+fund.promoteSplit || 0))} pro-rata to investors (LP + Dev only — GP is rewarded via promote).
           </div>
         </>
       )}

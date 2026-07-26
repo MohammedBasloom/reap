@@ -206,6 +206,10 @@
     "Distribution waterfall": "شلال التوزيعات",
     "Compounded · pro-rata to all equity": "مركّب · بالتناسب على كامل الملكية",
     "GP share after pref / catch-up": "حصة الشريك العام بعد العائد الممتاز واللحاق",
+    "GP share of profit above the preferred return": "حصة الشريك العام من الربح الزائد عن العائد الممتاز",
+    "Of distributions after return of capital + preferred return": "من التوزيعات بعد استرداد رأس المال والعائد الممتاز",
+    "(1) return of capital pro-rata to whoever contributed cash, (2) compounded preferred return pro-rata, (3) performance fee —":
+      "(1) استرداد رأس المال بالتناسب لمن ساهم نقدًا، (2) العائد الممتاز المركّب بالتناسب، (3) رسوم الأداء —",
     "GP catch-up": "لحاق الشريك العام",
     "100% = full catch-up · 50% = 50/50": "100% = لحاق كامل · 50% = مناصفة",
     "European waterfall:": "الشلال الأوروبي:",
