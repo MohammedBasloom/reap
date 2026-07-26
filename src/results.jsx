@@ -1890,8 +1890,11 @@ function RiskPanel({ result, input }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px 32px", marginTop: 14, fontSize: 12 }}>
           <Diag label="Land as % of dev cost" value={fp(k.landCost / k.devCostExFinance)} ok={(k.landCost / k.devCostExFinance) < 0.30} />
           <Diag label="Construction as % of dev cost" value={fp(k.constructionCost / k.devCostExFinance)} ok={true} />
-          <Diag label="Profit margin (on revenue)" value={fp(k.profit / k.totalRevenue)} ok={(k.profit / k.totalRevenue) > 0.12} />
-          <Diag label="ROI on cost" value={fp(k.profit / k.totalCost)} ok={(k.profit / k.totalCost) > 0.15} />
+          {/* Same definitions as the Returns tab: levered profit over
+              revenue, and over ALL-IN cost (incl. financing interest) —
+              mixing bases here made the two tabs disagree. */}
+          <Diag label="Margin on revenue" value={k.totalRevenue > 0 ? fp(k.profit / k.totalRevenue) : "—"} ok={(k.profit / Math.max(1, k.totalRevenue)) > 0.12} />
+          <Diag label="Margin on cost" value={(k.totalCost + k.totalInterest) > 0 ? fp(k.profit / (k.totalCost + k.totalInterest)) : "—"} ok={(k.profit / Math.max(1, k.totalCost + k.totalInterest)) > 0.15} />
           <Diag label="Interest / dev cost" value={fp(k.totalInterest / k.devCostExFinance)} ok={(k.totalInterest / k.devCostExFinance) < 0.10} />
           <Diag label="Selling cost / revenue" value={fp((k.marketing + k.salesCommission + k.govFees) / Math.max(1, k.totalRevenue))} ok={true} />
         </div>
