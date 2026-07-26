@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -10,9 +10,9 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>REAP Platform</title>
-  <meta name="description" content="REAP â€” Real Estate Assessment Platform. Feasibility modeling and property valuation, built for everyone." />
+  <meta name="description" content="REAP — Real Estate Assessment Platform. Feasibility modeling and property valuation, built for everyone." />
   <meta property="og:title" content="REAP Platform" />
-  <meta property="og:description" content="Real Estate Assessment Platform â€” feasibility modeling and property valuation." />
+  <meta property="og:description" content="Real Estate Assessment Platform — feasibility modeling and property valuation." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://reapapp.netlify.app/" />
   <meta property="og:image" content="https://reapapp.netlify.app/assets/og-card.png" />
@@ -89,7 +89,7 @@
     .card p { font-size: 14px; line-height: 1.65; color: var(--fg-2); margin-top: 10px; flex: 1; }
     .card ul { margin: 14px 0 0; padding: 0; list-style: none; }
     .card li { font-size: 12.5px; color: var(--fg-2); padding: 5px 0; padding-inline-start: 20px; position: relative; }
-    .card li::before { content: "â—†"; position: absolute; inset-inline-start: 0; font-size: 8px; top: 9px; color: var(--ad-gold-500); }
+    .card li::before { content: "◆"; position: absolute; inset-inline-start: 0; font-size: 8px; top: 9px; color: var(--ad-gold-500); }
     .card .go {
       margin-top: 24px; align-self: flex-start;
       font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
@@ -150,7 +150,7 @@
       display: flex; gap: 14px 36px; flex-wrap: wrap; justify-content: space-between;
     }
     .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; }
-    .trust .t::before { content: "â—†"; color: var(--ad-gold-500); font-size: 7px; }
+    .trust .t::before { content: "◆"; color: var(--ad-gold-500); font-size: 7px; }
 
     /* ---------- Features bento ---------- */
     .features { background: var(--bg-1); color: var(--fg-1); padding: 72px 40px 80px; border-top: 1px solid var(--border-1); }
@@ -299,19 +299,19 @@
   <div class="topbar">
     <div class="brand">
       <svg class="mark" viewBox="4 16 88 78" fill="#fff" aria-hidden="true"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
-      <span class="lockup"><b>REAP</b><span class="tag" data-ar="Ù…Ù†ØµØ© ØªØ­Ù„ÙŠÙ„ ÙˆØªÙ‚ÙŠÙŠÙ… Ø§Ù„ÙØ±Øµ Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠØ©">Real Estate Assessment Platform</span></span>
+      <span class="lockup"><b>REAP</b><span class="tag" data-ar="منصة تحليل وتقييم الفرص العقارية">Real Estate Assessment Platform</span></span>
     </div>
     <div class="actions">
       <div class="userchip" id="userChip">
         <button class="avatar" id="btnAvatar" aria-label="Account menu">?</button>
         <div class="avatar-menu" id="avatarMenu">
-          <div class="mlabel" data-ar="Ù…Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø¨Ø§Ø³Ù…">Signed in as</div>
+          <div class="mlabel" data-ar="مسجّل الدخول باسم">Signed in as</div>
           <div class="mname" id="userName"></div>
           <div class="memail" id="userEmail"></div>
           <div class="mdivider"></div>
-          <a class="mbtn primary" href="model.html" data-ar="Ø§ÙØªØ­ Ø§Ù„Ù†Ù…Ø°Ø¬Ø© Ø§Ù„Ù…Ø§Ù„ÙŠØ©">Open Financial Modeling</a>
-          <a class="mbtn primary" href="valuation.html" data-ar="Ø§ÙØªØ­ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ">Open Valuation</a>
-          <button class="mbtn" id="btnLogout" data-ar="ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬">Log out</button>
+          <a class="mbtn primary" href="model.html" data-ar="افتح النمذجة المالية">Open Financial Modeling</a>
+          <a class="mbtn primary" href="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</a>
+          <button class="mbtn" id="btnLogout" data-ar="تسجيل الخروج">Log out</button>
         </div>
       </div>
       <button class="btn-land icon" id="btnLang" title="Switch language" aria-label="Switch language">
@@ -319,29 +319,29 @@
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm7.93 9h-3.02a15.9 15.9 0 0 0-1.4-5.02A8.01 8.01 0 0 1 19.93 11zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14A8.1 8.1 0 0 1 4 12c0-.69.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h3.02c.35 1.77 1.03 3.5 1.4 5.02A8.01 8.01 0 0 1 5.08 16zm3.02-8H5.08a8.01 8.01 0 0 1 4.42-5.02A15.9 15.9 0 0 0 8.1 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 7.02c.37-1.52 1.05-3.25 1.4-5.02h3.02a8.01 8.01 0 0 1-4.42 5.02zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" />
         </svg>
       </button>
-      <button class="btn-land" id="btnLogin" data-ar="ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„">Log in</button>
-      <button class="btn-land primary" id="btnSignup" data-ar="Ø³Ø¬Ù‘Ù„ Ù…Ø¬Ø§Ù†Ù‹Ø§">Sign up free</button>
+      <button class="btn-land" id="btnLogin" data-ar="تسجيل الدخول">Log in</button>
+      <button class="btn-land primary" id="btnSignup" data-ar="سجّل مجانًا">Sign up free</button>
     </div>
   </div>
 
   <!-- ============ HERO ============ -->
   <div class="hero">
     <div>
-      <div class="eyebrow" data-ar="Ø¯Ø±Ø§Ø³Ø© Ø§Ù„Ø¬Ø¯ÙˆÙ‰ Â· Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Â· Ù‚Ø±Ø§Ø±Ø§Øª Ø¬Ø§Ù‡Ø²Ø©">Feasibility Â· Valuation Â· Decision-ready</div>
-      <h1 data-ar="Ø­Ù„Ù‘Ù„ØŒ Ø£Ø¯Ø±Ø³ØŒ Ù‚ÙŠÙ‘Ù… <span style='white-space:nowrap'>Ø£ÙŠ ÙØ±ØµØ© Ø¹Ù‚Ø§Ø±ÙŠØ©</span> <span style='white-space:nowrap'>â€” <em>Ø¨Ø§Ø­ØªØ±Ø§ÙÙŠØ©.</em></span>">Assess any real estate opportunity â€” <em>like a professional.</em></h1>
-      <p class="lede" data-ar="ØªØ­ÙˆÙ‘Ù„ REAP Ø§Ù„ØªØ­Ù„ÙŠÙ„ Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ Ø§Ù„Ù…Ø¹Ù‚Ù‘Ø¯ Ø¥Ù„Ù‰ Ù†Ù…Ø§Ø°Ø¬ Ø­ÙŠÙ‘Ø© Ù…ÙˆØ¬ÙŽÙ‘Ù‡Ø©. Ù†ÙÙ‘Ø° Ø¯Ø±Ø§Ø³Ø© Ø¬Ø¯ÙˆÙ‰ ØªØ·ÙˆÙŠØ±ÙŠØ© ÙƒØ§Ù…Ù„Ø© Ø£Ùˆ Ù‚ÙŠÙ‘Ù… Ø¹Ù‚Ø§Ø±Ù‹Ø§ Ø¨Ø£Ø³Ø§Ù„ÙŠØ¨ Ù…Ø¹ØªÙ…Ø¯Ø© Ø¹Ø§Ù„Ù…ÙŠÙ‹Ø§ â€” Ø¯ÙˆÙ† Ø§Ù„Ø­Ø§Ø¬Ø© Ø¥Ù„Ù‰ Ø®Ù„ÙÙŠØ© Ù…Ø§Ù„ÙŠØ©.">
+      <div class="eyebrow" data-ar="دراسة الجدوى · التقييم · قرارات جاهزة">Feasibility · Valuation · Decision-ready</div>
+      <h1 data-ar="حلّل، أدرس، قيّم <span style='white-space:nowrap'>أي فرصة عقارية</span> <span style='white-space:nowrap'>— <em>باحترافية.</em></span>">Assess any real estate opportunity — <em>like a professional.</em></h1>
+      <p class="lede" data-ar="تحوّل REAP التحليل العقاري المعقّد إلى نماذج حيّة موجَّهة. نفّذ دراسة جدوى تطويرية كاملة أو قيّم عقارًا بأساليب معتمدة عالميًا — دون الحاجة إلى خلفية مالية.">
         REAP turns complex real-estate analysis into guided, live models. Run a full development
-        feasibility study or value a property with globally recognised methods â€” no financial
+        feasibility study or value a property with globally recognised methods — no financial
         background required.
       </p>
       <div class="cta">
-        <button class="btn-land primary" id="btnStart" data-ar="Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù† â€” Ù…Ø¬Ø§Ù†Ù‹Ø§">Get started â€” it's free</button>
-        <button class="btn-land" id="btnExplore" data-ar="Ø§Ø³ØªÙƒØ´Ù ÙƒØ¶ÙŠÙ">Explore as guest</button>
+        <button class="btn-land primary" id="btnStart" data-ar="ابدأ الآن — مجانًا">Get started — it's free</button>
+        <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
       </div>
       <div class="stats">
-        <div class="stat"><b>2</b><span data-ar="Ù…Ù†ØµØªØ§ ØªØ­Ù„ÙŠÙ„">Analysis platforms</span></div>
-        <div class="stat"><b>10+</b><span data-ar="Ù„ÙˆØ­Ø© Ù†ØªØ§Ø¦Ø¬ Ø­ÙŠÙ‘Ø©">Live dashboards</span></div>
-        <div class="stat"><b>IVS</b><span data-ar="Ø£Ø³Ø§Ù„ÙŠØ¨ Ù…Ø¹ØªÙ…Ø¯Ø© Ø¯ÙˆÙ„ÙŠÙ‹Ø§">Aligned methods</span></div>
+        <div class="stat"><b>2</b><span data-ar="منصتا تحليل">Analysis platforms</span></div>
+        <div class="stat"><b>10+</b><span data-ar="لوحة نتائج حيّة">Live dashboards</span></div>
+        <div class="stat"><b>IVS</b><span data-ar="أساليب معتمدة دوليًا">Aligned methods</span></div>
       </div>
     </div>
     <div class="arch-art">
@@ -354,13 +354,13 @@
           <div class="mockhead">
             <svg width="15" height="13" viewBox="4 16 88 78" fill="#102040" aria-hidden="true"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
             <b>REAP</b>
-            <span class="mtag" data-ar="Ù„ÙˆØ­Ø© Ù†ØªØ§Ø¦Ø¬ Ø­ÙŠÙ‘Ø©">Live dashboard</span>
-            <span class="mchip" data-ar="Ø¬Ø§Ù‡Ø² Ù„Ù„Ù‚Ø±Ø§Ø±">Decision-ready</span>
+            <span class="mtag" data-ar="لوحة نتائج حيّة">Live dashboard</span>
+            <span class="mchip" data-ar="جاهز للقرار">Decision-ready</span>
           </div>
           <div class="mkpis">
-            <div class="mkpi"><span data-ar="Ø¹Ø§Ø¦Ø¯ Ø§Ù„Ù…Ù„ÙƒÙŠØ© IRR">Equity IRR</span><b class="tabnum">18.4%</b></div>
-            <div class="mkpi"><span data-ar="ØµØ§ÙÙŠ Ø§Ù„Ù‚ÙŠÙ…Ø© NPV">NPV</span><b class="tabnum">SAR 24.6M</b></div>
-            <div class="mkpi"><span data-ar="ÙØªØ±Ø© Ø§Ù„Ø§Ø³ØªØ±Ø¯Ø§Ø¯">Payback</span><b class="tabnum">4.2 yrs</b></div>
+            <div class="mkpi"><span data-ar="عائد الملكية IRR">Equity IRR</span><b class="tabnum">18.4%</b></div>
+            <div class="mkpi"><span data-ar="صافي القيمة NPV">NPV</span><b class="tabnum">SAR 24.6M</b></div>
+            <div class="mkpi"><span data-ar="فترة الاسترداد">Payback</span><b class="tabnum">4.2 yrs</b></div>
           </div>
           <div class="mchartwrap">
             <svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
@@ -385,8 +385,8 @@
             </svg>
           </div>
           <div class="mfoot">
-            <span data-ar="Ø§Ù„ØªØ¯ÙÙ‚ Ø§Ù„Ù†Ù‚Ø¯ÙŠ Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ">Cumulative cashflow</span>
-            <span><i class="sw navy"></i><span data-ar="ØªØ¯ÙÙ‚ Ø§Ù„ÙØªØ±Ø©">Period cash</span>&nbsp;&nbsp;<i class="sw gold"></i><span data-ar="Ø§Ù„ØªØ±Ø§ÙƒÙ…ÙŠ">Cumulative</span></span>
+            <span data-ar="التدفق النقدي التراكمي">Cumulative cashflow</span>
+            <span><i class="sw navy"></i><span data-ar="تدفق الفترة">Period cash</span>&nbsp;&nbsp;<i class="sw gold"></i><span data-ar="التراكمي">Cumulative</span></span>
           </div>
         </div>
       </div>
@@ -396,50 +396,50 @@
   <!-- ============ TRUST STRIP ============ -->
   <div class="trust">
     <div class="inner">
-      <span class="t" data-ar="Ù…Ù†Ù‡Ø¬ÙŠØ© Ù…ØªÙˆØ§ÙÙ‚Ø© Ù…Ø¹ IVS">IVS-aligned methodology</span>
-      <span class="t" data-ar="Ø¹Ø±Ø¨ÙŠ ÙˆØ¥Ù†Ø¬Ù„ÙŠØ²ÙŠ â€” Ø¯Ø¹Ù… ÙƒØ§Ù…Ù„ Ù„Ù„Ø§ØªØ¬Ø§Ù‡ÙŠÙ†">Arabic &amp; English â€” full RTL</span>
-      <span class="t" data-ar="Ù‚ÙŠÙ… Ø§ÙØªØ±Ø§Ø¶ÙŠØ© Ù„Ù„Ø³ÙˆÙ‚ Ø§Ù„Ø³Ø¹ÙˆØ¯ÙŠ">Saudi market defaults</span>
-      <span class="t" data-ar="Ù…Ø¬Ø§Ù†Ù‹Ø§ â€” Ø¯ÙˆÙ† Ø¨Ø·Ø§Ù‚Ø© Ø§Ø¦ØªÙ…Ø§Ù†ÙŠØ©">Free â€” no card required</span>
+      <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
+      <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
+      <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
+      <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
     </div>
   </div>
 
   <!-- ============ SERVICES ============ -->
   <div class="services">
     <div class="inner">
-      <div class="eyebrow" data-ar="Ø§Ø®ØªØ± Ø®Ø¯Ù…ØªÙƒ">Choose your service</div>
-      <h2 data-ar="Ù…Ù†ØµØªØ§Ù†. ÙˆÙ‚Ø±Ø§Ø± ÙˆØ§Ø­Ø¯: Ù‡Ù„ ØªØ³ØªØ­Ù‚ Ù‡Ø°Ù‡ Ø§Ù„ØµÙÙ‚Ø©ØŸ">Two platforms. One decision: is this deal worth it?</h2>
+      <div class="eyebrow" data-ar="اختر خدمتك">Choose your service</div>
+      <h2 data-ar="منصتان. وقرار واحد: هل تستحق هذه الصفقة؟">Two platforms. One decision: is this deal worth it?</h2>
       <div class="cards">
         <div class="card">
           <div class="num">01</div>
-          <h3 data-ar="Ø§Ù„Ù†Ù…Ø°Ø¬Ø© Ø§Ù„Ù…Ø§Ù„ÙŠØ©">Financial Modeling</h3>
-          <p data-ar="Ø§Ø³ØªÙˆØ¯ÙŠÙˆ Ù…ØªÙƒØ§Ù…Ù„ Ù„Ø¯Ø±Ø§Ø³Ø§Øª Ø§Ù„Ø¬Ø¯ÙˆÙ‰ Ø§Ù„ØªØ·ÙˆÙŠØ±ÙŠØ©. Ø¬Ù‡Ù‘Ø² Ø§Ù„Ø£Ø±Ø¶ ÙˆÙ…ÙƒÙˆÙ‘Ù†Ø§Øª Ø§Ù„Ø¨Ø±Ù†Ø§Ù…Ø¬ (ÙÙ„Ù„ØŒ Ø´Ù‚Ù‚ØŒ ØªØ¬Ø²Ø¦Ø©ØŒ ÙÙ†Ø¯Ù‚â€¦) ÙˆØ§Ù„ØªÙƒØ§Ù„ÙŠÙ ÙˆØ§Ù„ØªÙ…ÙˆÙŠÙ„ â€” ÙˆØ§Ù‚Ø±Ø£ Ù„ÙˆØ­Ø§Øª Ø­ÙŠÙ‘Ø© Ù„Ù„ØªØ¯ÙÙ‚Ø§Øª Ø§Ù„Ù†Ù‚Ø¯ÙŠØ© ÙˆØ§Ù„Ø¹ÙˆØ§Ø¦Ø¯ ÙˆØ§Ù„Ø­Ø³Ø§Ø³ÙŠØ© ÙˆÙ…ÙˆÙ†Øª ÙƒØ§Ø±Ù„Ùˆ ÙˆØ´Ù„Ø§Ù„ Ø§Ù„ØªÙˆØ²ÙŠØ¹Ø§Øª.">
+          <h3 data-ar="النمذجة المالية">Financial Modeling</h3>
+          <p data-ar="استوديو متكامل لدراسات الجدوى التطويرية. جهّز الأرض ومكوّنات البرنامج (فلل، شقق، تجزئة، فندق…) والتكاليف والتمويل — واقرأ لوحات حيّة للتدفقات النقدية والعوائد والحساسية ومونت كارلو وشلال التوزيعات.">
             A full development feasibility studio. Configure land, program components (villas,
-            apartments, retail, hotelâ€¦), costs and financing â€” and read live dashboards for
+            apartments, retail, hotel…), costs and financing — and read live dashboards for
             cashflow, returns, sensitivity, Monte Carlo and fund waterfalls.
           </p>
           <ul>
-            <li data-ar="Ù…Ù†Ø´Ø¦ Ø¨Ø±Ù†Ø§Ù…Ø¬ Ø¨Ù‚ÙŠÙ… Ø³ÙˆÙ‚ÙŠØ© Ø¬Ø§Ù‡Ø²Ø©">Program builder with market defaults</li>
-            <li data-ar="Ù†Ù…Ø°Ø¬Ø© IRR ÙˆNPV ÙˆÙØªØ±Ø© Ø§Ù„Ø§Ø³ØªØ±Ø¯Ø§Ø¯ ÙˆØ§Ù„Ø¯ÙŠÙ†">IRR, NPV, payback & debt modeling</li>
-            <li data-ar="Ø³ÙŠÙ†Ø§Ø±ÙŠÙˆÙ‡Ø§Øª ÙˆØ­Ø³Ø§Ø³ÙŠØ© ÙˆÙ…Ø®Ø§Ø·Ø± Ù…ÙˆÙ†Øª ÙƒØ§Ø±Ù„Ùˆ">Scenarios, sensitivity & Monte Carlo risk</li>
-            <li data-ar="Ø´Ù„Ø§Ù„ ØªÙˆØ²ÙŠØ¹Ø§Øª LP / GP">LP / GP fund waterfall</li>
+            <li data-ar="منشئ برنامج بقيم سوقية جاهزة">Program builder with market defaults</li>
+            <li data-ar="نمذجة IRR وNPV وفترة الاسترداد والدين">IRR, NPV, payback & debt modeling</li>
+            <li data-ar="سيناريوهات وحساسية ومخاطر مونت كارلو">Scenarios, sensitivity & Monte Carlo risk</li>
+            <li data-ar="شلال توزيعات LP / GP">LP / GP fund waterfall</li>
           </ul>
-          <button class="go" data-app="model.html" data-ar="Ø§ÙØªØ­ Ø§Ù„Ù†Ù…Ø°Ø¬Ø© Ø§Ù„Ù…Ø§Ù„ÙŠØ©">Open Financial Modeling</button>
+          <button class="go" data-app="model.html" data-ar="افتح النمذجة المالية">Open Financial Modeling</button>
         </div>
         <div class="card">
           <div class="num">02</div>
-          <h3 data-ar='Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ<span class="badge">Ø¬Ø¯ÙŠØ¯</span>'>Real Estate Valuation<span class="badge">New</span></h3>
-          <p data-ar="Ù‚ÙŠÙ‘Ù… Ø£ÙŠ Ø¹Ù‚Ø§Ø± Ø¨Ø§Ù„Ø£Ø³Ø§Ù„ÙŠØ¨ Ø§Ù„Ø«Ù„Ø§Ø«Ø© Ø§Ù„Ù…Ø¹ØªÙ…Ø¯Ø© Ø¯ÙˆÙ„ÙŠÙ‹Ø§ â€” Ø§Ù„Ù…Ù‚Ø§Ø±Ù†Ø§Øª Ø§Ù„Ø³ÙˆÙ‚ÙŠØ© ÙˆØ§Ù„Ø¯Ø®Ù„ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© â€” Ø¹Ø¨Ø± Ù…Ø¹Ø§Ù„Ø¬ Ù…ÙˆØ¬Ù‘Ù‡ Ø¨Ù„ØºØ© Ù…Ø¨Ø³Ø·Ø©. ÙƒÙ„ Ù…Ø¯Ø®Ù„ Ù…Ø´Ø±ÙˆØ­ØŒ ÙˆÙƒÙ„ Ù‚ÙŠÙ…Ø© Ø§ÙØªØ±Ø§Ø¶ÙŠØ© Ù…Ù†Ø·Ù‚ÙŠØ©.">
-            Value any property with the three internationally recognised approaches â€” sales
-            comparison, income and cost â€” through a guided, plain-language wizard. Every input
+          <h3 data-ar='التقييم العقاري<span class="badge">جديد</span>'>Real Estate Valuation<span class="badge">New</span></h3>
+          <p data-ar="قيّم أي عقار بالأساليب الثلاثة المعتمدة دوليًا — المقارنات السوقية والدخل والتكلفة — عبر معالج موجّه بلغة مبسطة. كل مدخل مشروح، وكل قيمة افتراضية منطقية.">
+            Value any property with the three internationally recognised approaches — sales
+            comparison, income and cost — through a guided, plain-language wizard. Every input
             explained, every default sensible.
           </p>
           <ul>
-            <li data-ar="Ù…Ø¹Ø§Ù„Ø¬ Ù…ÙˆØ¬Ù‘Ù‡ â€” Ø¯ÙˆÙ† Ø§Ù„Ø­Ø§Ø¬Ø© Ø¥Ù„Ù‰ Ø®Ø¨Ø±Ø©">Guided wizard â€” no expertise needed</li>
-            <li data-ar="Ù…Ù‚Ø§Ø±Ù†Ø§Øª Ø³ÙˆÙ‚ÙŠØ© Ù…Ø¹ Ø§Ù„ØªØ³ÙˆÙŠØ§Øª">Sales comparison with adjustments</li>
-            <li data-ar="Ø±Ø³Ù…Ù„Ø© Ø§Ù„Ø¯Ø®Ù„ ÙˆØ£Ø³Ù„ÙˆØ¨ Ø§Ù„ØªÙƒÙ„ÙØ©">Income capitalisation & cost approach</li>
-            <li data-ar="Ù‚ÙŠÙ…Ø© Ù…Ø±Ø¬Ù‘Ø­Ø© Ù…Ø¹ Ù†Ø·Ø§Ù‚ Ø«Ù‚Ø©">Reconciled value with confidence range</li>
+            <li data-ar="معالج موجّه — دون الحاجة إلى خبرة">Guided wizard — no expertise needed</li>
+            <li data-ar="مقارنات سوقية مع التسويات">Sales comparison with adjustments</li>
+            <li data-ar="رسملة الدخل وأسلوب التكلفة">Income capitalisation & cost approach</li>
+            <li data-ar="قيمة مرجّحة مع نطاق ثقة">Reconciled value with confidence range</li>
           </ul>
-          <button class="go" data-app="valuation.html" data-ar="Ø§ÙØªØ­ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠ">Open Valuation</button>
+          <button class="go" data-app="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</button>
         </div>
       </div>
     </div>
@@ -448,33 +448,33 @@
   <!-- ============ FEATURES BENTO ============ -->
   <div class="features">
     <div class="inner">
-      <div class="eyebrow" data-ar="Ù„Ù…Ø§Ø°Ø§ REAP">Why REAP</div>
-      <h2 data-ar="ØªØ­Ù„ÙŠÙ„ Ø¨Ù…Ø³ØªÙˆÙ‰ Ø§Ø­ØªØ±Ø§ÙÙŠ â€” Ø¯ÙˆÙ† ØªØ¹Ù‚ÙŠØ¯.">Professional-grade analysis â€” without the complexity.</h2>
+      <div class="eyebrow" data-ar="لماذا REAP">Why REAP</div>
+      <h2 data-ar="تحليل بمستوى احترافي — دون تعقيد.">Professional-grade analysis — without the complexity.</h2>
       <div class="bento">
         <div class="tile wide">
           <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
-          <h4 data-ar="Ù„ÙˆØ­Ø§Øª Ù†ØªØ§Ø¦Ø¬ Ø­ÙŠÙ‘Ø©">Live dashboards</h4>
-          <p data-ar="Ø§Ù„ØªØ¯ÙÙ‚Ø§Øª Ø§Ù„Ù†Ù‚Ø¯ÙŠØ© ÙˆØ§Ù„Ø¹ÙˆØ§Ø¦Ø¯ ÙˆØ§Ù„Ø­Ø³Ø§Ø³ÙŠØ© ÙˆØ§Ù„Ù…Ø®Ø§Ø·Ø± â€” ØªØªØ­Ø¯Ù‘Ø« Ø¬Ù…ÙŠØ¹Ù‡Ø§ ÙÙˆØ± ØªØ¹Ø¯ÙŠÙ„ Ø£ÙŠ Ù…Ø¯Ø®Ù„ØŒ Ø¯ÙˆÙ† Ø¥Ø¹Ø§Ø¯Ø© Ø­Ø³Ø§Ø¨ ÙŠØ¯ÙˆÙŠØ©.">Cashflow, returns, sensitivity and risk â€” everything recalculates the moment you change an input. No manual re-runs.</p>
+          <h4 data-ar="لوحات نتائج حيّة">Live dashboards</h4>
+          <p data-ar="التدفقات النقدية والعوائد والحساسية والمخاطر — تتحدّث جميعها فور تعديل أي مدخل، دون إعادة حساب يدوية.">Cashflow, returns, sensitivity and risk — everything recalculates the moment you change an input. No manual re-runs.</p>
         </div>
         <div class="tile">
           <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3,20 C8,20 8,5 12,5 S16,20 21,20"/><line x1="3" y1="20" x2="21" y2="20"/></svg></div>
-          <h4 data-ar="Ù…Ø®Ø§Ø·Ø± Ù…ÙˆÙ†Øª ÙƒØ§Ø±Ù„Ùˆ">Monte Carlo risk</h4>
-          <p data-ar="Ù…Ø­Ø§ÙƒØ§Ø© Ø¨Ø¢Ù„Ø§Ù Ø§Ù„ØªØ¬Ø§Ø±Ø¨ ØªÙƒØ´Ù Ø§Ø­ØªÙ…Ø§Ù„ÙŠØ© Ø§Ù„Ø®Ø³Ø§Ø±Ø© ÙˆØªÙˆØ²ÙŠØ¹ Ø§Ù„Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ù…ØªÙˆÙ‚Ø¹Ø© Ù„Ù…Ø´Ø±ÙˆØ¹Ùƒ.">Thousands of simulation runs reveal your probability of loss and the full distribution of outcomes.</p>
+          <h4 data-ar="مخاطر مونت كارلو">Monte Carlo risk</h4>
+          <p data-ar="محاكاة بآلاف التجارب تكشف احتمالية الخسارة وتوزيع النتائج المتوقعة لمشروعك.">Thousands of simulation runs reveal your probability of loss and the full distribution of outcomes.</p>
         </div>
         <div class="tile">
           <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3,5 h6 v5 h6 v5 h6 v4"/><path d="M3,19 h18"/></svg></div>
-          <h4 data-ar="Ø´Ù„Ø§Ù„ ØªÙˆØ²ÙŠØ¹Ø§Øª Ø§Ù„ØµÙ†Ø§Ø¯ÙŠÙ‚">Fund waterfalls</h4>
-          <p data-ar="Ø´Ù„Ø§Ù„ Ø£ÙˆØ±ÙˆØ¨ÙŠ ÙƒØ§Ù…Ù„ â€” Ø¹Ø§Ø¦Ø¯ Ù…ÙØ¶Ù‘Ù„ØŒ Ù„Ø­Ø§Ù‚ØŒ ÙˆØ­ÙˆØ§ÙØ² Ø£Ø¯Ø§Ø¡ â€” Ù…ÙˆØ²Ù‘Ø¹Ù‹Ø§ Ø¨ÙŠÙ† LP ÙˆØ§Ù„Ù…Ø·ÙˆÙ‘Ø± ÙˆGP.">A full European waterfall â€” preferred return, catch-up and promote â€” split across LP, Developer and GP.</p>
+          <h4 data-ar="شلال توزيعات الصناديق">Fund waterfalls</h4>
+          <p data-ar="شلال أوروبي كامل — عائد مفضّل، لحاق، وحوافز أداء — موزّعًا بين LP والمطوّر وGP.">A full European waterfall — preferred return, catch-up and promote — split across LP, Developer and GP.</p>
         </div>
         <div class="tile">
           <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5,20 V11"/><path d="M12,20 V5"/><path d="M19,20 V14"/><path d="M3,20 h18"/></svg></div>
-          <h4 data-ar="Ø£Ø³Ø§Ù„ÙŠØ¨ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø«Ù„Ø§Ø«Ø©">Three valuation approaches</h4>
-          <p data-ar="Ø§Ù„Ù…Ù‚Ø§Ø±Ù†Ø§Øª Ø§Ù„Ø³ÙˆÙ‚ÙŠØ© ÙˆØ§Ù„Ø¯Ø®Ù„ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© â€” ÙˆÙÙ‚ Ø§Ù„Ù…Ø¹Ø§ÙŠÙŠØ± Ø§Ù„Ø¯ÙˆÙ„ÙŠØ© IVS â€” Ù…Ø±Ø¬Ù‘Ø­Ø© ÙÙŠ Ù‚ÙŠÙ…Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ù†Ø·Ø§Ù‚ Ø«Ù‚Ø©.">Sales comparison, income and cost â€” per international standards â€” reconciled into one value with a confidence range.</p>
+          <h4 data-ar="أساليب التقييم الثلاثة">Three valuation approaches</h4>
+          <p data-ar="المقارنات السوقية والدخل والتكلفة — وفق المعايير الدولية IVS — مرجّحة في قيمة واحدة بنطاق ثقة.">Sales comparison, income and cost — per international standards — reconciled into one value with a confidence range.</p>
         </div>
         <div class="tile">
           <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12,3 v10"/><path d="M8,9 l4,4 4,-4"/><path d="M4,17 v3 h16 v-3"/></svg></div>
-          <h4 data-ar="ØªØµØ¯ÙŠØ± ÙˆØ­ÙØ¸">Export &amp; save</h4>
-          <p data-ar="ØªÙ‚Ø§Ø±ÙŠØ± PDF Ø¬Ø§Ù‡Ø²Ø© Ù„Ù„Ø·Ø¨Ø§Ø¹Ø© ÙˆØ§Ù„Ù…Ø´Ø§Ø±ÙƒØ©ØŒ ÙˆØªØ­Ù„ÙŠÙ„Ø§ØªÙƒ Ù…Ø­ÙÙˆØ¸Ø© ÙÙŠ Ø­Ø³Ø§Ø¨Ùƒ Ù„Ù„ÙˆØµÙˆÙ„ Ù…Ù† Ø£ÙŠ Ø¬Ù‡Ø§Ø².">Print-ready PDF reports, and every analysis saved to your account â€” accessible from any device.</p>
+          <h4 data-ar="تصدير وحفظ">Export &amp; save</h4>
+          <p data-ar="تقارير PDF جاهزة للطباعة والمشاركة، وتحليلاتك محفوظة في حسابك للوصول من أي جهاز.">Print-ready PDF reports, and every analysis saved to your account — accessible from any device.</p>
         </div>
       </div>
     </div>
@@ -483,22 +483,22 @@
   <!-- ============ HOW IT WORKS ============ -->
   <div class="how">
     <div class="inner">
-      <h2 data-ar="ÙƒÙŠÙ ØªØ¹Ù…Ù„ Ø§Ù„Ù…Ù†ØµØ©">How it works</h2>
+      <h2 data-ar="كيف تعمل المنصة">How it works</h2>
       <div class="steps">
         <div class="step">
           <div class="n">01</div>
-          <h4 data-ar="Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ùƒ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ">Create your free account</h4>
-          <p data-ar="Ø³Ø¬Ù‘Ù„ Ø¨Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ â€” ØªÙØ­ÙØ¸ Ù†Ù…Ø§Ø°Ø¬Ùƒ ÙˆØªÙ‚ÙŠÙŠÙ…Ø§ØªÙƒ Ø¨Ø£Ù…Ø§Ù† ÙÙŠ Ø­Ø³Ø§Ø¨Ùƒ ÙˆÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„ÙˆØµÙˆÙ„ Ø¥Ù„ÙŠÙ‡Ø§ Ù…Ù† Ø£ÙŠ Ø¬Ù‡Ø§Ø².">Sign up with your email â€” your models and valuations are saved securely to your account, accessible from any device.</p>
+          <h4 data-ar="أنشئ حسابك المجاني">Create your free account</h4>
+          <p data-ar="سجّل ببريدك الإلكتروني — تُحفظ نماذجك وتقييماتك بأمان في حسابك ويمكنك الوصول إليها من أي جهاز.">Sign up with your email — your models and valuations are saved securely to your account, accessible from any device.</p>
         </div>
         <div class="step">
           <div class="n">02</div>
-          <h4 data-ar="Ø§Ø®ØªØ± Ø§Ù„Ø®Ø¯Ù…Ø© ÙˆØ§ØªØ¨Ø¹ Ø§Ù„Ø¯Ù„ÙŠÙ„">Pick a service & follow the guide</h4>
-          <p data-ar="ÙƒÙ„ Ø­Ù‚Ù„ Ù…Ø²ÙˆÙ‘Ø¯ Ø¨Ø´Ø±Ø­ Ù…Ø¨Ø³Ù‘Ø· ÙˆÙ‚ÙŠÙ… Ø³ÙˆÙ‚ÙŠØ© ÙˆØ§Ù‚Ø¹ÙŠØ©ØŒ Ù„ØªÙØ®Ø±Ø¬ ØªØ­Ù„ÙŠÙ„Ù‹Ø§ Ù…ÙˆØ«ÙˆÙ‚Ù‹Ø§ Ù…Ù† Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ø§Ù„Ø£ÙˆÙ„Ù‰.">Every field comes with plain-language hints and realistic market defaults, so you can produce a credible analysis on the first try.</p>
+          <h4 data-ar="اختر الخدمة واتبع الدليل">Pick a service & follow the guide</h4>
+          <p data-ar="كل حقل مزوّد بشرح مبسّط وقيم سوقية واقعية، لتُخرج تحليلًا موثوقًا من المحاولة الأولى.">Every field comes with plain-language hints and realistic market defaults, so you can produce a credible analysis on the first try.</p>
         </div>
         <div class="step">
           <div class="n">03</div>
-          <h4 data-ar="Ø§Ù‚Ø±Ø£ Ø§Ù„Ù†ØªÙŠØ¬Ø©">Read the verdict</h4>
-          <p data-ar="Ù„ÙˆØ­Ø§Øª Ø­ÙŠÙ‘Ø© ØªØ¹Ø±Ø¶ Ø§Ù„Ù‚ÙŠÙ…Ø© ÙˆØ§Ù„Ø¹ÙˆØ§Ø¦Ø¯ ÙˆØ§Ù„Ù…Ø®Ø§Ø·Ø± â€” Ù…Ø¹ ØªÙ†Ø¨ÙŠÙ‡Ø§Øª ÙˆØ§Ø¶Ø­Ø© Ø¹Ù†Ø¯Ù…Ø§ ØªØ¨Ø¯Ùˆ Ø§Ù„ÙØ±Ø¶ÙŠØ§Øª ØºÙŠØ± Ø³Ù„ÙŠÙ…Ø©. Ø§Ø·Ø¨Ø¹ Ø£Ùˆ ØµØ¯Ù‘Ø± Ø¹Ù†Ø¯ Ø§Ù„Ø¬Ø§Ù‡Ø²ÙŠØ©.">Live dashboards show value, returns and risk â€” with clear flags when assumptions look off. Export or print when you're ready to share.</p>
+          <h4 data-ar="اقرأ النتيجة">Read the verdict</h4>
+          <p data-ar="لوحات حيّة تعرض القيمة والعوائد والمخاطر — مع تنبيهات واضحة عندما تبدو الفرضيات غير سليمة. اطبع أو صدّر عند الجاهزية.">Live dashboards show value, returns and risk — with clear flags when assumptions look off. Export or print when you're ready to share.</p>
         </div>
       </div>
     </div>
@@ -507,23 +507,23 @@
   <!-- ============ FAQ ============ -->
   <div class="faq">
     <div class="inner">
-      <div class="eyebrow" data-ar="Ø£Ø³Ø¦Ù„Ø© Ø´Ø§Ø¦Ø¹Ø©">FAQ</div>
-      <h2 data-ar="Ø§Ù„Ø£Ø³Ø¦Ù„Ø© Ø§Ù„Ù…ØªÙƒØ±Ø±Ø©">Frequently asked questions</h2>
+      <div class="eyebrow" data-ar="أسئلة شائعة">FAQ</div>
+      <h2 data-ar="الأسئلة المتكررة">Frequently asked questions</h2>
       <details>
-        <summary data-ar="Ù‡Ù„ Ø£Ø­ØªØ§Ø¬ Ø®Ù„ÙÙŠØ© Ù…Ø§Ù„ÙŠØ© Ø£Ùˆ Ø¹Ù‚Ø§Ø±ÙŠØ©ØŸ">Do I need a finance or real-estate background?</summary>
-        <div class="a" data-ar="Ù„Ø§. ÙƒÙ„ Ø­Ù‚Ù„ Ù…Ø²ÙˆÙ‘Ø¯ Ø¨Ø´Ø±Ø­ Ù…Ø¨Ø³Ù‘Ø· ÙˆÙ‚ÙŠÙ… Ø§ÙØªØ±Ø§Ø¶ÙŠØ© Ø³ÙˆÙ‚ÙŠØ© ÙˆØ§Ù‚Ø¹ÙŠØ©ØŒ ÙˆØ§Ù„Ù…Ù†ØµØ© ØªÙ†Ø¨Ù‘Ù‡Ùƒ Ø¹Ù†Ø¯Ù…Ø§ ØªØ¨Ø¯Ùˆ Ø§Ù„ÙØ±Ø¶ÙŠØ§Øª ØºÙŠØ± Ø³Ù„ÙŠÙ…Ø© â€” ØµÙÙ…Ù‘Ù…Øª REAP Ù„ØºÙŠØ± Ø§Ù„Ù…ØªØ®ØµØµÙŠÙ† Ø£ÙˆÙ„Ù‹Ø§.">No. Every field comes with plain-language hints and realistic market defaults, and the platform flags assumptions that look off. REAP is designed for non-specialists first.</div>
+        <summary data-ar="هل أحتاج خلفية مالية أو عقارية؟">Do I need a finance or real-estate background?</summary>
+        <div class="a" data-ar="لا. كل حقل مزوّد بشرح مبسّط وقيم افتراضية سوقية واقعية، والمنصة تنبّهك عندما تبدو الفرضيات غير سليمة — صُمّمت REAP لغير المتخصصين أولًا.">No. Every field comes with plain-language hints and realistic market defaults, and the platform flags assumptions that look off. REAP is designed for non-specialists first.</div>
       </details>
       <details>
-        <summary data-ar="Ù‡Ù„ Ø§Ù„Ù…Ù†ØµØ© Ù…Ø¬Ø§Ù†ÙŠØ©ØŸ">Is REAP free to use?</summary>
-        <div class="a" data-ar="Ù†Ø¹Ù… â€” Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ùƒ Ù…Ø¬Ø§Ù†Ù‹Ø§ ÙˆØªÙØ­ÙØ¸ ØªØ­Ù„ÙŠÙ„Ø§ØªÙƒ ÙÙŠÙ‡ØŒ Ø£Ùˆ Ø¬Ø±Ù‘Ø¨ Ø§Ù„Ù…Ù†ØµØ© ÙƒØ¶ÙŠÙ Ø¯ÙˆÙ† ØªØ³Ø¬ÙŠÙ„ (Ù„Ù† ÙŠÙØ­ÙØ¸ Ø´ÙŠØ¡ ÙÙŠ ÙˆØ¶Ø¹ Ø§Ù„Ø¶ÙŠÙ).">Yes â€” sign up free and your analyses are saved to your account, or explore as a guest without registering (nothing is saved in guest mode).</div>
+        <summary data-ar="هل المنصة مجانية؟">Is REAP free to use?</summary>
+        <div class="a" data-ar="نعم — أنشئ حسابك مجانًا وتُحفظ تحليلاتك فيه، أو جرّب المنصة كضيف دون تسجيل (لن يُحفظ شيء في وضع الضيف).">Yes — sign up free and your analyses are saved to your account, or explore as a guest without registering (nothing is saved in guest mode).</div>
       </details>
       <details>
-        <summary data-ar="Ù…Ø§ Ø§Ù„Ø£Ø³Ø§Ù„ÙŠØ¨ Ø§Ù„ØªÙŠ ÙŠØ¹ØªÙ…Ø¯Ù‡Ø§ Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¹Ù‚Ø§Ø±ÙŠØŸ">What methods does the valuation platform use?</summary>
-        <div class="a" data-ar="Ø§Ù„Ø£Ø³Ø§Ù„ÙŠØ¨ Ø§Ù„Ø«Ù„Ø§Ø«Ø© Ø§Ù„Ù…ØªÙˆØ§ÙÙ‚Ø© Ù…Ø¹ Ù…Ø¹Ø§ÙŠÙŠØ± Ø§Ù„ØªÙ‚ÙŠÙŠÙ… Ø§Ù„Ø¯ÙˆÙ„ÙŠØ© IVS: Ø§Ù„Ù…Ù‚Ø§Ø±Ù†Ø§Øª Ø§Ù„Ø³ÙˆÙ‚ÙŠØ© Ù…Ø¹ Ø§Ù„ØªØ³ÙˆÙŠØ§ØªØŒ ÙˆØ±Ø³Ù…Ù„Ø© Ø§Ù„Ø¯Ø®Ù„ØŒ ÙˆØ§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø§Ø³ØªØ¨Ø¯Ø§Ù„ÙŠØ© Ø§Ù„Ù…Ù‡Ù„ÙƒØ© â€” Ø«Ù… ØªÙØ±Ø¬Ù‘Ø­ ÙÙŠ Ù‚ÙŠÙ…Ø© ÙˆØ§Ø­Ø¯Ø© Ø¨Ù†Ø·Ø§Ù‚ Ø«Ù‚Ø©.">The three IVS-aligned approaches: sales comparison with adjustments, income capitalisation, and depreciated replacement cost â€” reconciled into a single value with a confidence range.</div>
+        <summary data-ar="ما الأساليب التي يعتمدها التقييم العقاري؟">What methods does the valuation platform use?</summary>
+        <div class="a" data-ar="الأساليب الثلاثة المتوافقة مع معايير التقييم الدولية IVS: المقارنات السوقية مع التسويات، ورسملة الدخل، والتكلفة الاستبدالية المهلكة — ثم تُرجّح في قيمة واحدة بنطاق ثقة.">The three IVS-aligned approaches: sales comparison with adjustments, income capitalisation, and depreciated replacement cost — reconciled into a single value with a confidence range.</div>
       </details>
       <details>
-        <summary data-ar="Ù‡Ù„ ÙŠÙ…ÙƒÙ†Ù†ÙŠ ØªØµØ¯ÙŠØ± Ø§Ù„Ù†ØªØ§Ø¦Ø¬ ÙˆÙ…Ø´Ø§Ø±ÙƒØªÙ‡Ø§ØŸ">Can I export and share my results?</summary>
-        <div class="a" data-ar="Ù†Ø¹Ù… â€” ÙŠÙ…ÙƒÙ†Ùƒ ØªØµØ¯ÙŠØ± ØªÙ‚Ø±ÙŠØ± Ù…Ù„Ø®Ù‘Øµ Ø¬Ø§Ù‡Ø² Ù„Ù„Ø·Ø¨Ø§Ø¹Ø© Ø¨ØµÙŠØºØ© PDF Ù…Ù† ÙƒÙ„ØªØ§ Ø§Ù„Ù…Ù†ØµØªÙŠÙ†ØŒ Ø¨Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø£Ùˆ Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©.">Yes â€” both platforms export a print-ready summary report as PDF, in Arabic or English.</div>
+        <summary data-ar="هل يمكنني تصدير النتائج ومشاركتها؟">Can I export and share my results?</summary>
+        <div class="a" data-ar="نعم — يمكنك تصدير تقرير ملخّص جاهز للطباعة بصيغة PDF من كلتا المنصتين، بالعربية أو الإنجليزية.">Yes — both platforms export a print-ready summary report as PDF, in Arabic or English.</div>
       </details>
     </div>
   </div>
@@ -532,25 +532,25 @@
   <div class="ctaband">
     <div class="inner">
       <div>
-        <div class="eyebrow" data-ar="Ø§Ø¨Ø¯Ø£ Ø§Ù„Ø¢Ù†">Start now</div>
-        <h2 data-ar="Ø¬Ø§Ù‡Ø² Ù„ØªÙ‚ÙŠÙŠÙ… ÙØ±ØµØªÙƒ Ø§Ù„Ø£ÙˆÙ„Ù‰ØŸ">Ready to assess your first opportunity?</h2>
-        <p data-ar="Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ùƒ Ø§Ù„Ù…Ø¬Ø§Ù†ÙŠ ÙˆØ§Ø¨Ø¯Ø£ Ø®Ù„Ø§Ù„ Ø¯Ù‚ÙŠÙ‚Ø© â€” Ø£Ùˆ Ø¬Ø±Ù‘Ø¨ Ø§Ù„Ù…Ù†ØµØ© ÙƒØ¶ÙŠÙ Ø£ÙˆÙ„Ù‹Ø§.">Create your free account and start in under a minute â€” or try the platform as a guest first.</p>
+        <div class="eyebrow" data-ar="ابدأ الآن">Start now</div>
+        <h2 data-ar="جاهز لتقييم فرصتك الأولى؟">Ready to assess your first opportunity?</h2>
+        <p data-ar="أنشئ حسابك المجاني وابدأ خلال دقيقة — أو جرّب المنصة كضيف أولًا.">Create your free account and start in under a minute — or try the platform as a guest first.</p>
         <div class="cta">
-          <button class="btn-land primary" id="btnStart2" data-ar="Ø³Ø¬Ù‘Ù„ Ù…Ø¬Ø§Ù†Ù‹Ø§">Sign up free</button>
-          <button class="btn-land" id="btnExplore2" data-ar="Ø§Ø³ØªÙƒØ´Ù ÙƒØ¶ÙŠÙ">Explore as guest</button>
+          <button class="btn-land primary" id="btnStart2" data-ar="سجّل مجانًا">Sign up free</button>
+          <button class="btn-land" id="btnExplore2" data-ar="استكشف كضيف">Explore as guest</button>
         </div>
       </div>
       <div class="disclaim">
         <div class="dhead">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5v.5"/></svg>
-          <span data-ar="ØªÙ†ÙˆÙŠÙ‡ â€” Ù†ØªØ§Ø¦Ø¬ Ø§Ø³ØªØ±Ø´Ø§Ø¯ÙŠØ©">Disclaimer â€” indicative results</span>
+          <span data-ar="تنويه — نتائج استرشادية">Disclaimer — indicative results</span>
         </div>
-        <p data-ar="Ø§Ù„Ø¯Ø±Ø§Ø³Ø§Øª ÙˆØ§Ù„ØªÙ‚ÙŠÙŠÙ…Ø§Øª Ø§Ù„ØµØ§Ø¯Ø±Ø© Ø¹Ù† Ù…Ù†ØµØ© REAP Ù‡ÙŠ ØªØ­Ù„ÙŠÙ„Ø§Øª Ø£ÙˆÙ„ÙŠØ© Ø§Ø³ØªØ±Ø´Ø§Ø¯ÙŠØ©ØŒ Ø£ÙØ¹Ø¯Ù‘Øª Ù„Ø£ØºØ±Ø§Ø¶ Ø§Ù„ÙØ­Øµ Ø§Ù„Ù…Ø¨Ø¯Ø¦ÙŠ ÙˆØ¯Ø¹Ù… Ø§ØªØ®Ø§Ø° Ø§Ù„Ù‚Ø±Ø§Ø±ØŒ ÙˆÙ‡ÙŠ ØºÙŠØ± Ù…Ø¹ØªÙ…Ø¯Ø© ÙˆÙ„Ø§ ÙŠÙØ¹ØªØ¯ Ø¨Ù‡Ø§ Ù„Ù„Ø£ØºØ±Ø§Ø¶ Ø§Ù„Ø±Ø³Ù…ÙŠØ© Ø£Ùˆ Ø§Ù„ØªÙ†Ø¸ÙŠÙ…ÙŠØ© Ø£Ùˆ Ø§Ù„ØªÙ…ÙˆÙŠÙ„ÙŠØ© Ø£Ùˆ Ø§Ù„Ù‚Ø§Ù†ÙˆÙ†ÙŠØ©.">
+        <p data-ar="الدراسات والتقييمات الصادرة عن منصة REAP هي تحليلات أولية استرشادية، أُعدّت لأغراض الفحص المبدئي ودعم اتخاذ القرار، وهي غير معتمدة ولا يُعتد بها للأغراض الرسمية أو التنظيمية أو التمويلية أو القانونية.">
           The studies and valuations produced by REAP are preliminary, indicative analyses intended for
           initial screening and decision support. They are not accredited reports and should not be
           relied upon for official, regulatory, financing or legal purposes.
         </p>
-        <p data-ar="ÙˆØ¹Ù†Ø¯ Ø§Ù„Ø­Ø§Ø¬Ø© Ø¥Ù„Ù‰ Ø¯Ø±Ø§Ø³Ø© Ø¬Ø¯ÙˆÙ‰ Ø±Ø³Ù…ÙŠØ© Ø£Ùˆ ØªÙ‚ÙŠÙŠÙ… Ù…Ø¹ØªÙ…Ø¯ØŒ ÙŠØ³Ø¹Ø¯Ù†Ø§ ØªÙˆØ§ØµÙ„ÙƒÙ… Ø¹Ø¨Ø± Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø§ØªØµØ§Ù„ ÙÙŠ Ø£Ø³ÙÙ„ Ø§Ù„ØµÙØ­Ø©ØŒ ÙˆØ³ÙŠØªÙ… Ø§Ù„ØªØ±ØªÙŠØ¨ ÙˆÙÙ‚Ù‹Ø§ Ù„Ø°Ù„Ùƒ.">
+        <p data-ar="وعند الحاجة إلى دراسة جدوى رسمية أو تقييم معتمد، يسعدنا تواصلكم عبر بيانات الاتصال في أسفل الصفحة، وسيتم الترتيب وفقًا لذلك.">
           Should you require a formal feasibility study or an accredited valuation, please reach out
           using the contact details in the footer below and arrangements will be made accordingly.
         </p>
@@ -560,7 +560,7 @@
 
   <!-- ============ FOOTER ============ -->
   <div class="footer">
-    <span data-ar='ØªØ·ÙˆÙŠØ± <b style="color:white">Ù…Ø­Ù…Ø¯ Ø¨Ø§Ø³Ù„ÙˆÙ…</b>'>Developed by <b style="color:white">Mohammed Basloom</b></span>
+    <span data-ar='تطوير <b style="color:white">محمد باسلوم</b>'>Developed by <b style="color:white">Mohammed Basloom</b></span>
     <span class="sep"></span>
     <a href="tel:+966558793201" class="tabnum">+966 55 879 3201</a>
     <span class="sep"></span>
@@ -576,42 +576,42 @@
 <!-- ============ AUTH MODAL ============ -->
 <div class="overlay" id="authOverlay">
   <div class="modal">
-    <button class="close" id="authClose">Ã—</button>
+    <button class="close" id="authClose">×</button>
     <div id="authSignupView">
-      <h3 data-ar="Ø£Ù†Ø´Ø¦ Ø­Ø³Ø§Ø¨Ùƒ">Create your account</h3>
-      <div class="sub" data-ar="Ù…Ø¬Ø§Ù†Ù‹Ø§ â€” ØªÙØ­ÙØ¸ ØªØ­Ù„ÙŠÙ„Ø§ØªÙƒ ÙÙŠ Ø­Ø³Ø§Ø¨Ùƒ.">Free â€” your analyses are saved to your account.</div>
-      <label><span data-ar="Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„">Full name</span><input type="text" id="suName" autocomplete="name" /></label>
-      <label><span data-ar="Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ">Email</span><input type="email" id="suEmail" autocomplete="email" /></label>
-      <label><span data-ar="ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± (Ù¦ Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„)">Password (min 6 characters)</span><input type="password" id="suPassword" autocomplete="new-password" /></label>
-      <button class="submit" id="suSubmit" data-ar="Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨">Create account</button>
+      <h3 data-ar="أنشئ حسابك">Create your account</h3>
+      <div class="sub" data-ar="مجانًا — تُحفظ تحليلاتك في حسابك.">Free — your analyses are saved to your account.</div>
+      <label><span data-ar="الاسم الكامل">Full name</span><input type="text" id="suName" autocomplete="name" /></label>
+      <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="suEmail" autocomplete="email" /></label>
+      <label><span data-ar="كلمة المرور (٦ أحرف على الأقل)">Password (min 6 characters)</span><input type="password" id="suPassword" autocomplete="new-password" /></label>
+      <button class="submit" id="suSubmit" data-ar="إنشاء الحساب">Create account</button>
       <div class="msg" id="suMsg"></div>
-      <div class="alt" data-ar='Ù„Ø¯ÙŠÙƒ Ø­Ø³Ø§Ø¨ Ø¨Ø§Ù„ÙØ¹Ù„ØŸ <a id="toLogin">ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„</a>'>Already have an account? <a id="toLogin">Log in</a></div>
-      <div class="guest"><a id="guestLink1" data-ar="Ø£Ùˆ ØªØ§Ø¨Ø¹ ÙƒØ¶ÙŠÙ (Ù„Ù† ÙŠÙØ­ÙØ¸ Ø´ÙŠØ¡)">or continue as guest (nothing is saved)</a></div>
+      <div class="alt" data-ar='لديك حساب بالفعل؟ <a id="toLogin">تسجيل الدخول</a>'>Already have an account? <a id="toLogin">Log in</a></div>
+      <div class="guest"><a id="guestLink1" data-ar="أو تابع كضيف (لن يُحفظ شيء)">or continue as guest (nothing is saved)</a></div>
     </div>
     <div id="authLoginView" style="display:none">
-      <h3 data-ar="Ù…Ø±Ø­Ø¨Ù‹Ø§ Ø¨Ø¹ÙˆØ¯ØªÙƒ">Welcome back</h3>
-      <div class="sub" data-ar="Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„ÙˆØµÙˆÙ„ Ø¥Ù„Ù‰ ØªØ­Ù„ÙŠÙ„Ø§ØªÙƒ Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©.">Log in to access your saved analyses.</div>
-      <label><span data-ar="Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ">Email</span><input type="email" id="liEmail" autocomplete="email" /></label>
-      <label><span data-ar="ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±">Password</span><input type="password" id="liPassword" autocomplete="current-password" /></label>
-      <div class="alt" style="text-align:start;margin-top:8px;"><a id="toReset" data-ar="Ù†Ø³ÙŠØª ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±ØŸ">Forgot password?</a></div>
-      <button class="submit" id="liSubmit" data-ar="ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„">Log in</button>
+      <h3 data-ar="مرحبًا بعودتك">Welcome back</h3>
+      <div class="sub" data-ar="سجّل الدخول للوصول إلى تحليلاتك المحفوظة.">Log in to access your saved analyses.</div>
+      <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="liEmail" autocomplete="email" /></label>
+      <label><span data-ar="كلمة المرور">Password</span><input type="password" id="liPassword" autocomplete="current-password" /></label>
+      <div class="alt" style="text-align:start;margin-top:8px;"><a id="toReset" data-ar="نسيت كلمة المرور؟">Forgot password?</a></div>
+      <button class="submit" id="liSubmit" data-ar="تسجيل الدخول">Log in</button>
       <div class="msg" id="liMsg"></div>
-      <div class="alt" data-ar='Ø¬Ø¯ÙŠØ¯ Ø¹Ù„Ù‰ REAPØŸ <a id="toSignup">Ø³Ø¬Ù‘Ù„ Ù…Ø¬Ø§Ù†Ù‹Ø§</a>'>New to REAP? <a id="toSignup">Sign up free</a></div>
-      <div class="guest"><a id="guestLink2" data-ar="Ø£Ùˆ ØªØ§Ø¨Ø¹ ÙƒØ¶ÙŠÙ (Ù„Ù† ÙŠÙØ­ÙØ¸ Ø´ÙŠØ¡)">or continue as guest (nothing is saved)</a></div>
+      <div class="alt" data-ar='جديد على REAP؟ <a id="toSignup">سجّل مجانًا</a>'>New to REAP? <a id="toSignup">Sign up free</a></div>
+      <div class="guest"><a id="guestLink2" data-ar="أو تابع كضيف (لن يُحفظ شيء)">or continue as guest (nothing is saved)</a></div>
     </div>
     <div id="authResetView" style="display:none">
-      <h3 data-ar="Ø¥Ø¹Ø§Ø¯Ø© ØªØ¹ÙŠÙŠÙ† ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±">Reset your password</h3>
-      <div class="sub" data-ar="Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ÙˆØ³Ù†Ø±Ø³Ù„ Ù„Ùƒ Ø±Ø§Ø¨Ø· Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªØ¹ÙŠÙŠÙ†.">Enter your email and we'll send you a reset link.</div>
-      <label><span data-ar="Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ">Email</span><input type="email" id="riEmail" autocomplete="email" /></label>
-      <button class="submit" id="riSubmit" data-ar="Ø¥Ø±Ø³Ø§Ù„ Ø±Ø§Ø¨Ø· Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªØ¹ÙŠÙŠÙ†">Send reset link</button>
+      <h3 data-ar="إعادة تعيين كلمة المرور">Reset your password</h3>
+      <div class="sub" data-ar="أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.">Enter your email and we'll send you a reset link.</div>
+      <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="riEmail" autocomplete="email" /></label>
+      <button class="submit" id="riSubmit" data-ar="إرسال رابط إعادة التعيين">Send reset link</button>
       <div class="msg" id="riMsg"></div>
-      <div class="alt"><a id="backToLogin" data-ar="Ø§Ù„Ø¹ÙˆØ¯Ø© Ù„ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„">Back to log in</a></div>
+      <div class="alt"><a id="backToLogin" data-ar="العودة لتسجيل الدخول">Back to log in</a></div>
     </div>
     <div id="authNewPwView" style="display:none">
-      <h3 data-ar="Ø§Ø®ØªØ± ÙƒÙ„Ù…Ø© Ù…Ø±ÙˆØ± Ø¬Ø¯ÙŠØ¯Ø©">Choose a new password</h3>
-      <div class="sub" data-ar="Ø£Ø¯Ø®Ù„ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø© Ù„Ø­Ø³Ø§Ø¨Ùƒ.">Enter the new password for your account.</div>
-      <label><span data-ar="ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø© (Ù¦ Ø£Ø­Ø±Ù Ø¹Ù„Ù‰ Ø§Ù„Ø£Ù‚Ù„)">New password (min 6 characters)</span><input type="password" id="npPassword" autocomplete="new-password" /></label>
-      <button class="submit" id="npSubmit" data-ar="Ø­ÙØ¸ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±">Save new password</button>
+      <h3 data-ar="اختر كلمة مرور جديدة">Choose a new password</h3>
+      <div class="sub" data-ar="أدخل كلمة المرور الجديدة لحسابك.">Enter the new password for your account.</div>
+      <label><span data-ar="كلمة المرور الجديدة (٦ أحرف على الأقل)">New password (min 6 characters)</span><input type="password" id="npPassword" autocomplete="new-password" /></label>
+      <button class="submit" id="npSubmit" data-ar="حفظ كلمة المرور">Save new password</button>
       <div class="msg" id="npMsg"></div>
     </div>
   </div>
@@ -630,7 +630,7 @@
   let pendingApp = null; // app to open after successful auth
 
   // Language toggle (globe icon)
-  $("btnLang").title = AR ? "Switch to English" : "Ø§Ù„ØªØ¨Ø¯ÙŠÙ„ Ø¥Ù„Ù‰ Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©";
+  $("btnLang").title = AR ? "Switch to English" : "التبديل إلى العربية";
   $("btnLang").onclick = () => I18N.setLang(AR ? "en" : "ar");
 
   function showView(which) {
@@ -659,14 +659,14 @@
     $("btnSignup").style.display = signedIn ? "none" : "";
     if (signedIn) {
       $("userEmail").textContent = user.email;
-      $("btnStart").textContent = L("Continue to your workspace", "ØªØ§Ø¨Ø¹ Ø¥Ù„Ù‰ Ù…Ø³Ø§Ø­Ø© Ø¹Ù…Ù„Ùƒ");
+      $("btnStart").textContent = L("Continue to your workspace", "تابع إلى مساحة عملك");
       // Avatar initial + full name from the profile (same as the platform pages)
       let name = "";
       try {
         const { data } = await sb.from("profiles").select("full_name").eq("id", user.id).single();
         name = (data && data.full_name) || "";
       } catch (e) {}
-      $("userName").textContent = name || L("My account", "Ø­Ø³Ø§Ø¨ÙŠ");
+      $("userName").textContent = name || L("My account", "حسابي");
       $("btnAvatar").textContent = ((name || user.email || "?").trim()[0] || "?").toUpperCase();
     }
     return signedIn;
@@ -705,24 +705,24 @@
   $("riSubmit").onclick = async () => {
     const email = $("riEmail").value.trim();
     const m = $("riMsg");
-    if (!/.+@.+\..+/.test(email)) return msg(m, L("Please enter a valid email address.", "ÙØ¶Ù„Ù‹Ø§ Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ù‹Ø§ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠÙ‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§."), "err");
+    if (!/.+@.+\..+/.test(email)) return msg(m, L("Please enter a valid email address.", "فضلًا أدخل بريدًا إلكترونيًا صحيحًا."), "err");
     $("riSubmit").disabled = true;
     const { error } = await reapAuth.resetPassword(email);
     $("riSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
-    msg(m, L("Reset link sent â€” check your inbox.", "Ø£Ø±Ø³Ù„Ù†Ø§ Ø±Ø§Ø¨Ø· Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„ØªØ¹ÙŠÙŠÙ† â€” ØªÙÙ‚Ø¯ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ."), "ok");
+    msg(m, L("Reset link sent — check your inbox.", "أرسلنا رابط إعادة التعيين — تفقد بريدك الإلكتروني."), "ok");
   };
 
   // Returning from the reset email: set the new password
   $("npSubmit").onclick = async () => {
     const pw = $("npPassword").value;
     const m = $("npMsg");
-    if (pw.length < 6) return msg(m, L("Password must be at least 6 characters.", "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù„Ø§ ØªÙ‚Ù„ Ø¹Ù† Ù¦ Ø£Ø­Ø±Ù."), "err");
+    if (pw.length < 6) return msg(m, L("Password must be at least 6 characters.", "كلمة المرور يجب ألا تقل عن ٦ أحرف."), "err");
     $("npSubmit").disabled = true;
     const { error } = await reapAuth.updatePassword(pw);
     $("npSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
-    msg(m, L("Password updated â€” you're signed in.", "ØªÙ… ØªØ­Ø¯ÙŠØ« ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙˆØªØ³Ø¬ÙŠÙ„ Ø¯Ø®ÙˆÙ„Ùƒ."), "ok");
+    msg(m, L("Password updated — you're signed in.", "تم تحديث كلمة المرور وتسجيل دخولك."), "ok");
     try { history.replaceState(null, "", location.pathname); } catch (e) {}
     await refreshSessionUI();
     setTimeout(closeAuth, 1600);
@@ -753,20 +753,20 @@
     const email = $("suEmail").value.trim();
     const pw = $("suPassword").value;
     const m = $("suMsg");
-    if (!name) return msg(m, L("Please enter your full name.", "ÙØ¶Ù„Ù‹Ø§ Ø£Ø¯Ø®Ù„ Ø§Ø³Ù…Ùƒ Ø§Ù„ÙƒØ§Ù…Ù„."), "err");
-    if (!/.+@.+\..+/.test(email)) return msg(m, L("Please enter a valid email address.", "ÙØ¶Ù„Ù‹Ø§ Ø£Ø¯Ø®Ù„ Ø¨Ø±ÙŠØ¯Ù‹Ø§ Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠÙ‹Ø§ ØµØ­ÙŠØ­Ù‹Ø§."), "err");
-    if (pw.length < 6) return msg(m, L("Password must be at least 6 characters.", "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ÙŠØ¬Ø¨ Ø£Ù„Ø§ ØªÙ‚Ù„ Ø¹Ù† Ù¦ Ø£Ø­Ø±Ù."), "err");
+    if (!name) return msg(m, L("Please enter your full name.", "فضلًا أدخل اسمك الكامل."), "err");
+    if (!/.+@.+\..+/.test(email)) return msg(m, L("Please enter a valid email address.", "فضلًا أدخل بريدًا إلكترونيًا صحيحًا."), "err");
+    if (pw.length < 6) return msg(m, L("Password must be at least 6 characters.", "كلمة المرور يجب ألا تقل عن ٦ أحرف."), "err");
     $("suSubmit").disabled = true;
     const { data, error } = await reapAuth.signUp(name, email, pw);
     $("suSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
     if (data.session) {
       reapAuth.clearGuest();
-      msg(m, L("Account created â€” taking you inâ€¦", "ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨ â€” Ø¬Ø§Ø±Ù Ø§Ù„Ø¯Ø®ÙˆÙ„â€¦"), "ok");
+      msg(m, L("Account created — taking you in…", "تم إنشاء الحساب — جارٍ الدخول…"), "ok");
       setTimeout(() => { window.location.href = pendingApp || "index.html"; if (!pendingApp) window.location.reload(); }, 700);
       if (!pendingApp) { await refreshSessionUI(); closeAuth(); }
     } else {
-      msg(m, L("Account created. Please check your inbox and confirm your email, then log in.", "ØªÙ… Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨. ÙØ¶Ù„Ù‹Ø§ Ø§ÙØªØ­ Ø¨Ø±ÙŠØ¯Ùƒ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ ÙˆØ£ÙƒÙ‘Ø¯ Ø§Ù„ØªØ³Ø¬ÙŠÙ„ Ø«Ù… Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„."), "ok");
+      msg(m, L("Account created. Please check your inbox and confirm your email, then log in.", "تم إنشاء الحساب. فضلًا افتح بريدك الإلكتروني وأكّد التسجيل ثم سجّل الدخول."), "ok");
     }
   };
 
