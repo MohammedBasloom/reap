@@ -376,12 +376,18 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {/* Title row */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <span style={{ fontSize: 16, color: "var(--ad-navy-700)", width: 16, textAlign: "center" }}>{preset.icon || "◇"}</span>
-        <input
-          className="field-input"
-          style={{ flex: 1, border: "none", padding: "4px 6px", background: "transparent", fontWeight: 500, fontSize: 13 }}
-          value={comp.name}
-          onChange={(e) => update("name", e.target.value)}
-        />
+        {/* Dashed underline + pencil — same rename affordance as the project name */}
+        <span className="editable-name-wrap" style={{ flex: 1, minWidth: 0 }} title="Click to rename">
+          <input
+            className="field-input editable-name"
+            style={{ flex: 1, padding: "4px 2px", fontWeight: 500, fontSize: 13, minWidth: 0 }}
+            value={comp.name}
+            onChange={(e) => update("name", e.target.value)}
+          />
+          <svg className="pencil" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+          </svg>
+        </span>
         <label style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer", fontSize: 11, color: "var(--fg-3)" }}>
           <input type="checkbox" checked={comp.enabled} onChange={e => update("enabled", e.target.checked)} />
           on
