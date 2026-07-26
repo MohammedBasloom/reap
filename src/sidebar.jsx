@@ -890,7 +890,7 @@ function FundStructureSection({ input, upd }) {
             Fees
           </div>
           <Row cols={2}>
-            <PctField label="Subscription fee" value={fund.subscriptionFeePct} onChange={v => updFund("subscriptionFeePct", v)} hint="To GP · % of each equity call" />
+            <PctField label="Subscription fee" value={fund.subscriptionFeePct} onChange={v => updFund("subscriptionFeePct", v)} hint="To GP · % of equity, once at establishment" />
             <PctField label="Asset mgmt (yr)" value={fund.assetMgmtFeePctYr} onChange={v => updFund("assetMgmtFeePctYr", v)} hint="To GP · annual · on unreturned equity" />
             <PctField label="Development fee" value={fund.developmentFeePct} onChange={v => updFund("developmentFeePct", v)} hint="To Developer · % of constr. + site" />
             <div />
@@ -902,7 +902,7 @@ function FundStructureSection({ input, upd }) {
           </div>
           <Row cols={2}>
             <PctField label="Preferred return" value={fund.preferredReturnPct} onChange={v => updFund("preferredReturnPct", v)} hint="Compounded · pro-rata to all equity" />
-            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share of profit above the preferred return" />
+            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share of profit above pref · paid once at exit" />
           </Row>
 
           <div style={{

@@ -457,7 +457,7 @@ function SourcesUsesTable({ w, result, fund }) {
   const projectTotal = projectUses.reduce((s, u) => s + u.value, 0);
 
   const fundFees = [
-    { label: "Subscription fee",      value: w.fees.subscription, recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.subscriptionFeePct, 2)} of each equity call` },
+    { label: "Subscription fee",      value: w.fees.subscription, recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.subscriptionFeePct, 2)} of equity collected at close` },
     { label: "Asset management fee",  value: w.fees.assetMgmt,   recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr on paid-in capital` },
     { label: "Development fee",       value: w.fees.development, recipient: "Developer", color: FUND_COLORS.dev, rate: `${fpF(fund.developmentFeePct, 2)} of construction cost · S-curve` },
   ].filter(u => u.value > 0.5);
@@ -645,7 +645,7 @@ function SourcesUsesTable({ w, result, fund }) {
 function FeeTable({ w, fund }) {
   const k = w; // alias
   const rows = [
-    { who: "GP",        label: "Subscription fee",  rate: fpF(fund.subscriptionFeePct, 2),  base: "Of each equity call, at the time it is drawn", value: w.fees.subscription,  color: FUND_COLORS.gp },
+    { who: "GP",        label: "Subscription fee",  rate: fpF(fund.subscriptionFeePct, 2),  base: "Equity collected at establishment · charged once", value: w.fees.subscription,  color: FUND_COLORS.gp },
     { who: "GP",        label: "Asset mgmt fee",    rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr`, base: "Paid-in capital · accrued monthly, every year", value: w.fees.assetMgmt,     color: FUND_COLORS.gp },
     { who: "Developer", label: "Development fee",   rate: fpF(fund.developmentFeePct, 2),  base: "Construction + site cost · S-curve", value: w.fees.development, color: FUND_COLORS.dev },
     { who: "GP",        label: "Performance fee (promote)",   rate: fpF(fund.promoteSplit, 0), base: "Of distributions after return of capital + preferred return", value: w.buckets.promoteToGP, color: FUND_COLORS.gp },

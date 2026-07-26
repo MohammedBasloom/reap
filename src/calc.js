@@ -956,6 +956,27 @@ function runWaterfall(input, result) {
     promoteToGP: 0,
     proRataResidual: 0,
   };
+  // Performance fee accrues through the life but is paid once, at exit.
+  let promoteReserve = 0;
+  let promoteHurdleMet = false;
+
+  /* ---- Equity is collected in full at fund establishment (month 0) ----
+     The single call must cover the project's whole equity need, the
+     development fee, asset-management fees for the fund's life, and the
+     subscription fee — each of the last two being a % of the call itself,
+     so solve for E directly:
+        E = (projectNeed + devFee) / (1 − subFee% − AM%/12 × months)      */
+  const projectNeedTotal = equityCF
+    .slice(0, horizon)
+    .reduce((s, v) => s + Math.max(0, -(v || 0)), 0);
+  // AM accrues on paid-in capital from the month AFTER the call lands (the
+  // fee is computed before the call inside the loop), hence horizon − 1.
+  const amLoad = mgmtMonthly * Math.max(0, horizon - 1);
+  const loadDenom = 1 - subFeePct - amLoad;
+  const equityAtClose = loadDenom > 0.01
+    ? (projectNeedTotal + devFeeTotal) / loadDenom
+    : projectNeedTotal + devFeeTotal;
+  const subFeeAtClose = equityAtClose * subFeePct;
 
   for (let m = 0; m < horizon; m++) {
     // === Fees this month — paid as incurred (standard treatment) ===
@@ -980,21 +1001,12 @@ function runWaterfall(input, result) {
     party.dev.cashflow[m] += devFeeM;
     party.dev.feeFlow[m]  += devFeeM;
 
-    // ----- Capital call this month -----
-    // CASH basis: the fund calls exactly the project's net cash shortfall
-    // this month (equity gap after debt draws AND after any revenue retained
-    // against costs) + the fund fees paid out. Using the gross accounting
-    // series here would double-count interest & selling costs — they are
-    // already netted out of the distribution stream by the debt sweep.
-    const projectCall = Math.max(0, -(equityCF[m] || 0));
-    const feeCall = devFeeM + mgmtFeeM;
-    // Subscription fee — a % of the equity called this month, paid to the GP
-    // on top of the cash the fund needs, so investors fund both.
-    const baseCall = projectCall + feeCall;
-    // Grossed up so the fee is exactly subFeePct OF THE AMOUNT CALLED, while
-    // the net still covers the project's need.
-    const totalCall = baseCall > 0 && subFeePct < 1 ? baseCall / (1 - subFeePct) : baseCall;
-    const subFeeM = totalCall - baseCall;
+    // ----- Capital call — the whole commitment, once, at establishment -----
+    // The fund holds the cash and disburses it to the project as costs fall
+    // due, so later months need no further calls.
+    const totalCall = m === 0 ? equityAtClose : 0;
+    // Subscription fee — charged once, on the equity collected at close.
+    const subFeeM = m === 0 ? subFeeAtClose : 0;
     if (subFeeM > 0) {
       fees.subscription += subFeeM;
       feeFlows.subscription[m] += subFeeM;
@@ -1059,17 +1071,12 @@ function runWaterfall(input, result) {
         }
       }
 
-      // (d) Performance split — promote% to GP, rest pro-rata to INVESTORS
-      //     (LP + Developer). GP co-invest does NOT receive any residual; GP
-      //     is rewarded via promote only.
+      // (d) Performance split — the GP's share is HELD BACK and settled once
+      //     at exit (see below); investors receive their share as it arises.
       if (dist > 0) {
         const gpShare = dist * promote;
         const invShare = dist - gpShare;
-        party.gp.cashflow[m]    += gpShare;
-        party.gp.promoteFlow[m] += gpShare;
-        fees.promote += gpShare;
-        feeFlows.promote[m] += gpShare;
-        buckets.promoteToGP += gpShare;
+        promoteReserve += gpShare;
 
         party.lp.cashflow[m]    += invShare * lpInv;
         party.dev.cashflow[m]   += invShare * devInv;
@@ -1078,6 +1085,31 @@ function runWaterfall(input, result) {
         buckets.proRataResidual += invShare;
         dist = 0;
       }
+    }
+
+    /* ---- Exit: settle the performance fee, once ----
+       Paid only if the fund cleared its hurdle — i.e. every riyal of
+       preferred return has been paid. If it did not clear, the reserve is
+       released to investors instead. */
+    if (m === horizon - 1 && promoteReserve > 0.01) {
+      const prefOutstanding =
+        party.lp.prefAccrued + party.dev.prefAccrued + party.gp.prefAccrued;
+      const hurdleMet = prefOutstanding <= 0.01;
+      if (hurdleMet) {
+        party.gp.cashflow[m]    += promoteReserve;
+        party.gp.promoteFlow[m] += promoteReserve;
+        fees.promote += promoteReserve;
+        feeFlows.promote[m] += promoteReserve;
+        buckets.promoteToGP += promoteReserve;
+      } else {
+        party.lp.cashflow[m]     += promoteReserve * lpInv;
+        party.dev.cashflow[m]    += promoteReserve * devInv;
+        party.lp.proRataFlow[m]  += promoteReserve * lpInv;
+        party.dev.proRataFlow[m] += promoteReserve * devInv;
+        buckets.proRataResidual += promoteReserve;
+      }
+      promoteHurdleMet = hurdleMet;
+      promoteReserve = 0;
     }
   }
 
@@ -1106,6 +1138,10 @@ function runWaterfall(input, result) {
     config: {
       preferredReturnPct: prefAnnual,
       promoteSplit: promote,
+      subscriptionFeePct: subFeePct,
+      equityAtClose,
+      promoteHurdleMet,
+      promotePaidAtExit: true,
     },
   };
 }
