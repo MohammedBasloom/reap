@@ -907,7 +907,9 @@ function runWaterfall(input, result) {
   const prefAnnual = +f.preferredReturnPct || 0;
   const prefMonthly = Math.pow(1 + prefAnnual, 1 / 12) - 1;
   const mgmtMonthly = (+f.assetMgmtFeePctYr || 0) / 12;
-  const acqFeePct = +f.acquisitionFeePct || 0;
+  // Subscription fee — charged on each equity call, as a % of the amount
+  // called (replaces the old one-off acquisition fee on project cost).
+  const subFeePct = +f.subscriptionFeePct || 0;
   const devFeePct = +f.developmentFeePct || 0;
 
   const promote = Math.max(0, Math.min(1, +f.promoteSplit || 0));
@@ -918,7 +920,6 @@ function runWaterfall(input, result) {
     (k.devCostExFinance || 0) + (k.totalInterest || 0) +
     (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0);
   const constructionBase = (k.constructionCost || 0) + (k.siteWorkCost || 0);
-  const acqFeeTotal = totalProjectCost * acqFeePct;
   const devFeeTotal = constructionBase * devFeePct;
 
   const predesign = Math.max(0, input.predesignMonths | 0);
@@ -941,7 +942,7 @@ function runWaterfall(input, result) {
   const party = { lp: mkParty(), dev: mkParty(), gp: mkParty() };
 
   // Fee totals + bucket aggregates
-  const fees = { acquisition: 0, assetMgmt: 0, development: 0, promote: 0 };
+  const fees = { subscription: 0, assetMgmt: 0, development: 0, promote: 0 };
   const buckets = {
     returnOfCapital: 0,
     preferredReturn: 0,
@@ -951,24 +952,22 @@ function runWaterfall(input, result) {
 
   for (let m = 0; m < horizon; m++) {
     // === Fees this month — paid as incurred (standard treatment) ===
-    const acqFeeM = m === 0 ? acqFeeTotal : 0;
     let devFeeM = 0;
     if (m >= conStart && m < conEnd) {
       devFeeM = devFeeTotal * (conDist[m - conStart] || 0);
     }
-    const unreturnedEquity =
-      Math.max(0, party.lp.contrib - party.lp.returned) +
-      Math.max(0, party.dev.contrib - party.dev.returned) +
-      Math.max(0, party.gp.contrib - party.gp.returned);
-    const mgmtFeeM = unreturnedEquity * mgmtMonthly;
+    // Asset management — annual rate accrued monthly on PAID-IN capital, for
+    // the whole fund life. (Basing it on unreturned capital made the fee
+    // vanish once capital was repaid, so it only showed in the first year.)
+    const paidInCapital = party.lp.contrib + party.dev.contrib + party.gp.contrib;
+    const mgmtFeeM = paidInCapital * mgmtMonthly;
 
-    fees.acquisition += acqFeeM;
     fees.development += devFeeM;
     fees.assetMgmt += mgmtFeeM;
 
     // Fees paid out to recipients immediately
-    party.gp.cashflow[m]  += acqFeeM + mgmtFeeM;
-    party.gp.feeFlow[m]   += acqFeeM + mgmtFeeM;
+    party.gp.cashflow[m]  += mgmtFeeM;
+    party.gp.feeFlow[m]   += mgmtFeeM;
     party.dev.cashflow[m] += devFeeM;
     party.dev.feeFlow[m]  += devFeeM;
 
@@ -979,8 +978,19 @@ function runWaterfall(input, result) {
     // series here would double-count interest & selling costs — they are
     // already netted out of the distribution stream by the debt sweep.
     const projectCall = Math.max(0, -(equityCF[m] || 0));
-    const feeCall = acqFeeM + devFeeM + mgmtFeeM;
-    const totalCall = projectCall + feeCall;
+    const feeCall = devFeeM + mgmtFeeM;
+    // Subscription fee — a % of the equity called this month, paid to the GP
+    // on top of the cash the fund needs, so investors fund both.
+    const baseCall = projectCall + feeCall;
+    // Grossed up so the fee is exactly subFeePct OF THE AMOUNT CALLED, while
+    // the net still covers the project's need.
+    const totalCall = baseCall > 0 && subFeePct < 1 ? baseCall / (1 - subFeePct) : baseCall;
+    const subFeeM = totalCall - baseCall;
+    if (subFeeM > 0) {
+      fees.subscription += subFeeM;
+      party.gp.cashflow[m] += subFeeM;
+      party.gp.feeFlow[m]  += subFeeM;
+    }
     if (totalCall > 0) {
       const lpCall  = totalCall * lp;
       const devCall = totalCall * dev;

@@ -43,7 +43,7 @@ const SAMPLE_INPUT = {
     lpEquityPct: 0.85,         // Limited Partners / cash investors
     devEquityPct: 0.10,        // Developer co-invest
     gpEquityPct: 0.05,         // GP / fund manager co-invest
-    acquisitionFeePct: 0.01,   // % of total project cost — paid to GP at close
+    subscriptionFeePct: 0.01,  // % of each equity call — paid to GP on subscription
     assetMgmtFeePctYr: 0.015,  // annual % of unreturned equity — paid to GP
     developmentFeePct: 0.03,   // % of construction + site cost — paid to Developer
     preferredReturnPct: 0.08,  // compounded hurdle IRR before promote kicks in

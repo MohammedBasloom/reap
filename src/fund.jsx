@@ -32,7 +32,7 @@ function FundPanel({ result, waterfall, input }) {
 
   // Top KPIs
   const totalEquity = w.contributions.total;
-  const totalFees = w.fees.acquisition + w.fees.assetMgmt + w.fees.development;
+  const totalFees = w.fees.subscription + w.fees.assetMgmt + w.fees.development;
   const totalDistributed = totals.lp.distributed + totals.dev.distributed + totals.gp.distributed;
 
   return (
@@ -63,7 +63,7 @@ function FundPanel({ result, waterfall, input }) {
         <FundKPI eyebrow="Total equity" value={fcF(totalEquity)} sub={`LP ${fpF(w.splits.lp,0)} · Dev ${fpF(w.splits.dev,0)} · GP ${fpF(w.splits.gp,0)}`} large />
         <FundKPI eyebrow="Total distributed" value={fcF(totalDistributed)} sub="Across all three parties" large />
         <FundKPI eyebrow="GP promote earned" value={fcF(w.buckets.promoteToGP)} sub={`${fpF(fund.promoteSplit, 0)} performance fee`} tone="accent" large />
-        <FundKPI eyebrow="Total fees" value={fcF(totalFees)} sub={`Acq + asset mgmt + dev`} large />
+        <FundKPI eyebrow="Total fees" value={fcF(totalFees)} sub={`Subscription + asset mgmt + dev`} large />
       </div>
 
       {/* Party returns - three big cards */}
@@ -86,8 +86,8 @@ function FundPanel({ result, waterfall, input }) {
           who="gp" label="GP · Fund manager"
           contrib={totals.gp.contributed} dist={totals.gp.distributed} profit={totals.gp.profit}
           irr={totals.gp.irr} moic={totals.gp.moic} hurdle={fund.preferredReturnPct}
-          fees={w.fees.acquisition + w.fees.assetMgmt}
-          note={`Acq + mgmt ${fcF(w.fees.acquisition + w.fees.assetMgmt)} · promote ${fcF(w.buckets.promoteToGP)}`}
+          fees={w.fees.subscription + w.fees.assetMgmt}
+          note={`Subscription + mgmt ${fcF(w.fees.subscription + w.fees.assetMgmt)} · promote ${fcF(w.buckets.promoteToGP)}`}
           accent
         />
       </div>
@@ -368,8 +368,8 @@ function SourcesUsesTable({ w, result, fund }) {
   const projectTotal = projectUses.reduce((s, u) => s + u.value, 0);
 
   const fundFees = [
-    { label: "Acquisition fee",       value: w.fees.acquisition, recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.acquisitionFeePct, 2)} of project cost · one-time` },
-    { label: "Asset management fee",  value: w.fees.assetMgmt,   recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr on unreturned equity` },
+    { label: "Subscription fee",      value: w.fees.subscription, recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.subscriptionFeePct, 2)} of each equity call` },
+    { label: "Asset management fee",  value: w.fees.assetMgmt,   recipient: "GP",        color: FUND_COLORS.gp,  rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr on paid-in capital` },
     { label: "Development fee",       value: w.fees.development, recipient: "Developer", color: FUND_COLORS.dev, rate: `${fpF(fund.developmentFeePct, 2)} of construction cost · S-curve` },
   ].filter(u => u.value > 0.5);
   const feesTotal = fundFees.reduce((s, u) => s + u.value, 0);
@@ -556,8 +556,8 @@ function SourcesUsesTable({ w, result, fund }) {
 function FeeTable({ w, fund }) {
   const k = w; // alias
   const rows = [
-    { who: "GP",        label: "Acquisition fee",   rate: fpF(fund.acquisitionFeePct, 2),  base: "Total project cost · one-time", value: w.fees.acquisition,  color: FUND_COLORS.gp },
-    { who: "GP",        label: "Asset mgmt fee",    rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr`, base: "Unreturned equity balance · monthly", value: w.fees.assetMgmt,     color: FUND_COLORS.gp },
+    { who: "GP",        label: "Subscription fee",  rate: fpF(fund.subscriptionFeePct, 2),  base: "Of each equity call, at the time it is drawn", value: w.fees.subscription,  color: FUND_COLORS.gp },
+    { who: "GP",        label: "Asset mgmt fee",    rate: `${fpF(fund.assetMgmtFeePctYr, 2)}/yr`, base: "Paid-in capital · accrued monthly, every year", value: w.fees.assetMgmt,     color: FUND_COLORS.gp },
     { who: "Developer", label: "Development fee",   rate: fpF(fund.developmentFeePct, 2),  base: "Construction + site cost · S-curve", value: w.fees.development, color: FUND_COLORS.dev },
     { who: "GP",        label: "Performance fee (promote)",   rate: fpF(fund.promoteSplit, 0), base: "Of distributions after return of capital + preferred return", value: w.buckets.promoteToGP, color: FUND_COLORS.gp },
   ];
