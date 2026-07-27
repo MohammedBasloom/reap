@@ -27,7 +27,7 @@ function esc(s) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-export async function onRequestPost({ request, env }) {
+async function handlePost(request, env) {
   let body;
   try {
     body = await request.json();
@@ -114,5 +114,17 @@ export async function onRequestPost({ request, env }) {
   return json({ ok: true }, 200);
 }
 
-// Only onRequestPost is exported — Pages answers every other method with 405
-// on its own, so there is no catch-all handler to keep in sync.
+// A catch-all, not onRequestPost: with only a method-specific handler, Pages
+// lets other methods fall through to the static assets, so a GET here would
+// render the landing page instead of refusing.
+export async function onRequest({ request, env }) {
+  if (request.method === "POST") return handlePost(request, env);
+  return new Response(JSON.stringify({ ok: false, error: "method_not_allowed" }), {
+    status: 405,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-store",
+      Allow: "POST",
+    },
+  });
+}
