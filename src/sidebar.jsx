@@ -354,10 +354,6 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   const land = computed.land;
   const gfa = computed.gfa;
   const nsa = computed.nsa;
-  const footprint = computed.footprint;
-  const remainingArea = computed.remainingArea;
-  const builtCost = computed.builtCost;
-  const siteCost = computed.siteWorkCost;
   const basementArea = computed.basementArea || 0;
   const landCostC = computed.landCost;
 
@@ -510,13 +506,30 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         </Row>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, padding: "8px 10px", background: "var(--bg-2)", fontSize: 10, color: "var(--fg-3)", marginBottom: 12 }}>
+      {/* Read-out only — a summary of the massing above. Nothing here feeds the
+          engine, so changing what is displayed cannot move any number. */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px 8px", padding: "10px", background: "var(--bg-2)", fontSize: 10, color: "var(--fg-3)", marginBottom: 12 }}>
         <div>Land<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(land)} m²</span></div>
         <div>GFA<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(gfa)} m²</span></div>
+        <div>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+            <span>BUA</span>
+            <span
+              title="Built-up area — the total constructed area: above-ground GFA plus the basement where one is included. The saleable/leasable area is the share of GFA that can actually be sold or let, after circulation, cores and walls."
+              style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+                border: "1px solid var(--ad-gold-600)", color: "var(--ad-gold-600)",
+                fontSize: 9, fontWeight: 700, cursor: "help", lineHeight: 1,
+              }}
+            >!</span>
+          </span>
+          <br />
+          <span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>
+            {Feas.formatNumber(gfa + (comp.hasBasement ? basementArea : 0))} m²
+          </span>
+        </div>
         <div>{comp.mode === "sale" ? "Saleable" : "Leasable"}<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(nsa)} m²</span></div>
-        <div>{(comp.massingMode || "far") === "coverage" ? "Ground floor" : "Footprint"}<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatNumber(footprint)} m²</span></div>
-        <div>{comp.hasBasement ? "Basement" : "Remaining"}<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatNumber(comp.hasBasement ? basementArea : remainingArea)} m²</span></div>
-        <div>Built + site<br /><span className="tabnum" style={{ color: "var(--fg-2)", fontSize: 11 }}>{Feas.formatCurrency(builtCost + siteCost)}</span></div>
       </div>
 
       {/* Revenue basis */}

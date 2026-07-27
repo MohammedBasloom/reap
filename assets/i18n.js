@@ -269,6 +269,8 @@
       "بالتناسب للمستثمرين (الشريك المحدود والمطوّر فقط — إذ يُكافأ الشريك العام عبر حوافز الأداء).",
     "% of land — over 100% adds floors (200% ≈ 2 levels)": "٪ من مساحة الأرض — أكثر من 100% يعني طوابق إضافية (200% ≈ طابقان)",
     "Basement coverage is measured as % of the land area. If the basement spans more than one floor, enter more than 100% — e.g. two full basement floors ≈ 200%.": "تُحسب تغطية القبو كنسبة من مساحة الأرض. إذا كان القبو أكثر من طابق واحد، أدخل نسبة أعلى من 100% — مثلًا: طابقان كاملان ≈ 200%.",
+    "Built-up area — the total constructed area: above-ground GFA plus the basement where one is included. The saleable/leasable area is the share of GFA that can actually be sold or let, after circulation, cores and walls.":
+      "المساحة المبنية — إجمالي المساحة المُنشأة: مساحة الأدوار فوق الأرض (GFA) مضافًا إليها القبو إن وُجد. أما المساحة القابلة للبيع أو التأجير فهي الجزء من الـ GFA الذي يمكن بيعه أو تأجيره فعليًا بعد خصم الممرات والخدمات والجدران.",
     "Sale price": "سعر البيع", "Avg unit size": "متوسط مساحة الوحدة", "Unit price": "سعر الوحدة",
     "Units (derived)": "عدد الوحدات (محسوب)", "Keys": "المفاتيح", "Key price": "سعر المفتاح",
     "Rent": "الإيجار", "Units": "الوحدات", "ADR": "متوسط سعر الليلة ADR",
