@@ -731,11 +731,24 @@
     "Value per m² (built)": "القيمة لكل م² (بناء)", "Value per m² (land)": "القيمة لكل م² (أرض)",
     "m² basis": "م² أساس القياس",
     "Likely range": "النطاق المرجّح",
-    "This tool follows the three internationally recognised valuation approaches (IVS), but is an indicative\n          estimate — not a substitute for an accredited valuer (Taqeem) report where one is legally required.":
+    /* JSX collapses the source line break into a single space — the key must
+       match the runtime string, not the indented source. */
+    "This tool follows the three internationally recognised valuation approaches (IVS), but is an indicative estimate — not a substitute for an accredited valuer (Taqeem) report where one is legally required.":
       "تتبع هذه الأداة أساليب التقييم الثلاثة المعتمدة دوليًا (IVS)، لكنها تقدير استرشادي — ولا تغني عن تقرير مقيّم معتمد (تقييم) حيث يُشترط نظامًا.",
+
+    /* Sensitivity drivers (valuation) */
+    "Comparable prices ±10%": "أسعار المقارنات ±10%",
+    "Rent ±10%": "الإيجار ±10%",
+    "Cap rate ∓10%": "معدل الرسملة ∓10%",
+    "Build cost ±10%": "تكلفة البناء ±10%",
+    "Land price ±10%": "سعر الأرض ±10%",
 
     /* Quality check titles (static ones) */
     "No usable comparables": "لا توجد مقارنات صالحة",
+    "Professional practice uses 3–5 comparable sales. Fewer comps make the value less reliable.":
+      "تعتمد الممارسة المهنية على ٣–٥ صفقات مقارنة. وكلما قلّ عددها ضعفت موثوقية القيمة.",
+    "Total adjustments beyond ±25% suggest the comparable is not truly similar — consider replacing it.":
+      "التسويات الإجمالية التي تتجاوز ±٢٥٪ تشير إلى أن العقار المقارن ليس مماثلًا فعليًا — يُفضّل استبداله.",
     "Add at least 3 recent sales of similar properties — the market approach is the backbone of most valuations.": "أضف ٣ صفقات بيع حديثة على الأقل لعقارات مماثلة — أسلوب السوق هو أساس معظم التقييمات.",
     "Comparables disagree widely": "تباين كبير بين المقارنات",
     "Unusual capitalisation rate": "معدل رسملة غير معتاد",
@@ -841,6 +854,22 @@
       "قلّل توزيع مكوّن أو أكثر — الإجمالي يتجاوز الأرض المتاحة بمقدار $1 نقطة."],
     [/^Sources exceed uses by (.+)$/, "المصادر تتجاوز الاستخدامات بمقدار $1"],
     [/^Uses exceed sources by (.+)$/, "الاستخدامات تتجاوز المصادر بمقدار $1"],
+
+    /* Valuation — build-up ledger rows (interpolated, so they never match the dictionary) */
+    [/^− Vacancy \((.+)\)$/, "− الشواغر ($1)"],
+    [/^− Operating costs \((.+)\)$/, "− مصاريف التشغيل ($1)"],
+    [/^÷ Cap rate (.+)$/, "÷ معدل الرسملة $1"],
+    [/^− Depreciation \((.+) · eff\. age (.+) yrs\)$/, "− الإهلاك ($1 · العمر الفعلي $2 سنة)"],
+    [/^× ([\d.,]+) (م²|m²)$/, "× $1 $2"],
+    [/^([\d.,]+%) divergence$/, "تباين $1"],
+
+    /* Valuation — quality checks (interpolated) */
+    [/^Only (\d+) comparables?$/, "عدد المقارنات $1 فقط"],
+    [/^Comp (\d+) is heavily adjusted \((.+)\)$/, "العقار المقارن $1 خضع لتسوية كبيرة ($2)"],
+    [/^Your adjusted comps span (.+) around the middle value\. Re-check the adjustments or replace outlier comps\.$/,
+      "تتباعد مقارناتك بعد التسوية بنحو $1 حول القيمة الوسطى. راجع التسويات أو استبدل المقارنات الشاذة."],
+    [/^(.+) is outside the typical 4–12% band for income property in the region\.$/,
+      "$1 خارج النطاق المعتاد 4–12% للعقارات المدرّة للدخل في المنطقة."],
     /* Auto-numbered duplicates of a known term — e.g. component names like
        "Villa 2" → «فيلا 2». Keep LAST: it matches any "<term> <n>" and
        returns the string unchanged when the base isn't a known term. */
