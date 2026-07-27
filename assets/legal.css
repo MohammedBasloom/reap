@@ -114,6 +114,11 @@ html[dir="rtl"] .lgl-brand b { letter-spacing: 0; }
 .lgl-foot a:hover { color: var(--ad-gold-400); }
 .lgl-foot .sep { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.18); }
 .lgl-foot .copy { color: rgba(255, 255, 255, 0.5); }
+.lgl-foot .ver {
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;
+  color: var(--ad-gold-400); border: 1px solid rgba(201, 168, 97, 0.45);
+  border-radius: 2px; padding: 3px 8px; white-space: nowrap;
+}
 
 @media (max-width: 620px) {
   .lgl-doc { padding: 32px 20px 56px; }

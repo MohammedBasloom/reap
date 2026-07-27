@@ -235,6 +235,7 @@
     "Privacy Policy": "سياسة الخصوصية",
     "Terms of Use": "شروط الاستخدام",
     "Disclaimer": "إخلاء المسؤولية",
+    "Beta v2.0": "نسخة تجريبية v2.0",
     "© 2026 REAP. All rights reserved.": "© 2026 REAP. جميع الحقوق محفوظة.",
     "New tab unlocked": "تبويب جديد متاح",
     "Fund tab is now available": "تبويب الصندوق أصبح متاحًا",

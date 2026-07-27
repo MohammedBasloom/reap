@@ -402,6 +402,13 @@ function FundTabToast({ onOpen, onClose }) {
   );
 }
 
+/* Release marker — bump the label here when the version changes. */
+const VER_BADGE = {
+  fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600,
+  color: "var(--ad-gold-400)", border: "1px solid rgba(201,168,97,0.45)",
+  borderRadius: 2, padding: "3px 8px", whiteSpace: "nowrap",
+};
+
 function AppFooter() {
   const iconLink = {
     display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -439,6 +446,8 @@ function AppFooter() {
       <a href="terms.html" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Terms of Use</a>
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
       <a href="disclaimer.html" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Disclaimer</a>
+      <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
+      <span style={VER_BADGE}>Beta v2.0</span>
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
       <span style={{ color: "rgba(255,255,255,0.5)" }}>© 2026 REAP. All rights reserved.</span>
     </footer>
