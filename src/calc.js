@@ -767,6 +767,7 @@ function runFeasibility(input) {
     a, projectIRR, equityIRR, projectROI, profit, ltc, contingencyPct,
     softCostsPct, constructionMonths, predesignMonths, peakDebt, debtFacility,
     allocationOverflow, totalAllocationPct, allocationUnused,
+    totalEquity: totalEquityContributed,
     components,
   });
 
@@ -834,7 +835,7 @@ function runFeasibility(input) {
 
 function computeRisks(ctx) {
   const out = [];
-  const { a, equityIRR, profit, ltc, contingencyPct, softCostsPct, constructionMonths, peakDebt, debtFacility, allocationOverflow, totalAllocationPct, allocationUnused, components } = ctx;
+  const { a, equityIRR, profit, ltc, contingencyPct, softCostsPct, constructionMonths, peakDebt, debtFacility, allocationOverflow, totalAllocationPct, allocationUnused, totalEquity, components } = ctx;
   const push = (level, title, detail) => out.push({ level, title, detail });
 
   // Allocation alarm (high priority)
@@ -851,7 +852,12 @@ function computeRisks(ctx) {
   }
 
   const hurdle = +a.discountRate || 0.12;
-  if (equityIRR === null) push("danger", "IRR could not be computed", "Cashflow does not change sign — revenue may not cover costs.");
+  // A null IRR has two very different causes. If no equity was ever called the
+  // project simply funded itself, and there is no equity series to solve — that
+  // is a good outcome, not a danger. Only an unsolvable series is a red flag.
+  const noEquityCalled = !(totalEquity > 0.01);
+  if (noEquityCalled) push("success", "No equity called", "Income and debt covered every outflow, so no equity was required — an equity IRR is undefined rather than poor.");
+  else if (equityIRR === null) push("danger", "IRR could not be computed", "Cashflow does not change sign — revenue may not cover costs.");
   else if (equityIRR < hurdle * 0.7) push("danger", "Equity IRR well below hurdle", `Equity IRR ${(equityIRR * 100).toFixed(1)}% vs hurdle ${(hurdle * 100).toFixed(1)}%.`);
   else if (equityIRR < hurdle) push("warning", "Equity IRR below hurdle", `${(equityIRR * 100).toFixed(1)}% vs target ${(hurdle * 100).toFixed(1)}%.`);
   else push("success", "Equity IRR clears hurdle", `${(equityIRR * 100).toFixed(1)}% vs target ${(hurdle * 100).toFixed(1)}%.`);

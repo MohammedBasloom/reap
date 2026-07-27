@@ -381,6 +381,8 @@
     "Total GFA": "إجمالي مسطحات البناء GFA", "Total NSA": "إجمالي المساحة الصافية NSA",
     "Total units": "إجمالي الوحدات", "Total keys": "إجمالي المفاتيح", "Components": "المكوّنات",
     "No equity called": "لا استدعاء لرأس مال",
+    "Income and debt covered every outflow, so no equity was required — an equity IRR is undefined rather than poor.":
+      "غطّت الإيرادات والدين كل التدفقات الخارجة، فلم تُطلب أي مساهمة من الملكية — وعليه فإن معدل العائد الداخلي للملكية غير معرّف، لا ضعيف.",
     /* Cost tab */
     "Transfer fees": "رسوم التصرّف", "Site work": "أعمال الموقع", "Soft": "غير مباشرة",
     "Selling": "تكاليف البيع", "Total cost · all-in": "إجمالي التكلفة · شامل",
