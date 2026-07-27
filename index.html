@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260786"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260786" />
+  <script src="assets/i18n.js?v=20260787"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260787" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -438,6 +438,7 @@
       .road-spark, .road.in .road-spark { display: none; animation: none; }
       .rstep .node, .road.in .rstep .node { transition: none; transition-delay: 0s; transform: none; }
       .road.in .rstep .node::after { animation: none; }
+      .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
 
       .reveal, .reveal.in { opacity: 1; transform: none; transition: none; }
@@ -532,13 +533,23 @@
       .rstep { text-align: start; display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start; }
       .rstep .node { margin: 0; }
       .rstep .n { margin-top: 2px; }
-      .road-track {
-        top: 28px; bottom: 28px; height: auto; width: 2px;
-        inset-inline-start: 27px; inset-inline-end: auto;
+      /* One global rail can't know where the last node sits — it would run on
+         past it into the text. Each step draws its own connector instead. */
+      .road-track, .road-spark { display: none; }
+      .rstep:not(:last-child)::before,
+      .rstep:not(:last-child)::after {
+        content: ""; position: absolute; width: 2px;
+        inset-inline-start: 27px; top: 58px; bottom: -32px;
       }
-      .road-fill, html[dir="rtl"] .road-fill { transform: scaleY(0); transform-origin: top; }
-      .road.in .road-fill { transform: scaleY(1); }
-      .road-spark { display: none; }
+      .rstep:not(:last-child)::before { background: var(--border-2); }
+      .rstep:not(:last-child)::after {
+        background: var(--ad-gold-500);
+        transform: scaleY(0); transform-origin: top;
+      }
+      .road.in .rstep:not(:last-child)::after {
+        transition: transform 620ms var(--ease-out) calc(var(--i) * 520ms + 560ms);
+        transform: scaleY(1);
+      }
       .services, .how, .features, .faq { padding-left: 24px; padding-right: 24px; }
       .bento { grid-template-columns: 1fr; }
       .tile.wide { grid-column: span 1; }
@@ -547,7 +558,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260786"></script>
+<script src="assets/mobile-notice.js?v=20260787"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -962,8 +973,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260786"></script>
-<script src="assets/auth.js?v=20260786"></script>
+<script src="assets/config.js?v=20260787"></script>
+<script src="assets/auth.js?v=20260787"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
