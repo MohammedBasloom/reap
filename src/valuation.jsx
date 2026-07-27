@@ -34,15 +34,6 @@ function defaultInput(type = "apartment") {
 }
 
 /* ---------- Small UI atoms (brand-consistent) ---------- */
-function Eyebrow({ n, children }) {
-  return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-      {n && <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--ad-gold-600)" }}>{n}</span>}
-      <div className="ad-eyebrow">{children}</div>
-    </div>
-  );
-}
-
 function NumInput({ value, onChange, placeholder, disabled }) {
   const [draft, setDraft] = useState(null);
   const fmt = (v) => (v === null || v === undefined || v === "" || isNaN(+v)) ? "" : (+v).toLocaleString("en-US", { maximumFractionDigits: 6 });
@@ -83,21 +74,60 @@ function Row({ cols = 2, children }) {
   return <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12, marginTop: 12 }}>{children}</div>;
 }
 
+/* Section header bands — same treatment as the modeling page's sidebar, so a
+   user moving between the two platforms reads them the same way: tinted band,
+   gold accent when open, numbered badge and a full-size title. */
+const BAND_STYLE = {
+  width: "100%", boxSizing: "border-box",
+  display: "flex", alignItems: "center", justifyContent: "space-between",
+  padding: "14px 24px", background: "var(--bg-2)", border: "none",
+  textAlign: "start", fontFamily: "inherit",
+};
+
+function BandLabel({ n, title, open = true }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+      <span style={{
+        fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+        padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+        background: open ? "var(--ad-navy-800)" : "var(--bg-3)",
+        color: open ? "#FFFFFF" : "var(--fg-3)",
+      }}>{String(n).padStart(2, "0")}</span>
+      <span style={{
+        fontSize: 13, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+        color: "var(--fg-1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+      }}>{title}</span>
+    </span>
+  );
+}
+
 function Section({ n, title, sub, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border-1)" }}>
-      <button type="button" onClick={() => setOpen(!open)} style={{
-        width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "16px 24px", background: "transparent", border: "none", cursor: "pointer", textAlign: "left",
-      }}>
-        <div>
-          <Eyebrow n={n}>{title}</Eyebrow>
-          {sub && <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 4 }}>{sub}</div>}
-        </div>
-        <span style={{ fontSize: 12, color: "var(--fg-3)", transform: open ? "none" : "rotate(-90deg)", transition: "transform 200ms var(--ease-out)" }}>▾</span>
+    <div style={{ borderTop: "1px solid var(--border-strong)" }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          ...BAND_STYLE, cursor: "pointer",
+          borderInlineStart: `3px solid ${open ? "var(--ad-gold-500)" : "transparent"}`,
+          transition: "border-color var(--t-fast) var(--ease-out)",
+        }}
+      >
+        <BandLabel n={n} title={title} open={open} />
+        <span style={{
+          fontSize: 12, color: "var(--fg-3)", flexShrink: 0,
+          transition: "transform 200ms var(--ease-out)",
+          transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+        }}>▾</span>
       </button>
-      {open && <div style={{ padding: "0 24px 24px" }}>{children}</div>}
+      {open && (
+        /* Breathing room under the band, and the explainer leads the content */
+        <div style={{ padding: "18px 24px 24px" }}>
+          {sub && <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14 }}>{sub}</div>}
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -235,24 +265,25 @@ function ValApp() {
 
       {/* ===== SIDEBAR (wizard) ===== */}
       <aside style={{ gridArea: "side", borderRight: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}>
+        {/* Section 01 isn't collapsible, but wears the same band as 02+ */}
+        <div style={{ ...BAND_STYLE, borderInlineStart: "3px solid var(--ad-gold-500)" }}>
+          <BandLabel n="01" title="Property" />
+          <button
+            type="button"
+            onClick={() => { if (confirm(I18N.t("Start a fresh valuation?"))) setInput(defaultInput(input.property.type)); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 5, flexShrink: 0,
+              background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
+              color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+              padding: "4px 9px", fontFamily: "inherit",
+            }}
+          >
+            <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
+            Reset
+          </button>
+        </div>
         <div style={{ padding: "18px 24px 14px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <Eyebrow n="01">Property</Eyebrow>
-            <button
-              type="button"
-              onClick={() => { if (confirm(I18N.t("Start a fresh valuation?"))) setInput(defaultInput(input.property.type)); }}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
-                color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
-                padding: "4px 9px", fontFamily: "inherit",
-              }}
-            >
-              <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
-              Reset
-            </button>
-          </div>
-          <div style={{ fontSize: 11, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>
+          <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
             Tell us what you're valuing. Everything else pre-fills with realistic market defaults you can refine later.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginTop: 14 }}>
@@ -494,7 +525,7 @@ function ValResults({ result, sens, input }) {
       </div>
 
       {/* Approach comparison */}
-      <Panel title="The three approaches" sub="Professional valuations triangulate from independent angles — then weight them into one number.">
+      <Panel n="01" title="The three approaches" sub="Professional valuations triangulate from independent angles — then weight them into one number.">
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
@@ -528,7 +559,7 @@ function ValResults({ result, sens, input }) {
       </Panel>
 
       {/* Sales detail */}
-      <Panel title="Comparable sales — adjusted" sub="Each comp's price per m², corrected for time, location and condition differences.">
+      <Panel n="02" title="Comparable sales — adjusted" sub="Each comp's price per m², corrected for time, location and condition differences.">
         {s.compCount === 0 ? (
           <div style={{ fontSize: 13, color: "var(--fg-3)" }}>No comparables entered yet — add them in the sidebar (step 02).</div>
         ) : (
@@ -586,7 +617,7 @@ function ValResults({ result, sens, input }) {
 
       {/* Sensitivity */}
       {hasValue && (
-        <Panel title="What moves the value" sub="Final value if each key input turns out 10% better or worse.">
+        <Panel n="03" title="What moves the value" sub="Final value if each key input turns out 10% better or worse.">
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
             <thead><tr style={{ borderBottom: "1px solid var(--border-2)" }}><th style={th}>Driver</th><th style={thR}>Downside</th><th style={thR}>Base</th><th style={thR}>Upside</th></tr></thead>
             <tbody>
@@ -604,7 +635,7 @@ function ValResults({ result, sens, input }) {
       )}
 
       {/* Quality checks */}
-      <Panel title="Quality checks" sub="Automatic review of your inputs against professional practice.">
+      <Panel n="04" title="Quality checks" sub="Automatic review of your inputs against professional practice.">
         {result.checks.map((c, i) => (
           <div key={i} style={{
             display: "flex", gap: 12, padding: "10px 14px", marginBottom: 8, alignItems: "flex-start",
@@ -644,12 +675,26 @@ function KPI({ eyebrow, value, sub }) {
   );
 }
 
-function Panel({ title, sub, tight, children }) {
+/* Result panels carry the same numbered heading as the modeling page's Fund
+   tab, so each block announces itself instead of whispering an eyebrow.
+   `n` is optional — the nested build-up panels are detail, not top-level steps. */
+function Panel({ n, title, sub, tight, children }) {
   return (
     <div className="val-panel" style={{ border: "1px solid var(--border-1)", background: "var(--bg-1)", padding: tight ? "18px 20px" : "22px 24px", marginBottom: 20 }}>
-      <div className="ad-eyebrow">{title}</div>
-      {sub && <div style={{ fontSize: 11.5, color: "var(--fg-3)", marginTop: 4, marginBottom: 12 }}>{sub}</div>}
-      {!sub && <div style={{ marginBottom: 12 }} />}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: sub ? 5 : 14 }}>
+        {n && (
+          <span style={{
+            fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+            padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+            background: "var(--ad-navy-800)", color: "#FFFFFF",
+          }}>{String(n).padStart(2, "0")}</span>
+        )}
+        <h3 style={{
+          margin: 0, fontSize: tight ? 13 : 14, fontWeight: 600, letterSpacing: "0.08em",
+          textTransform: "uppercase", color: "var(--fg-1)",
+        }}>{title}</h3>
+      </div>
+      {sub && <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55, marginBottom: 14, maxWidth: 760 }}>{sub}</div>}
       {children}
     </div>
   );
