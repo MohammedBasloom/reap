@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260782"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260782" />
+  <script src="assets/i18n.js?v=20260783"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260783" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -212,6 +212,172 @@
     .disclaim .dhead svg { flex-shrink: 0; }
     .disclaim p { font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,0.62); margin: 12px 0 0; }
 
+    /* ---------- Contact ---------- */
+    .contact {
+      position: relative; overflow: hidden;
+      background: var(--ad-navy-900); color: white;
+      padding: 84px 40px 92px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    /* Soft gold bloom behind the form — pure decoration. */
+    .contact::before {
+      content: ""; position: absolute; top: -180px; inset-inline-end: -140px;
+      width: 520px; height: 520px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(circle, rgba(201,168,97,0.14) 0%, rgba(201,168,97,0) 68%);
+    }
+    .contact .inner {
+      position: relative; max-width: 1180px; margin: 0 auto;
+      display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 56px; align-items: start;
+    }
+    .contact .eyebrow { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ad-gold-400); font-weight: 600; }
+    .contact h2 {
+      font-family: var(--font-display); font-size: clamp(26px, 3vw, 36px); font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1.15; margin-top: 14px; color: white;
+    }
+    .contact .blurb { margin-top: 16px; font-size: 15px; line-height: 1.7; color: rgba(255,255,255,0.66); }
+    .cf-direct { margin-top: 30px; display: flex; flex-direction: column; gap: 2px; }
+    .cf-direct a, .cf-direct span.item {
+      display: inline-flex; align-items: center; gap: 11px;
+      padding: 10px 0; font-size: 13.5px; color: rgba(255,255,255,0.78);
+      text-decoration: none; transition: color 160ms var(--ease-out);
+    }
+    .cf-direct a:hover { color: var(--ad-gold-400); }
+    .cf-direct svg { flex-shrink: 0; opacity: 0.55; }
+    .cf-direct a:hover svg { opacity: 1; }
+
+    /* Form card */
+    .cf-card {
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 3px; padding: 34px 36px 30px;
+      backdrop-filter: blur(6px);
+    }
+    .cf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+    .cf-grid .span2 { grid-column: 1 / -1; }
+
+    /* Floating-label field */
+    .fld { position: relative; padding-top: 6px; }
+    .fld input, .fld textarea {
+      width: 100%; box-sizing: border-box;
+      background: transparent; border: none;
+      border-bottom: 1px solid rgba(255,255,255,0.22);
+      color: white; font-family: var(--font-body); font-size: 14.5px;
+      padding: 20px 2px 9px; outline: none; resize: none;
+      transition: border-color 200ms var(--ease-out);
+    }
+    .fld textarea { min-height: 108px; line-height: 1.6; }
+    .fld label {
+      position: absolute; inset-inline-start: 2px; top: 24px;
+      font-size: 14px; color: rgba(255,255,255,0.5); pointer-events: none;
+      /* transform-origin takes no logical keywords — flip it explicitly for RTL */
+      transform-origin: left top;
+      transition: transform 200ms var(--ease-out), color 200ms var(--ease-out);
+    }
+    html[dir="rtl"] .fld label { transform-origin: right top; }
+    /* placeholder=" " makes :placeholder-shown a reliable "is empty" test */
+    .fld input:focus + label,
+    .fld input:not(:placeholder-shown) + label,
+    .fld textarea:focus + label,
+    .fld textarea:not(:placeholder-shown) + label {
+      transform: translateY(-19px) scale(0.78);
+      color: var(--ad-gold-400);
+    }
+    /* Gold underline that grows from the reading edge on focus */
+    .fld::after {
+      content: ""; position: absolute; inset-inline-start: 0; bottom: 0;
+      height: 2px; width: 100%; background: var(--ad-gold-500);
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 260ms var(--ease-out);
+    }
+    html[dir="rtl"] .fld::after { transform-origin: right; }
+    .fld:focus-within::after { transform: scaleX(1); }
+    .fld.invalid input, .fld.invalid textarea { border-bottom-color: #e0776b; }
+    .fld.invalid label { color: #e0776b; }
+
+    /* Honeypot — off-screen, never shown, never announced */
+    .cf-hp { position: absolute; inset-inline-start: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+    .cf-actions { display: flex; align-items: center; gap: 16px; margin-top: 26px; flex-wrap: wrap; }
+    .cf-submit {
+      position: relative; overflow: hidden;
+      background: var(--ad-gold-500); color: var(--ad-navy-900);
+      border: none; border-radius: 2px; cursor: pointer;
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 14px 34px; min-width: 190px;
+      transition: background 160ms var(--ease-out), transform 160ms var(--ease-out);
+    }
+    .cf-submit:hover:not(:disabled) { background: var(--ad-gold-400); transform: translateY(-1px); }
+    .cf-submit:disabled { cursor: default; opacity: 0.75; }
+    /* Sheen sweep on hover */
+    .cf-submit::after {
+      content: ""; position: absolute; top: 0; inset-inline-start: -60%;
+      width: 40%; height: 100%; pointer-events: none;
+      background: linear-gradient(100deg, transparent, rgba(255,255,255,0.45), transparent);
+      transform: translateX(-140%);
+    }
+    .cf-submit:hover:not(:disabled)::after { animation: cf-sheen 720ms var(--ease-out); }
+    @keyframes cf-sheen { to { transform: translateX(420%); } }
+
+    .cf-spinner {
+      display: none; width: 13px; height: 13px; vertical-align: -2px;
+      margin-inline-end: 8px; border-radius: 50%;
+      border: 2px solid rgba(16,32,64,0.25); border-top-color: var(--ad-navy-900);
+      animation: cf-spin 700ms linear infinite;
+    }
+    @keyframes cf-spin { to { transform: rotate(360deg); } }
+    .cf-card.sending .cf-spinner { display: inline-block; }
+
+    .cf-note { font-size: 11.5px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+    .cf-error {
+      display: none; margin-top: 16px; padding: 11px 14px;
+      border-inline-start: 3px solid #e0776b; background: rgba(224,119,107,0.1);
+      font-size: 12.5px; line-height: 1.6; color: #f0b3aa;
+    }
+    .cf-error.show { display: block; animation: cf-shake 420ms var(--ease-out); }
+    @keyframes cf-shake {
+      0%,100% { transform: translateX(0); }
+      22% { transform: translateX(-5px); } 44% { transform: translateX(5px); }
+      66% { transform: translateX(-3px); } 88% { transform: translateX(3px); }
+    }
+
+    /* Success state — form swaps out for a drawn checkmark */
+    .cf-done { display: none; text-align: center; padding: 26px 10px 18px; }
+    .cf-card.done .cf-form { display: none; }
+    .cf-card.done .cf-done { display: block; }
+    .cf-done svg { width: 60px; height: 60px; }
+    .cf-done .ring, .cf-done .tick {
+      fill: none; stroke: var(--ad-gold-500); stroke-width: 3;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .cf-done .ring { stroke-dasharray: 166; stroke-dashoffset: 166; animation: cf-draw 620ms var(--ease-out) forwards; }
+    .cf-done .tick { stroke-dasharray: 48; stroke-dashoffset: 48; animation: cf-draw 380ms var(--ease-out) 500ms forwards; }
+    @keyframes cf-draw { to { stroke-dashoffset: 0; } }
+    .cf-done h3 { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin: 18px 0 0; color: white; }
+    .cf-done p { font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,0.6); margin: 9px 0 0; }
+
+    /* Scroll-reveal — staggered by --i */
+    .reveal { opacity: 0; transform: translateY(18px); }
+    .reveal.in {
+      opacity: 1; transform: none;
+      transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
+      transition-delay: calc(var(--i, 0) * 80ms);
+    }
+
+    @media (max-width: 900px) {
+      .contact { padding: 60px 24px 68px; }
+      .contact .inner { grid-template-columns: 1fr; gap: 34px; }
+      .cf-card { padding: 26px 22px 24px; }
+      .cf-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .reveal.in { opacity: 1; transform: none; transition: none; }
+      .cf-done .ring, .cf-done .tick { animation: none; stroke-dashoffset: 0; }
+      .cf-submit:hover:not(:disabled)::after { animation: none; }
+      .cf-error.show { animation: none; }
+      .cf-spinner { animation-duration: 1.6s; }
+    }
+
     /* ---------- Footer ---------- */
     .footer {
       background: var(--ad-navy-900); border-top: 1px solid var(--ad-navy-700);
@@ -300,7 +466,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260782"></script>
+<script src="assets/mobile-notice.js?v=20260783"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -566,13 +732,94 @@
     </div>
   </div>
 
+  <!-- ============ CONTACT ============ -->
+  <div class="contact" id="contact">
+    <div class="inner">
+
+      <div>
+        <div class="eyebrow reveal" data-ar="تواصل معنا">Get in touch</div>
+        <h2 class="reveal" style="--i:1" data-ar="لديك سؤال أو فرصة تودّ مناقشتها؟">Have a question, or an opportunity to discuss?</h2>
+        <p class="blurb reveal" style="--i:2" data-ar="سواء كان استفسارًا عن المنصة، أو طلبًا لدراسة جدوى رسمية أو تقييم معتمد — اكتب لنا وسنعود إليك.">
+          Whether it's a question about the platform or a request for a formal feasibility study
+          or an accredited valuation — write to us and we'll come back to you.
+        </p>
+
+        <div class="cf-direct reveal" style="--i:3">
+          <a href="mailto:info@reapinsights.com">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.24l-8 5-8-5V6.4l8 5 8-5v1.84z"/></svg>
+            info@reapinsights.com
+          </a>
+          <a href="tel:+966558793201" class="tabnum">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            +966 55 879 3201
+          </a>
+          <a href="https://linkedin.com/in/mohammedbasloom1" target="_blank" rel="noopener noreferrer">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </div>
+
+      <div class="cf-card reveal" style="--i:2" id="cfCard">
+        <form class="cf-form" id="cfForm" novalidate>
+          <div class="cf-grid">
+            <div class="fld">
+              <input type="text" id="cfName" name="name" placeholder=" " autocomplete="name" maxlength="100" required />
+              <label for="cfName" data-ar="الاسم">Your name</label>
+            </div>
+            <div class="fld">
+              <input type="email" id="cfEmail" name="email" placeholder=" " autocomplete="email" maxlength="200" required />
+              <label for="cfEmail" data-ar="البريد الإلكتروني">Email address</label>
+            </div>
+            <div class="fld span2">
+              <input type="text" id="cfSubject" name="subject" placeholder=" " maxlength="150" required />
+              <label for="cfSubject" data-ar="الموضوع">Subject</label>
+            </div>
+            <div class="fld span2">
+              <textarea id="cfMessage" name="message" placeholder=" " rows="4" maxlength="4000" required></textarea>
+              <label for="cfMessage" data-ar="الرسالة">Message</label>
+            </div>
+          </div>
+
+          <!-- Honeypot: hidden from people, irresistible to bots -->
+          <div class="cf-hp" aria-hidden="true">
+            <label for="cfCompany">Company</label>
+            <input type="text" id="cfCompany" name="company" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="cf-actions">
+            <button type="submit" class="cf-submit" id="cfSubmit">
+              <span class="cf-spinner" aria-hidden="true"></span>
+              <span id="cfBtnLabel" data-ar="إرسال الرسالة">Send message</span>
+            </button>
+            <span class="cf-note" data-ar="نرد عادةً خلال يوم عمل واحد.">We usually reply within one business day.</span>
+          </div>
+
+          <div class="cf-error" id="cfError" role="alert"></div>
+        </form>
+
+        <div class="cf-done" id="cfDone">
+          <svg viewBox="0 0 60 60" aria-hidden="true">
+            <circle class="ring" cx="30" cy="30" r="26.5" />
+            <path class="tick" d="M18.5 31.5 L26.5 39.5 L42 23" />
+          </svg>
+          <h3 data-ar="تم إرسال رسالتك">Message sent</h3>
+          <p data-ar="شكرًا لتواصلك — وصلتنا رسالتك وسنرد عليك على بريدك الإلكتروني قريبًا.">
+            Thanks for reaching out — we've received your message and will reply to your email shortly.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ============ FOOTER ============ -->
   <div class="footer">
     <span data-ar='تطوير <b style="color:white">محمد باسلوم</b>'>Developed by <b style="color:white">Mohammed Basloom</b></span>
     <span class="sep"></span>
     <a href="tel:+966558793201" class="tabnum">+966 55 879 3201</a>
     <span class="sep"></span>
-    <a href="mailto:moh.baslom@gmail.com" title="moh.baslom@gmail.com" aria-label="Email">
+    <a href="mailto:info@reapinsights.com" title="info@reapinsights.com" aria-label="Email">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.24l-8 5-8-5V6.4l8 5 8-5v1.84z"/></svg>
     </a>
     <a href="https://linkedin.com/in/mohammedbasloom1" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn">
@@ -632,8 +879,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260782"></script>
-<script src="assets/auth.js?v=20260782"></script>
+<script src="assets/config.js?v=20260783"></script>
+<script src="assets/auth.js?v=20260783"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -806,6 +1053,112 @@
   });
 
   refreshSessionUI();
+})();
+</script>
+
+<script>
+/* ---------- Contact section: scroll-reveal + submit ---------- */
+(function () {
+  const AR = window.I18N && I18N.lang === "ar";
+  const L = (en, ar) => (AR ? ar : en);
+  const $ = (id) => document.getElementById(id);
+
+  /* Reveal on scroll. Without IntersectionObserver, show everything at once. */
+  const reveals = document.querySelectorAll(".reveal");
+  if (!("IntersectionObserver" in window)) {
+    reveals.forEach((el) => el.classList.add("in"));
+  } else {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
+    reveals.forEach((el) => io.observe(el));
+  }
+
+  const form = $("cfForm");
+  if (!form) return;
+  const card = $("cfCard"), btn = $("cfSubmit"), err = $("cfError");
+
+  const showError = (msg) => { err.textContent = msg; err.classList.remove("show"); void err.offsetWidth; err.classList.add("show"); };
+  const clearError = () => { err.classList.remove("show"); err.textContent = ""; };
+
+  // Clear the invalid ring as soon as the user starts fixing the field.
+  form.querySelectorAll("input, textarea").forEach((el) => {
+    el.addEventListener("input", () => el.closest(".fld") && el.closest(".fld").classList.remove("invalid"));
+  });
+
+  form.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    if (card.classList.contains("sending")) return;
+    clearError();
+
+    const vals = {
+      name: $("cfName").value.trim(),
+      email: $("cfEmail").value.trim(),
+      subject: $("cfSubject").value.trim(),
+      message: $("cfMessage").value.trim(),
+      company: $("cfCompany").value.trim(),
+    };
+
+    // Validate client-side first so the user gets an instant answer; the
+    // Function re-checks everything regardless.
+    const missing = ["name", "email", "subject", "message"].filter((k) => !vals[k]);
+    if (missing.length) {
+      missing.forEach((k) => {
+        const f = form.querySelector("#cf" + k.charAt(0).toUpperCase() + k.slice(1));
+        if (f && f.closest(".fld")) f.closest(".fld").classList.add("invalid");
+      });
+      showError(L("Please fill in every field before sending.", "يرجى تعبئة جميع الحقول قبل الإرسال."));
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(vals.email)) {
+      $("cfEmail").closest(".fld").classList.add("invalid");
+      showError(L("That email address doesn't look right.", "يبدو أن البريد الإلكتروني غير صحيح."));
+      return;
+    }
+
+    card.classList.add("sending");
+    btn.disabled = true;
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(vals),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.ok) {
+        card.classList.add("done");
+        return;
+      }
+      if (data.error === "not_configured") {
+        showError(L(
+          "The contact form isn't available right now. Please email info@reapinsights.com directly.",
+          "نموذج التواصل غير متاح حاليًا. يرجى المراسلة مباشرة على info@reapinsights.com."
+        ));
+      } else if (data.error === "bad_email") {
+        $("cfEmail").closest(".fld").classList.add("invalid");
+        showError(L("That email address doesn't look right.", "يبدو أن البريد الإلكتروني غير صحيح."));
+      } else {
+        showError(L(
+          "Something went wrong sending your message. Please try again, or email info@reapinsights.com.",
+          "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى أو المراسلة على info@reapinsights.com."
+        ));
+      }
+    } catch (e) {
+      showError(L(
+        "We couldn't reach the server. Check your connection, or email info@reapinsights.com.",
+        "تعذّر الوصول إلى الخادم. تحقق من اتصالك أو راسلنا على info@reapinsights.com."
+      ));
+    } finally {
+      card.classList.remove("sending");
+      btn.disabled = false;
+    }
+  });
 })();
 </script>
 </body>

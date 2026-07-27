@@ -686,7 +686,7 @@ function ValFooter() {
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
       <a href="tel:+966558793201" className="tabnum" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>+966 55 879 3201</a>
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
-      <a href="mailto:moh.baslom@gmail.com" title="moh.baslom@gmail.com" aria-label="Email" style={{ display: "inline-flex", color: "rgba(255,255,255,0.75)" }}>
+      <a href="mailto:info@reapinsights.com" title="info@reapinsights.com" aria-label="Email" style={{ display: "inline-flex", color: "rgba(255,255,255,0.75)" }}>
         <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4.24l-8 5-8-5V6.4l8 5 8-5v1.84z" /></svg>
       </a>
       <a href="https://linkedin.com/in/mohammedbasloom1" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn" style={{ display: "inline-flex", color: "rgba(255,255,255,0.75)" }}>
