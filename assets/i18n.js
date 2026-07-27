@@ -10,9 +10,12 @@
    ============================================================= */
 (function () {
   const KEY = "reap_lang";
+  // Arabic is the default for a first-time visitor; anyone who has switched
+  // before keeps their stored choice.
+  const DEFAULT_LANG = "ar";
   let lang;
-  try { lang = localStorage.getItem(KEY) || "en"; } catch (e) { lang = "en"; }
-  if (lang !== "en" && lang !== "ar") lang = "en";
+  try { lang = localStorage.getItem(KEY) || DEFAULT_LANG; } catch (e) { lang = DEFAULT_LANG; }
+  if (lang !== "en" && lang !== "ar") lang = DEFAULT_LANG;
 
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
