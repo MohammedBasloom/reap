@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260784"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260784" />
+  <script src="assets/i18n.js?v=20260785"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260785" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -192,25 +192,6 @@
     .faq summary::after { content: "+"; font-size: 20px; line-height: 1; color: var(--ad-gold-600); font-weight: 400; transition: transform 160ms var(--ease-out); flex-shrink: 0; }
     .faq details[open] summary::after { transform: rotate(45deg); }
     .faq .a { padding: 0 20px 18px; font-size: 13px; line-height: 1.7; color: var(--fg-2); }
-
-    /* ---------- Closing CTA band ---------- */
-    .ctaband { background: var(--ad-navy-800); color: white; padding: 64px 40px; border-top: 1px solid var(--ad-navy-700); }
-    .ctaband .inner { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 44px; align-items: center; }
-    .ctaband .eyebrow { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ad-gold-400); font-weight: 600; }
-    .ctaband h2 { font-family: var(--font-display); font-size: clamp(24px, 3vw, 34px); font-weight: 700; letter-spacing: -0.02em; margin-top: 12px; color: white; }
-    .ctaband p { font-size: 14px; color: rgba(255,255,255,0.62); margin-top: 10px; max-width: 460px; line-height: 1.65; }
-    .ctaband .cta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .disclaim {
-      border: 1px solid rgba(255,255,255,0.16); border-inline-start: 3px solid var(--ad-gold-500);
-      background: rgba(255,255,255,0.03); border-radius: 2px; padding: 20px 24px;
-    }
-    .disclaim .dhead {
-      display: flex; align-items: center; gap: 9px;
-      font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 600;
-      color: var(--ad-gold-400);
-    }
-    .disclaim .dhead svg { flex-shrink: 0; }
-    .disclaim p { font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,0.62); margin: 12px 0 0; }
 
     /* ---------- Contact ---------- */
     .contact {
@@ -459,16 +440,15 @@
       .cards { grid-template-columns: 1fr; }
       .steps { grid-template-columns: 1fr; }
       .topbar { padding: 14px 20px; }
-      .services, .how, .features, .faq, .ctaband { padding-left: 24px; padding-right: 24px; }
+      .services, .how, .features, .faq { padding-left: 24px; padding-right: 24px; }
       .bento { grid-template-columns: 1fr; }
       .tile.wide { grid-column: span 1; }
-      .ctaband .inner { grid-template-columns: 1fr; gap: 28px; }
       .trust .inner { padding: 14px 24px; justify-content: flex-start; }
     }
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260784"></script>
+<script src="assets/mobile-notice.js?v=20260785"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -704,36 +684,6 @@
     </div>
   </div>
 
-  <!-- ============ CLOSING CTA ============ -->
-  <div class="ctaband">
-    <div class="inner">
-      <div>
-        <div class="eyebrow" data-ar="ابدأ الآن">Start now</div>
-        <h2 data-ar="جاهز لتقييم فرصتك الأولى؟">Ready to assess your first opportunity?</h2>
-        <p data-ar="أنشئ حسابك المجاني وابدأ خلال دقيقة — أو جرّب المنصة كضيف أولًا.">Create your free account and start in under a minute — or try the platform as a guest first.</p>
-        <div class="cta">
-          <button class="btn-land primary" id="btnStart2" data-ar="سجّل مجانًا">Sign up free</button>
-          <button class="btn-land" id="btnExplore2" data-ar="استكشف كضيف">Explore as guest</button>
-        </div>
-      </div>
-      <div class="disclaim">
-        <div class="dhead">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5v.5"/></svg>
-          <span data-ar="تنويه — نتائج استرشادية">Disclaimer — indicative results</span>
-        </div>
-        <p data-ar="الدراسات والتقييمات الصادرة عن منصة REAP هي تحليلات أولية استرشادية، أُعدّت لأغراض الفحص المبدئي ودعم اتخاذ القرار، وهي غير معتمدة ولا يُعتد بها للأغراض الرسمية أو التنظيمية أو التمويلية أو القانونية.">
-          The studies and valuations produced by REAP are preliminary, indicative analyses intended for
-          initial screening and decision support. They are not accredited reports and should not be
-          relied upon for official, regulatory, financing or legal purposes.
-        </p>
-        <p data-ar="وعند الحاجة إلى دراسة جدوى رسمية أو تقييم معتمد، يسعدنا تواصلكم عبر بيانات الاتصال في أسفل الصفحة، وسيتم الترتيب وفقًا لذلك.">
-          Should you require a formal feasibility study or an accredited valuation, please reach out
-          using the contact details in the footer below and arrangements will be made accordingly.
-        </p>
-      </div>
-    </div>
-  </div>
-
   <!-- ============ CONTACT ============ -->
   <div class="contact" id="contact">
     <div class="inner">
@@ -834,6 +784,8 @@
     <span class="sep"></span>
     <a href="terms.html" data-ar="شروط الاستخدام">Terms of Use</a>
     <span class="sep"></span>
+    <a href="disclaimer.html" data-ar="إخلاء المسؤولية">Disclaimer</a>
+    <span class="sep"></span>
     <span class="copy" data-ar="© 2026 REAP. جميع الحقوق محفوظة.">© 2026 REAP. All rights reserved.</span>
   </div>
 </div>
@@ -883,8 +835,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260784"></script>
-<script src="assets/auth.js?v=20260784"></script>
+<script src="assets/config.js?v=20260785"></script>
+<script src="assets/auth.js?v=20260785"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -1005,13 +957,6 @@
   document.querySelectorAll("[data-app]").forEach((b) => {
     b.onclick = () => launch(b.dataset.app);
   });
-
-  // Closing CTA band
-  $("btnStart2").onclick = async () => {
-    const user = await reapAuth.getUser();
-    if (user) { toServices(); } else { reapAuth.clearGuest(); openAuth("signup"); }
-  };
-  $("btnExplore2").onclick = () => { reapAuth.enterGuest(); toServices(); };
 
   $("suSubmit").onclick = async () => {
     const name = $("suName").value.trim();
