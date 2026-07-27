@@ -526,42 +526,8 @@ function ValResults({ result, sens, input }) {
         <KPI eyebrow="Approaches used" value={r.entries.filter((e) => e.value > 0).length} sub={r.divergence > 0 ? `${(r.divergence * 100).toFixed(0)}% divergence` : "—"} />
       </div>
 
-      {/* Approach comparison */}
-      <Panel n="01" title="The three approaches" sub="Professional valuations triangulate from independent angles — then weight them into one number.">
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
-              <th style={th}>Approach</th><th style={th}>In plain words</th>
-              <th style={thR}>Indicated value</th><th style={thR}>Weight</th><th style={thR}>Contribution</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[
-              { key: "sales", label: "Sales comparison", plain: "What similar properties sold for, adjusted to match yours", value: s.indicatedValue },
-              inc ? { key: "income", label: "Income capitalisation", plain: "What an investor would pay for the rent it can earn", value: inc.indicatedValue } : null,
-              cost ? { key: "cost", label: "Cost approach", plain: "Land value + rebuild cost, minus age & wear", value: cost.indicatedValue } : null,
-            ].filter(Boolean).map((row) => {
-              const entry = r.entries.find((e) => e.key === row.key) || { normWeight: 0 };
-              return (
-                <tr key={row.key} style={{ borderBottom: "1px solid var(--border-2)" }}>
-                  <td style={{ ...td, fontWeight: 600 }}>{row.label}</td>
-                  <td style={{ ...td, color: "var(--fg-3)", fontSize: 12 }}>{row.plain}</td>
-                  <td style={tdR}><span className="tabnum">{row.value > 0 ? fc(row.value) : "—"}</span></td>
-                  <td style={tdR}><span className="tabnum">{fp(entry.normWeight, 0)}</span></td>
-                  <td style={tdR}>
-                    <div style={{ display: "inline-block", width: 120, height: 10, background: "var(--bg-3)", border: "1px solid var(--border-1)", verticalAlign: "middle" }}>
-                      <div style={{ height: "100%", width: `${entry.normWeight * 100}%`, background: "var(--ad-navy-700)" }} />
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </Panel>
-
       {/* Build-ups for all three approaches, read side by side under one heading */}
-      <Panel n="02" title="Inside the three approaches"
+      <Panel n="01" title="The three approaches in detail"
         sub="The workings behind each indicated value — the same three columns a valuer would set out.">
         <div style={{
           display: "grid",
@@ -614,6 +580,40 @@ function ValResults({ result, sens, input }) {
             </div>
           )}
         </div>
+      </Panel>
+
+      {/* Reconciliation — how the three indicated values are weighted into one */}
+      <Panel n="02" title="Weighting the three approaches" sub="Professional valuations triangulate from independent angles — then weight them into one number.">
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
+              <th style={th}>Approach</th><th style={th}>In plain words</th>
+              <th style={thR}>Indicated value</th><th style={thR}>Weight</th><th style={thR}>Contribution</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { key: "sales", label: "Sales comparison", plain: "What similar properties sold for, adjusted to match yours", value: s.indicatedValue },
+              inc ? { key: "income", label: "Income capitalisation", plain: "What an investor would pay for the rent it can earn", value: inc.indicatedValue } : null,
+              cost ? { key: "cost", label: "Cost approach", plain: "Land value + rebuild cost, minus age & wear", value: cost.indicatedValue } : null,
+            ].filter(Boolean).map((row) => {
+              const entry = r.entries.find((e) => e.key === row.key) || { normWeight: 0 };
+              return (
+                <tr key={row.key} style={{ borderBottom: "1px solid var(--border-2)" }}>
+                  <td style={{ ...td, fontWeight: 600 }}>{row.label}</td>
+                  <td style={{ ...td, color: "var(--fg-3)", fontSize: 12 }}>{row.plain}</td>
+                  <td style={tdR}><span className="tabnum">{row.value > 0 ? fc(row.value) : "—"}</span></td>
+                  <td style={tdR}><span className="tabnum">{fp(entry.normWeight, 0)}</span></td>
+                  <td style={tdR}>
+                    <div style={{ display: "inline-block", width: 120, height: 10, background: "var(--bg-3)", border: "1px solid var(--border-1)", verticalAlign: "middle" }}>
+                      <div style={{ height: "100%", width: `${entry.normWeight * 100}%`, background: "var(--ad-navy-700)" }} />
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </Panel>
 
       {/* Sensitivity */}

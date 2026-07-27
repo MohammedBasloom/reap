@@ -699,7 +699,7 @@
     "Waiting for inputs": "بانتظار المدخلات",
     "Approaches used": "الأساليب المستخدمة",
     "divergence": "تباين",
-    "The three approaches": "الأساليب الثلاثة",
+    "Weighting the three approaches": "ترجيح الأساليب الثلاثة",
     "Professional valuations triangulate from independent angles — then weight them into one number.": "التقييم المهني يستند إلى زوايا مستقلة ثم يرجّحها في رقم واحد.",
     "Approach": "الأسلوب", "In plain words": "بعبارة مبسطة",
     "Indicated value": "القيمة الاستدلالية", "Weight": "الوزن", "Contribution": "المساهمة",
@@ -710,7 +710,7 @@
     "Cost approach": "أسلوب التكلفة",
     "Land value + rebuild cost, minus age & wear": "قيمة الأرض + تكلفة إعادة البناء، ناقص العمر والإهلاك",
     "Comparable sales — adjusted": "المبيعات المقارنة — بعد التسوية",
-    "Inside the three approaches": "داخل الأساليب الثلاثة",
+    "The three approaches in detail": "تفصيل الأساليب الثلاثة",
     "The workings behind each indicated value — the same three columns a valuer would set out.":
       "تفصيل احتساب القيمة المستخلصة من كل أسلوب — الأعمدة الثلاثة نفسها التي يعرضها المقيّم.",
     "Median adjusted": "الوسيط بعد التسوية",
