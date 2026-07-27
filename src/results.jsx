@@ -839,6 +839,29 @@ function ProgramPanel({ result, input }) {
 
 /* ---------- Sensitivity panel ---------- */
 
+/* Numbered heading for the tornado blocks — same treatment as the Fund tab and
+   the valuation result panels, so each chart announces itself. */
+function SensHead({ n, title, sub }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, lineHeight: 1,
+          padding: "4px 6px", borderRadius: 3, flexShrink: 0,
+          background: "var(--ad-navy-800)", color: "#FFFFFF",
+        }}>{String(n).padStart(2, "0")}</span>
+        <h3 style={{
+          margin: 0, fontSize: 14, fontWeight: 600, letterSpacing: "0.08em",
+          textTransform: "uppercase", color: "var(--fg-1)",
+        }}>{title}</h3>
+      </div>
+      {sub && (
+        <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55, marginTop: 5, maxWidth: 760 }}>{sub}</div>
+      )}
+    </div>
+  );
+}
+
 function SensitivityPanel({ result, input }) {
   const drivers = [
     { key: "landPricePerSqm",        label: "Land price / m²" },
@@ -882,8 +905,31 @@ function SensitivityPanel({ result, input }) {
       <Eyebrow>Sensitivity</Eyebrow>
       <h2 style={{ fontSize: 24, marginTop: 6, marginBottom: 24 }}>What moves the needle</h2>
 
+      {/* How to read a tornado — stated once, above both charts */}
+      <div style={{
+        padding: "14px 18px", marginBottom: 24, background: "var(--bg-1)",
+        border: "1px solid var(--border-1)", borderInlineStart: "3px solid var(--ad-gold-500)",
+        fontSize: 12.5, lineHeight: 1.7, color: "var(--fg-2)", maxWidth: 900,
+      }}>
+        {/* Kept as whole sentences, not fragments around inline markup — the
+            translator matches complete strings, and Arabic reorders words. */}
+        <div style={{ color: "var(--fg-1)", fontWeight: 600, marginBottom: 4 }}>How to read these charts</div>
+        <div>Each driver is moved 10% above and 10% below the value you entered — one driver at a time, with every other assumption held fixed. The widest rows are the inputs your return depends on most.</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 10 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <span style={{ width: 12, height: 12, background: "var(--ad-danger)", flexShrink: 0 }} />
+            Weaker of the two results
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+            <span style={{ width: 12, height: 12, background: "var(--ad-success)", flexShrink: 0 }} />
+            Stronger of the two results
+          </span>
+        </div>
+      </div>
+
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
-        <Eyebrow>Tornado · Equity IRR sensitivity (±10%)</Eyebrow>
+        <SensHead n={1} title="Equity IRR sensitivity"
+          sub="How far the investors' return moves when each driver is flexed ±10%." />
         {/* With no equity called there is no equity IRR to flex — every bar
             would read 0.0%. Explain it instead of drawing an empty chart. */}
         {(result.kpi.totalEquity || 0) < 0.5 ? (
@@ -903,7 +949,8 @@ function SensitivityPanel({ result, input }) {
       </div>
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
-        <Eyebrow>Tornado · Profit sensitivity (±10%)</Eyebrow>
+        <SensHead n={2} title="Profit sensitivity"
+          sub="How far net profit moves when each driver is flexed ±10%." />
         <Tornado
           data={tornadoProfit.slice(0, 10)}
           height={chartH(tornadoProfit)}

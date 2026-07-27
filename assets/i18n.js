@@ -194,8 +194,17 @@
     "On": "مفعّل", "Off": "معطّل",
     /* Fund structure — splits, fees, waterfall */
     "Hotel keys": "مفاتيح الفندق", "NOI / yr": "صافي دخل تشغيلي / سنة",
-    "Tornado · Equity IRR sensitivity (±10%)": "تورنادو · حساسية IRR للملكية (±10%)",
-    "Tornado · Profit sensitivity (±10%)": "تورنادو · حساسية الربح (±10%)",
+    "Equity IRR sensitivity": "حساسية عائد الملكية IRR",
+    "Profit sensitivity": "حساسية الربح",
+    "How far the investors' return moves when each driver is flexed ±10%.":
+      "مدى تغيّر عائد المستثمرين عند تحريك كل عامل بنسبة ±10%.",
+    "How far net profit moves when each driver is flexed ±10%.":
+      "مدى تغيّر صافي الربح عند تحريك كل عامل بنسبة ±10%.",
+    "How to read these charts": "كيف تقرأ هذه الرسوم",
+    "Each driver is moved 10% above and 10% below the value you entered — one driver at a time, with every other assumption held fixed. The widest rows are the inputs your return depends on most.":
+      "يُحرَّك كل عامل بنسبة 10% أعلى و10% أدنى من القيمة التي أدخلتها — عامل واحد في كل مرة مع تثبيت بقية الافتراضات. والصفوف الأعرض هي المدخلات التي يعتمد عليها عائدك أكثر من غيرها.",
+    "Weaker of the two results": "النتيجة الأضعف من الحالتين",
+    "Stronger of the two results": "النتيجة الأقوى من الحالتين",
     "Base profit": "الربح الأساس",
     "No equity was called.": "لم تُستدعَ أي مساهمة من الملكية.",
     "Project income and the debt facility cover every funding need, so no investor cash is required and there is no equity IRR to measure — which is why shifting any driver leaves it unchanged. Use the profit sensitivity below to compare what moves the return.":
