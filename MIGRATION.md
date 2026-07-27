@@ -12,7 +12,7 @@ secrets are excluded — those are recreated on the new machine, never copied.
 | Site code, assets, brand kit, email templates | this repo | ✅ yes |
 | Dev server + deploy scripts (`serve.ps1`, `deploy-github.ps1`) | this repo | ✅ yes |
 | Dev-server port config (`.claude/launch.json`) | this repo | ✅ yes |
-| GitHub token (`.github-token`) | local file, gitignored | ❌ recreate |
+| GitHub push credential | Windows Credential Manager | ❌ sign in again |
 | Live site, DNS, email routing | Cloudflare account | ❌ account login |
 | Users, saved valuations | Supabase account | ❌ account login |
 | Outbound email | Resend account | ❌ account login |
@@ -32,15 +32,40 @@ git clone https://github.com/MohammedBasloom/reap.git
 cd reap
 ```
 
-### b. Recreate the GitHub token
+If the target folder already exists and is **not empty** — e.g. `D:\REAP`
+already holding a `.claude/` directory — `git clone` refuses. Populate it in
+place instead; this keeps whatever is already there:
 
-Deploys push with a personal access token read from a local file.
+```bash
+cd /d/REAP && git init -b main && git remote add origin https://github.com/MohammedBasloom/reap.git && git fetch origin && git checkout -B main --track origin/main
+```
 
-1. GitHub → Settings → Developer settings → Personal access tokens →
-   **Tokens (classic)** → Generate new token, scope **`repo`**.
-2. Save it as the **only line** of `.github-token` in the repo root.
+Then set the commit identity, which a fresh Git install does not have:
 
-That file is gitignored and must never be committed.
+```bash
+git config --global user.name "Mohammed Basloom" && git config --global user.email "moh.baslom@gmail.com"
+```
+
+### b. Sign in to GitHub
+
+Deploying is a plain `git push`. Git Credential Manager (bundled with Git for
+Windows) holds the credential — **no token file is needed.**
+
+```bash
+git push origin main
+```
+
+The first push opens a GitHub window: choose **Sign in with your browser** and
+approve. The credential is stored in Windows Credential Manager and survives
+reboots. Nothing lands in a plaintext file and nothing expires.
+
+A personal access token still works if you prefer one — `deploy-github.ps1`
+reads `.github-token` (gitignored, never commit it). If you go that route,
+tick the **`repo`** scope: it sits between the Expiration dropdown and the
+Generate button and is easy to scroll past. A scopeless token still
+authenticates successfully against `/user`, so it looks valid right up until
+the push fails with `403 Permission denied`. Check the token's scope line on
+github.com/settings/tokens reads `repo` before trusting it.
 
 ### c. Check the dev-server port
 
@@ -63,10 +88,22 @@ powershell -File serve.ps1 -Port 8322
 ```
 
 ```bash
-powershell -File deploy-github.ps1 -Message "your message"
+git add -A && git commit -m "your message" && git push origin main
 ```
 
-Pushing to `main` auto-deploys Cloudflare Pages (~30–60 s).
+Pushing to `main` auto-deploys Cloudflare Pages (~20–30 s measured) and the
+GitHub Pages mirror. `deploy-github.ps1 -Message "..."` does the same thing but
+requires `.github-token`; its extra API calls only ever created the repo and
+enabled Pages, both long since done.
+
+### e. Leave `_redirects` alone
+
+Cloudflare Pages serves **every** committed file, so without it this guide, the
+`README`, the `.ps1` scripts and `brand-assets/` are all publicly readable on
+the live domain. `_redirects` 301s them to the homepage.
+
+Pages accepts only **301/302/303/307/308** there. A `404` rule is parsed,
+deployed, and silently ignored — it will look like it worked and will not.
 
 ---
 
@@ -91,7 +128,8 @@ domain and the live site.
 
 ## 4. Do NOT copy
 
-- `.github-token`, `.netlify-token`, `.mcp.json` — regenerate instead
+- `.github-token` (no longer needed at all — see 2b), `.netlify-token`,
+  `.mcp.json` — regenerate instead, never copy
 - `build/` — disposable compiled output, regenerated on demand
 - `.claude/settings.local.json` — per-device permission grants
 
