@@ -2,20 +2,23 @@
 #
 # Cloudflare Pages deploys every committed file, which was publishing the
 # migration guide (naming the Cloudflare account, Supabase project ref and
-# deploy tokens), the PowerShell scripts, and the raw brand kit. None of it
-# is needed by the site; MIGRATION.md still has to live in the repo so the
-# next machine move works from a clean clone.
+# deploy-token filename), the PowerShell scripts, and the raw brand kit.
+# None of it is needed by the site; MIGRATION.md still has to live in the
+# repo so the next machine move works from a clean clone.
 #
-# Format: <path> <destination> <status>.  404 serves the destination with a
-# 404 status, so these paths read as "not found" to the public.
+# Format: <path> <destination> <status>.
+# Pages supports only 301/302/303/307/308 here - 404 is silently ignored, so
+# these send visitors to the homepage instead of exposing the file.
+# Per Cloudflare's docs redirects are followed even when a static asset
+# matches the request, so these do override the deployed files.
 
-/MIGRATION.md                   /   404
-/README.md                      /   404
-/serve.ps1                      /   404
-/deploy.ps1                     /   404
-/deploy-github.ps1              /   404
-/deploy-netlify-redirect.ps1    /   404
+/MIGRATION.md                   /   301
+/README.md                      /   301
+/serve.ps1                      /   301
+/deploy.ps1                     /   301
+/deploy-github.ps1              /   301
+/deploy-netlify-redirect.ps1    /   301
 
 # Source brand kit: unreferenced by the site (fonts load from assets/fonts/),
 # and contains licensed font files plus __MACOSX junk.
-/brand-assets/*                 /   404
+/brand-assets/*                 /   301
