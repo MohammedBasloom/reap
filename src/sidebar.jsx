@@ -31,14 +31,37 @@ function Eyebrow({ children, n }) {
   );
 }
 
-function Field({ label, suffix, value, onChange, type = "number", step = 1, min, max, hint, mono = true, disabled = false, placeholder }) {
+/* Small "!" affordance that explains a term on hover. Used for the jargon a
+   non-specialist won't know — FAR, GFA, efficiency, LTC and friends. */
+function TermTip({ tip }) {
+  if (!tip) return null;
+  return (
+    <span
+      title={tip}
+      style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: 13, height: 13, borderRadius: "50%", flexShrink: 0,
+        border: "1px solid var(--ad-gold-600)", color: "var(--ad-gold-600)",
+        fontSize: 9, fontWeight: 700, cursor: "help", lineHeight: 1,
+        marginInlineStart: 5, verticalAlign: "middle",
+      }}
+    >!</span>
+  );
+}
+
+function Field({ label, suffix, value, onChange, type = "number", step = 1, min, max, hint, tip, mono = true, disabled = false, placeholder }) {
+  // A disabled field is a computed read-out; say so unless a hint already does.
+  const shownHint = hint || (disabled ? "Calculated automatically" : null);
   return (
     <label style={{ display: "block" }}>
       <div style={{
         fontSize: 11, color: "var(--fg-2)", marginBottom: 4,
         display: "flex", justifyContent: "space-between", alignItems: "baseline",
       }}>
-        <span>{label}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", minWidth: 0 }}>
+          <span>{label}</span>
+          <TermTip tip={tip} />
+        </span>
         {suffix && <span style={{ color: "var(--fg-4)", fontSize: 10 }}>{suffix}</span>}
       </div>
       <FieldInput
@@ -52,7 +75,7 @@ function Field({ label, suffix, value, onChange, type = "number", step = 1, min,
         placeholder={placeholder}
         onChange={onChange}
       />
-      {hint && <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>{hint}</div>}
+      {shownHint && <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>{shownHint}</div>}
     </label>
   );
 }
@@ -92,7 +115,7 @@ function FieldInput({ type, step, min, max, value, disabled, mono, placeholder, 
   );
 }
 
-function PctField({ label, value, onChange, hint, suffix = "%", step = 0.5 }) {
+function PctField({ label, value, onChange, hint, tip, suffix = "%", step = 0.5 }) {
   return (
     <Field
       label={label}
@@ -100,6 +123,7 @@ function PctField({ label, value, onChange, hint, suffix = "%", step = 0.5 }) {
       value={value === null || value === undefined ? "" : +(+value * 100).toFixed(4)}
       onChange={(v) => onChange(+v / 100)}
       hint={hint}
+      tip={tip}
       type="number"
       step={step}
     />
@@ -427,7 +451,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {/* Land & massing */}
       <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Land & massing</div>
       <Row cols={2}>
-        <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" />
+        <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" tip="Efficiency — the share of built floor area that can actually be sold or let. The rest is corridors, stairs, lifts, plant rooms and wall thickness. Typically 65–85%, lower for hotels." />
         <div />
       </Row>
 
@@ -445,7 +469,8 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {(comp.massingMode || "far") === "far" ? (
         <Row cols={2}>
           <Field label="FAR" suffix="ratio" value={comp.far} onChange={v => update("far", v)} step={0.05}
-                 hint="GFA = Land × FAR" />
+                 hint="GFA = Land × FAR"
+                 tip="Floor Area Ratio — how much floor area the regulations let you build per m² of plot. FAR 2.0 on 1,000 m² of land allows 2,000 m² of GFA (Gross Floor Area, the total above-ground floor area)." />
           <div />
         </Row>
       ) : (
@@ -463,8 +488,8 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
       {/* Construction rates — apply to above-ground GFA */}
       <Row cols={2}>
-        <Field label="Built-up cost" suffix="SAR/m² GFA" value={comp.costPerSqmGFA} onChange={v => update("costPerSqmGFA", v)} step={50} hint="Above-ground construction rate" />
-        <PctField label="Site work (incl. setbacks)" value={comp.siteWorkPct} onChange={v => update("siteWorkPct", v)} hint="% of construction cost" step={0.5} />
+        <Field label="Built-up cost" suffix="SAR/m² GFA" value={comp.costPerSqmGFA} onChange={v => update("costPerSqmGFA", v)} step={50} hint="Above-ground construction rate" tip="Construction cost per m² of above-ground floor area (GFA). Excludes the basement, which carries its own rate, and excludes site works, design fees and contingency." />
+        <PctField label="Site work (incl. setbacks)" value={comp.siteWorkPct} onChange={v => update("siteWorkPct", v)} hint="% of construction cost" step={0.5} tip="Site works — everything outside the building footprint: boundary walls, landscaping, parking, external utilities and setbacks. Expressed as a percentage of construction cost." />
       </Row>
 
       {/* Basement */}
@@ -592,7 +617,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
             {basis === "key" && (
               <>
                 <Field label="Keys" suffix="#" value={comp.keys} onChange={v => update("keys", v)} step={5} />
-                <Field label="ADR" suffix="SAR/night" value={comp.adr} onChange={v => update("adr", v)} step={25} />
+                <Field label="ADR" suffix="SAR/night" value={comp.adr} onChange={v => update("adr", v)} step={25} tip="Average Daily Rate — the average room rate per night across the year. ADR × occupancy × keys × 365 gives annual room revenue." />
                 <div />
               </>
             )}
@@ -609,12 +634,12 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           <Row cols={3}>
             <PctField label="Initial occupancy" value={comp.initialOccupancy ?? 0.30} onChange={v => update("initialOccupancy", v)} hint="Day-1 at delivery" />
             <Field label="Years to stabilization" suffix="years" value={comp.yearsToStabilization ?? 1} onChange={v => update("yearsToStabilization", v)} step={0.25} min={0} hint="Lease-up period" />
-            <PctField label="Stabilized occupancy" value={comp.occupancy} onChange={v => update("occupancy", v)} hint="Long-term run-rate" />
+            <PctField label="Stabilized occupancy" value={comp.occupancy} onChange={v => update("occupancy", v)} hint="Long-term run-rate" tip="The occupancy the asset settles at once lease-up finishes — the long-run average, not the day-one figure." />
           </Row>
 
           <Row cols={2}>
-            <PctField label="OpEx" value={comp.opexPct} onChange={v => update("opexPct", v)} hint="% of gross income" />
-            <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} hint="Terminal cap" />
+            <PctField label="OpEx" value={comp.opexPct} onChange={v => update("opexPct", v)} hint="% of gross income" tip="Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI." />
+            <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} hint="Terminal cap" tip="Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price." />
           </Row>
         </>
       )}
@@ -903,9 +928,9 @@ function FundStructureSection({ input, upd }) {
             Fees
           </div>
           <Row cols={2}>
-            <PctField label="Subscription fee" value={fund.subscriptionFeePct} onChange={v => updFund("subscriptionFeePct", v)} hint="To GP · % of equity, once at establishment" />
-            <PctField label="Asset mgmt (yr)" value={fund.assetMgmtFeePctYr} onChange={v => updFund("assetMgmtFeePctYr", v)} hint="To GP · annual · on unreturned equity" />
-            <PctField label="Development fee" value={fund.developmentFeePct} onChange={v => updFund("developmentFeePct", v)} hint="To Developer · % of constr. + site" />
+            <PctField label="Subscription fee" value={fund.subscriptionFeePct} onChange={v => updFund("subscriptionFeePct", v)} hint="To GP · % of equity, once at establishment" tip="A one-off fee charged on the capital investors commit, paid to the fund manager (GP) when the fund is established." />
+            <PctField label="Asset mgmt (yr)" value={fund.assetMgmtFeePctYr} onChange={v => updFund("assetMgmtFeePctYr", v)} hint="To GP · annual · on unreturned equity" tip="Annual management fee paid to the fund manager (GP) for running the fund, charged on paid-in capital." />
+            <PctField label="Development fee" value={fund.developmentFeePct} onChange={v => updFund("developmentFeePct", v)} hint="To Developer · % of constr. + site" tip="Fee paid to the developer for delivering the project, charged as a percentage of construction plus site-works cost." />
             <div />
           </Row>
 
@@ -914,8 +939,8 @@ function FundStructureSection({ input, upd }) {
             Distribution waterfall
           </div>
           <Row cols={2}>
-            <PctField label="Preferred return" value={fund.preferredReturnPct} onChange={v => updFund("preferredReturnPct", v)} hint="Compounded · pro-rata to all equity" />
-            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share of profit above pref · paid once at exit" />
+            <PctField label="Preferred return" value={fund.preferredReturnPct} onChange={v => updFund("preferredReturnPct", v)} hint="Compounded · pro-rata to all equity" tip="The hurdle — the minimum annual return investors must receive on their capital before the manager earns any performance fee. Compounds until paid." />
+            <PctField label="Performance fee" value={fund.promoteSplit} onChange={v => updFund("promoteSplit", v)} hint="GP share of profit above pref · paid once at exit" tip="Also called the promote or carried interest — the manager's share of profit above the preferred return. Paid once at exit, and only if the hurdle is met." />
           </Row>
 
           <div style={{
@@ -1131,7 +1156,7 @@ function Sidebar({ input, setInput }) {
 
         {isRawLand && (
           <Row cols={2}>
-            <PctField label="Developable share" value={input.developablePct ?? 0.70} onChange={v => upd("developablePct", v)} hint="Net of roads, utilities & open space" />
+            <PctField label="Developable share" value={input.developablePct ?? 0.70} onChange={v => upd("developablePct", v)} hint="Net of roads, utilities & open space" tip="On raw land, the share of the plot left to build on once roads, utilities and public open space are taken out." />
             <Field label="Net developable" suffix="m²" value={Math.round(netDevelopableArea)} onChange={() => {}} disabled />
           </Row>
         )}
@@ -1215,8 +1240,8 @@ function Sidebar({ input, setInput }) {
       {/* 05 General Costs */}
       <Section title="General Costs" n="05">
         <Row cols={2}>
-          <PctField label="Soft costs" value={input.softCostsPct} onChange={v => upd("softCostsPct", v)} hint="Of construction + site" />
-          <PctField label="Contingency" value={input.contingencyPct} onChange={v => upd("contingencyPct", v)} hint="Of construction + soft" />
+          <PctField label="Soft costs" value={input.softCostsPct} onChange={v => upd("softCostsPct", v)} hint="Of construction + site" tip="Everything that is not physical construction: design and engineering fees, project management, permits, surveys and legal. Usually 10–15% of construction." />
+          <PctField label="Contingency" value={input.contingencyPct} onChange={v => upd("contingencyPct", v)} hint="Of construction + soft" tip="A reserve for the unknowns — variations, overruns and surprises on site. 5% is a normal minimum on a well-defined scheme." />
           <PctField label="Marketing" value={input.marketingPct} onChange={v => upd("marketingPct", v)} hint="Of sales revenue" />
           <PctField label="Sales commission" value={input.salesCommissionPct} onChange={v => upd("salesCommissionPct", v)} hint="Of sales revenue" />
           <PctField label="Gov / sales fees" value={input.govFeesPct} onChange={v => upd("govFeesPct", v)} hint="On sales revenue" />
@@ -1226,7 +1251,7 @@ function Sidebar({ input, setInput }) {
       {/* 06 Financing */}
       <Section title="Financing" n="06">
         <Row cols={2}>
-          <PctField label="LTC" value={input.ltc} onChange={v => upd("ltc", v)} hint="Loan to cost" />
+          <PctField label="LTC" value={input.ltc} onChange={v => upd("ltc", v)} hint="Loan to cost" tip="Loan to Cost — how much of total project cost the lender funds. 60% LTC means debt covers 60% and equity must fund the remaining 40%." />
           <PctField label="Interest" value={input.interestRate} onChange={v => upd("interestRate", v)} hint="Annual" />
         </Row>
         <div style={{

@@ -278,6 +278,43 @@
     "pro-rata to investors (LP + Dev only — GP is rewarded via promote).":
       "بالتناسب للمستثمرين (الشريك المحدود والمطوّر فقط — إذ يُكافأ الشريك العام عبر حوافز الأداء).",
     "% of land — over 100% adds floors (200% ≈ 2 levels)": "٪ من مساحة الأرض — أكثر من 100% يعني طوابق إضافية (200% ≈ طابقان)",
+
+    /* Derived-value marker + glossary tooltips on the assumption fields */
+    "Calculated automatically": "قيمة محسوبة تلقائيًا",
+    "Efficiency — the share of built floor area that can actually be sold or let. The rest is corridors, stairs, lifts, plant rooms and wall thickness. Typically 65–85%, lower for hotels.":
+      "الكفاءة — نسبة المساحة المبنية التي يمكن بيعها أو تأجيرها فعليًا. والباقي ممرات وسلالم ومصاعد وغرف خدمات وسماكة جدران. تتراوح عادة بين 65% و85%، وتقل في الفنادق.",
+    "Floor Area Ratio — how much floor area the regulations let you build per m² of plot. FAR 2.0 on 1,000 m² of land allows 2,000 m² of GFA (Gross Floor Area, the total above-ground floor area).":
+      "معامل البناء (FAR) — مقدار المساحة الطابقية التي تسمح الأنظمة ببنائها لكل م² من الأرض. فمعامل 2.0 على أرض 1,000 م² يتيح 2,000 م² من الـ GFA (إجمالي المساحة الطابقية فوق الأرض).",
+    "Construction cost per m² of above-ground floor area (GFA). Excludes the basement, which carries its own rate, and excludes site works, design fees and contingency.":
+      "تكلفة الإنشاء لكل م² من المساحة الطابقية فوق الأرض (GFA). لا تشمل القبو — فله معدل منفصل — ولا أعمال الموقع أو أتعاب التصميم أو الاحتياطي.",
+    "Site works — everything outside the building footprint: boundary walls, landscaping, parking, external utilities and setbacks. Expressed as a percentage of construction cost.":
+      "أعمال الموقع — كل ما يقع خارج بصمة المبنى: أسوار وتنسيق مواقع ومواقف ومرافق خارجية وارتدادات. وتُحتسب كنسبة من تكلفة الإنشاء.",
+    "Average Daily Rate — the average room rate per night across the year. ADR × occupancy × keys × 365 gives annual room revenue.":
+      "متوسط سعر الغرفة اليومي (ADR) — متوسط سعر الليلة على مدار السنة. ويُحتسب إيراد الغرف السنوي = ADR × الإشغال × عدد المفاتيح × 365.",
+    "The occupancy the asset settles at once lease-up finishes — the long-run average, not the day-one figure.":
+      "نسبة الإشغال التي يستقر عليها الأصل بعد اكتمال فترة التأجير — أي المتوسط على المدى الطويل، لا إشغال اليوم الأول.",
+    "Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI.":
+      "المصاريف التشغيلية — التكلفة السنوية لتشغيل الأصل: الإدارة والصيانة والمرافق والتأمين ورسوم الخدمات. وتُخصم من الدخل الإجمالي للوصول إلى صافي الدخل التشغيلي (NOI).",
+    "Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price.":
+      "معدل الرسملة عند البيع — العائد الذي يقبله المشتري. قيمة التخارج = صافي الدخل التشغيلي المستقر ÷ معدل الرسملة، أي أن انخفاض المعدل يعني سعر بيع أعلى.",
+    "A one-off fee charged on the capital investors commit, paid to the fund manager (GP) when the fund is established.":
+      "رسوم تُحتسب مرة واحدة على رأس المال الذي يلتزم به المستثمرون، وتُدفع لمدير الصندوق (GP) عند تأسيس الصندوق.",
+    "Annual management fee paid to the fund manager (GP) for running the fund, charged on paid-in capital.":
+      "رسوم إدارة سنوية تُدفع لمدير الصندوق (GP) مقابل إدارته، وتُحتسب على رأس المال المدفوع.",
+    "Fee paid to the developer for delivering the project, charged as a percentage of construction plus site-works cost.":
+      "رسوم تُدفع للمطوّر مقابل تنفيذ المشروع، وتُحتسب كنسبة من تكلفة الإنشاء وأعمال الموقع.",
+    "The hurdle — the minimum annual return investors must receive on their capital before the manager earns any performance fee. Compounds until paid.":
+      "العائد التفضيلي — الحد الأدنى من العائد السنوي الذي يجب أن يحصل عليه المستثمرون على رأس مالهم قبل أن يستحق المدير أي رسوم أداء. ويتراكم حتى يُدفع.",
+    "Also called the promote or carried interest — the manager's share of profit above the preferred return. Paid once at exit, and only if the hurdle is met.":
+      "تُعرف أيضًا بحصة التحفيز — نصيب المدير من الأرباح التي تتجاوز العائد التفضيلي. وتُدفع مرة واحدة عند التخارج، وبشرط تحقق العائد التفضيلي.",
+    "On raw land, the share of the plot left to build on once roads, utilities and public open space are taken out.":
+      "في الأرض الخام، نسبة ما يتبقى من قطعة الأرض للبناء بعد استقطاع الطرق والمرافق والمساحات المفتوحة العامة.",
+    "Everything that is not physical construction: design and engineering fees, project management, permits, surveys and legal. Usually 10–15% of construction.":
+      "كل ما ليس إنشاءً ماديًا: أتعاب التصميم والهندسة وإدارة المشروع والتراخيص والمساحة والأعمال القانونية. وتبلغ عادة 10–15% من تكلفة الإنشاء.",
+    "A reserve for the unknowns — variations, overruns and surprises on site. 5% is a normal minimum on a well-defined scheme.":
+      "احتياطي لمواجهة غير المتوقع — التغييرات وتجاوزات التكلفة ومفاجآت الموقع. و5% هو الحد الأدنى المعتاد لمشروع واضح النطاق.",
+    "Loan to Cost — how much of total project cost the lender funds. 60% LTC means debt covers 60% and equity must fund the remaining 40%.":
+      "نسبة التمويل إلى التكلفة (LTC) — حصة الممول من إجمالي تكلفة المشروع. فنسبة 60% تعني أن الدين يغطي 60% وعلى الملكية تمويل الـ40% المتبقية.",
     "Basement coverage is measured as % of the land area. If the basement spans more than one floor, enter more than 100% — e.g. two full basement floors ≈ 200%.": "تُحسب تغطية القبو كنسبة من مساحة الأرض. إذا كان القبو أكثر من طابق واحد، أدخل نسبة أعلى من 100% — مثلًا: طابقان كاملان ≈ 200%.",
     "Built-up area — the total constructed area: above-ground GFA plus the basement where one is included. The saleable/leasable area is the share of GFA that can actually be sold or let, after circulation, cores and walls.":
       "المساحة المبنية — إجمالي المساحة المُنشأة: مساحة الأدوار فوق الأرض (GFA) مضافًا إليها القبو إن وُجد. أما المساحة القابلة للبيع أو التأجير فهي الجزء من الـ GFA الذي يمكن بيعه أو تأجيره فعليًا بعد خصم الممرات والخدمات والجدران.",

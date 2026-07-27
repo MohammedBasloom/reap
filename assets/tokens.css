@@ -178,6 +178,17 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .field-input:focus-visible { border-color: var(--ad-navy-700); }
 .field-input.mono { font-family: var(--font-mono); font-size: 13px; }
 
+/* Derived values are rendered as disabled inputs. Grey them clearly so a
+   calculated figure is never mistaken for something you can type into. */
+.field-input:disabled {
+  color: var(--fg-3);
+  background: var(--bg-2);
+  border-style: dashed;
+  border-color: var(--border-1);
+  cursor: not-allowed;
+}
+.field-input:disabled:hover { border-color: var(--border-1); }
+
 .btn {
   font-family: var(--font-body);
   font-size: 12px;
