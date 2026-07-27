@@ -710,6 +710,10 @@
     "Cost approach": "أسلوب التكلفة",
     "Land value + rebuild cost, minus age & wear": "قيمة الأرض + تكلفة إعادة البناء، ناقص العمر والإهلاك",
     "Comparable sales — adjusted": "المبيعات المقارنة — بعد التسوية",
+    "Inside the three approaches": "داخل الأساليب الثلاثة",
+    "The workings behind each indicated value — the same three columns a valuer would set out.":
+      "تفصيل احتساب القيمة المستخلصة من كل أسلوب — الأعمدة الثلاثة نفسها التي يعرضها المقيّم.",
+    "Median adjusted": "الوسيط بعد التسوية",
     "Each comp's price per m², corrected for time, location and condition differences.": "سعر المتر لكل مقارن بعد تصحيح فروق الزمن والموقع والحالة.",
     "No comparables entered yet — add them in the sidebar (step 02).": "لم تُدخل مقارنات بعد — أضفها من القائمة الجانبية (الخطوة 02).",
     "Time adj.": "تسوية الزمن", "Total adj.": "إجمالي التسوية", "Adjusted SAR/m²": "ر.س/م² بعد التسوية",

@@ -11,6 +11,8 @@ const fc = V.formatCurrency, fn = V.formatNumber, fp = V.formatPct;
 // reading direction: Arabic lists low→high right-to-left, English left-to-right.
 // (Each fc() token is already internally bidi-isolated by the formatter.)
 const curSym = () => (window.I18N && I18N.lang === "ar") ? "ر.س" : "SAR";
+// Units built inside template strings bypass the dictionary — localize explicitly.
+const sqm = () => (window.I18N ? I18N.t("m²") : "m²");
 const ISO = {
   direction: (window.I18N && I18N.lang === "ar") ? "rtl" : "ltr",
   unicodeBidi: "isolate", display: "inline-block", whiteSpace: "nowrap",
@@ -558,62 +560,61 @@ function ValResults({ result, sens, input }) {
         </table>
       </Panel>
 
-      {/* Sales detail */}
-      <Panel n="02" title="Comparable sales — adjusted" sub="Each comp's price per m², corrected for time, location and condition differences.">
-        {s.compCount === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--fg-3)" }}>No comparables entered yet — add them in the sidebar (step 02).</div>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--border-2)" }}>
-                <th style={th}>#</th><th style={thR}>Sale price</th><th style={thR}>Area</th><th style={thR}>SAR/m²</th>
-                <th style={thR}>Time adj.</th><th style={thR}>Total adj.</th><th style={thR}>Adjusted SAR/m²</th>
-              </tr>
-            </thead>
-            <tbody>
-              {s.comps.map((c, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid var(--border-2)" }}>
-                  <td style={td}>{i + 1}</td>
-                  <td style={tdR}><span className="tabnum">{fn(c.price)}</span></td>
-                  <td style={tdR}><span className="tabnum">{fn(c.area)}</span></td>
-                  <td style={tdR}><span className="tabnum">{fn(c.ppsqm)}</span></td>
-                  <td style={tdR}><span className="tabnum">{fp(c.timeAdj)}</span></td>
-                  <td style={tdR}><span className="tabnum" style={{ color: Math.abs(c.totalAdjPct) > 0.25 ? "var(--ad-warning)" : "inherit" }}>{fp(c.totalAdjPct)}</span></td>
-                  <td style={{ ...tdR, fontWeight: 600 }}><span className="tabnum">{fn(c.adjustedPpsqm)}</span></td>
-                </tr>
-              ))}
-              <tr style={{ background: "var(--ad-navy-50)" }}>
-                <td style={{ ...td, fontWeight: 700 }} colSpan={6}>Median adjusted price × {fn(s.subjectArea)} m²</td>
-                <td style={{ ...tdR, fontWeight: 700 }}><span className="tabnum">{fc(s.indicatedValue)}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        )}
-      </Panel>
+      {/* Build-ups for all three approaches, read side by side under one heading */}
+      <Panel n="02" title="Inside the three approaches"
+        sub="The workings behind each indicated value — the same three columns a valuer would set out.">
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${1 + (inc ? 1 : 0) + (cost ? 1 : 0)}, minmax(0, 1fr))`,
+          gap: 26,
+        }}>
+          {/* Sales comparison — one row per comp, then the median × area */}
+          <div>
+            <ApproachHead title="Sales comparison" />
+            {s.compCount === 0 ? (
+              <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.6, paddingTop: 8 }}>
+                No comparables entered yet — add them in the sidebar (step 02).
+              </div>
+            ) : (
+              <>
+                {s.comps.map((c, i) => (
+                  <LedgerRow
+                    key={i}
+                    label={`Comparable ${i + 1}`}
+                    note={`${fn(c.price)} / ${fn(c.area)} ${sqm()} · ${fp(c.totalAdjPct)}`}
+                    value={fn(c.adjustedPpsqm)}
+                    tone={Math.abs(c.totalAdjPct) > 0.25 ? "var(--ad-warning)" : undefined}
+                  />
+                ))}
+                <LedgerRow label="Median adjusted" value={`${fn(s.medianPpsqm)} ${curSym()}/${sqm()}`} strong />
+                <LedgerRow label={`× ${fn(s.subjectArea)} ${sqm()}`} value={fc(s.indicatedValue)} final />
+              </>
+            )}
+          </div>
 
-      {/* Income + cost detail */}
-      {(inc || cost) && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
           {inc && (
-            <Panel title="Income build-up" tight>
+            <div>
+              <ApproachHead title="Income capitalisation" />
               <LedgerRow label="Potential gross rent" value={fc(inc.pgi)} />
               <LedgerRow label={`− Vacancy (${fp(inc.vacancy, 0)})`} value={fc(-(inc.pgi - inc.egi))} muted />
               <LedgerRow label={`− Operating costs (${fp(inc.opexPct, 0)})`} value={fc(-inc.opex)} muted />
               <LedgerRow label="Net operating income" value={fc(inc.noi)} strong />
               <LedgerRow label={`÷ Cap rate ${fp(inc.capRate)}`} value={fc(inc.indicatedValue)} final />
-            </Panel>
+            </div>
           )}
+
           {cost && (
-            <Panel title="Cost build-up" tight>
+            <div>
+              <ApproachHead title="Cost approach" />
               <LedgerRow label="Land value" value={fc(cost.landValue)} />
               <LedgerRow label="Replacement cost (new)" value={fc(cost.replacementCost)} />
               <LedgerRow label={`− Depreciation (${fp(cost.physicalDep, 0)} · eff. age ${cost.effectiveAge.toFixed(0)} yrs)`} value={fc(-(cost.replacementCost - cost.depreciatedCost))} muted />
               <LedgerRow label="Depreciated building value" value={fc(cost.depreciatedCost)} strong />
               <LedgerRow label="Land + building" value={fc(cost.indicatedValue)} final />
-            </Panel>
+            </div>
           )}
         </div>
-      )}
+      </Panel>
 
       {/* Sensitivity */}
       {hasValue && (
@@ -700,17 +701,34 @@ function Panel({ n, title, sub, tight, children }) {
   );
 }
 
-function LedgerRow({ label, value, muted, strong, final }) {
+/* Column heading inside the grouped approaches panel. */
+function ApproachHead({ title }) {
   return (
     <div style={{
-      display: "flex", justifyContent: "space-between", padding: "7px 0", fontSize: 12.5,
+      fontSize: 11, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+      color: "var(--ad-navy-700)", paddingBottom: 8, marginBottom: 2,
+      borderBottom: "2px solid var(--ad-navy-800)",
+    }}>{title}</div>
+  );
+}
+
+/* `note` carries the evidence under a label (the sales column uses it for each
+   comp's raw price and area); `tone` colours the figure for outliers. */
+function LedgerRow({ label, value, note, tone, muted, strong, final }) {
+  return (
+    <div style={{
+      display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10,
+      padding: "7px 0", fontSize: 12.5,
       borderBottom: final ? "none" : "1px solid var(--border-2)",
       borderTop: final ? "2px solid var(--border-strong)" : "none",
       marginTop: final ? 4 : 0, paddingTop: final ? 10 : 7,
       color: muted ? "var(--fg-3)" : "var(--fg-1)", fontWeight: strong || final ? 600 : 400,
     }}>
-      <span>{label}</span>
-      <span className="tabnum">{value}</span>
+      <span style={{ minWidth: 0 }}>
+        {label}
+        {note && <span style={{ display: "block", fontSize: 10.5, color: "var(--fg-4)", fontWeight: 400, marginTop: 2 }}>{note}</span>}
+      </span>
+      <span className="tabnum" style={{ flexShrink: 0, color: tone || "inherit" }}>{value}</span>
     </div>
   );
 }
