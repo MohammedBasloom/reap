@@ -1,6 +1,6 @@
 # Deploy REAP to GitHub Pages — free, no deploy caps.
 # One-time: save a GitHub personal access token (classic, "repo" scope)
-# as the only line of D:\REAP\.github-token
+# as the only line of .github-token in the repo root
 param([string]$Repo = "reap", [string]$Message = "Update site")
 
 $tokenFile = Join-Path $PSScriptRoot ".github-token"

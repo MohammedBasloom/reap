@@ -1,5 +1,5 @@
 # Deploy the REAP app to Netlify via the API (no Node/CLI required).
-# Token: set $env:NETLIFY_AUTH_TOKEN, or save it as the only line of D:\REAP\.netlify-token
+# Token: set $env:NETLIFY_AUTH_TOKEN, or save it as the only line of .netlify-token in the repo root
 param([string]$Site = "reapapp.netlify.app")
 
 $token = $env:NETLIFY_AUTH_TOKEN

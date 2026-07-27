@@ -44,8 +44,9 @@ That file is gitignored and must never be committed.
 
 ### c. Check the dev-server port
 
-`.claude/launch.json` uses port **8322**. Port 8321 was abandoned because it sits
-in a Windows *excluded port range* on the old machine. Confirm the port is free
+`.claude/launch.json` uses port **8322** and a relative script path, so the repo
+works from any folder. Port 8321 was abandoned because it sits in a Windows
+*excluded port range* on the old machine. Confirm the port is free
 on the new one:
 
 ```bash

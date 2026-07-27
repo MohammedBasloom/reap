@@ -4,7 +4,7 @@
     {
       "name": "reap",
       "runtimeExecutable": "powershell",
-      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "D:\\REAP\\serve.ps1", "-Port", "8322"],
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "serve.ps1", "-Port", "8322"],
       "port": 8322
     }
   ]
