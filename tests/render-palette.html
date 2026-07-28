@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — component palette render check</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; background: var(--bg-0, #fff); } #root { max-width: 680px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/sidebar.jsx"></script>
+<script type="text/babel">
+  /* Renders ONLY the component palette, so the Arabic tiles can be checked
+     without signing in to the auth-gated model page. */
+  const mixedComp = {
+    id: "m1", kind: "mixed", name: "مبنى متعدد الاستخدامات", mode: "mixed", enabled: true,
+    allocationPct: 1.0, massingMode: "far", far: 3.0,
+    hasBasement: false, basementCoveragePct: 0.40, basementCostPerSqm: 2000,
+    siteWorkPct: 0.07,
+    subs: [
+      { id: "r", name: "تجزئة", enabled: true, gfaSharePct: 0.40, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+      { id: "o", name: "مكاتب", enabled: true, gfaSharePct: 0.60, costPerSqmGFA: 3600, efficiency: 0.75, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.080 },
+    ],
+  };
+
+  function Harness() {
+    const [comp, setComp] = React.useState(mixedComp);
+    window.__comp = comp;
+    return (
+      <>
+        <ComponentPicker onPick={(k) => { window.__picked = k; }} hasComponents={false} landArea={10000} />
+        <div style={{ marginTop: 24 }}>
+          <ComponentEditor comp={comp} onChange={setComp} onRemove={() => {}}
+            totalLandArea={10000} landPricePerSqm={3000} />
+        </div>
+      </>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<Harness />);
+  window.__PALETTE_READY = true;
+</script>
+</body>
+</html>

@@ -116,6 +116,41 @@
        units, so it carries its own key. */
     "Villa": "فيلا", "Townhouse": "تاون هاوس", "Apartment": "شقة", "Build-to-Rent": "سكني للتأجير",
     "Residential Building": "عمارة سكنية - بيع وحدات",
+
+    /* Mixed-Use Building — one envelope, several uses, each sold or let on its
+       own terms. */
+    "Mixed-Use Building": "مبنى متعدد الاستخدامات",
+    "Several uses in one building": "عدة استخدامات في مبنى واحد",
+    "Sale + Lease": "بيع وتأجير",
+    "Uses in this building": "الاستخدامات داخل المبنى",
+    "Each use below is sold or let on its own terms.": "كل استخدام أدناه يُباع أو يُؤجَّر وفق شروطه الخاصة.",
+    "Build cost is set per use below.": "تكلفة البناء تُحدَّد لكل استخدام أدناه.",
+    "+ Add a use": "+ إضافة استخدام",
+    "Add a use": "إضافة استخدام",
+    "New use": "استخدام جديد",
+    "Remove this use": "حذف هذا الاستخدام",
+    "Share of GFA": "الحصة من إجمالي المسطحات",
+    "of the building's GFA": "من إجمالي مسطحات المبنى",
+    "How much of this building's total floor area this use takes. All the uses together should come to 100%.":
+      "نسبة ما يشغله هذا الاستخدام من إجمالي مسطحات المبنى. مجموع الاستخدامات ينبغي أن يبلغ 100%.",
+    "The share of this use's floor area that can actually be sold or let. Offices and retail differ.":
+      "نسبة المساحة القابلة للبيع أو التأجير فعليًا من مسطحات هذا الاستخدام. تختلف بين المكاتب والتجزئة.",
+    "This use's build rate": "تكلفة بناء هذا الاستخدام",
+    "Construction cost per m² for this use. A retail shell and an office fit-out cost very different amounts.":
+      "تكلفة البناء للمتر المربع لهذا الاستخدام. تكلفة هيكل التجزئة تختلف كثيرًا عن تجهيز المكاتب.",
+    "of GFA": "من إجمالي المسطحات",
+    "The uses add up to more than the building's GFA. Reduce one or more shares.":
+      "مجموع الاستخدامات يتجاوز إجمالي مسطحات المبنى. قلّل حصة استخدام أو أكثر.",
+    "Some of the building's GFA is unassigned — it is built and costed but earns nothing.":
+      "جزء من مسطحات المبنى غير موزَّع — يُبنى وتُحتسب تكلفته دون أن يُحقّق إيرادًا.",
+    "Saleable / leasable": "قابل للبيع / التأجير",
+    "Sales revenue + annual NOI": "إيراد المبيعات + صافي الدخل السنوي",
+    "Sales revenue ": "إيراد المبيعات ",
+    "Annual NOI ": "صافي الدخل السنوي ",
+    "Held before exit": "مدة التملّك قبل الخروج",
+    "Sell-down window": "فترة تصريف المبيعات",
+    "Retail": "تجزئة",
+    "Offices": "مكاتب",
     "Retail": "تجزئة", "Office": "مكاتب", "Hotel": "فندق", "Serviced Apartment": "شقق فندقية",
     "Custom": "مخصص",
     "Detached homes for sale": "مساكن مستقلة للبيع", "Attached homes for sale": "مساكن متلاصقة للبيع",

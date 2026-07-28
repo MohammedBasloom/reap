@@ -267,6 +267,14 @@ function Segmented({ value, onChange, options }) {
 const COMPONENT_PRESETS = {
   "villa":     { mode: "sale",  label: "Villa",            blurb: "Detached homes for sale", icon: "▱", basis: "unit", far: 1.6,  landCoveragePct: 0.45, maxFloors: 2, upperFloorCoveragePct: 0.30, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.85, avgUnitSize: 380, pricePerUnit: 2500000, salesPeriodMonths: 48 },
   "townhouse": { mode: "sale",  label: "Townhouse",        blurb: "Attached homes for sale", icon: "▤", basis: "unit", far: 0.9,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.82, avgUnitSize: 260, pricePerUnit: 1850000, salesPeriodMonths: 42 },
+  // One building, one envelope, several uses. Massing, basement and site works
+  // are unified; each sub takes a share of the GFA with its own build cost,
+  // efficiency, purpose, rate, occupancy, timing and exit cap.
+  "mixed":     { mode: "mixed", label: "Mixed-Use Building",   blurb: "Several uses in one building", icon: "▥", basis: "sqm", far: 3.0,  landCoveragePct: 0.50, maxFloors: 10, upperFloorCoveragePct: 0.50, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.78,
+    subs: [
+      { name: "Retail",  gfaSharePct: 0.40, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+      { name: "Offices", gfaSharePct: 0.60, costPerSqmGFA: 3600, efficiency: 0.75, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.080 },
+    ] },
   "apartment": { mode: "sale",  label: "Residential Building", blurb: "Strata residences", icon: "▣", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
   "btr":       { mode: "lease", label: "Build-to-Rent",    blurb: "Residential rental", icon: "◫", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 100, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075 },
   "retail":    { mode: "lease", label: "Retail",           blurb: "Leasable retail GLA", icon: "◰", basis: "sqm",  far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
@@ -381,6 +389,28 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   const basementArea = computed.basementArea || 0;
   const landCostC = computed.landCost;
 
+  /* Mixed-Use Building: the envelope (massing, basement, site works) belongs to
+     the building, while purpose, efficiency, build cost and pricing belong to
+     each sub-component. The engine has already sized every sub on `computed`. */
+  const isMixed = !!(comp.subs && comp.subs.length);
+  const subsComputed = computed.subs || [];
+  const subSharePct = (comp.subs || []).reduce((t, s) => t + (+s.gfaSharePct || 0), 0);
+  const subShareOff = isMixed && Math.abs(subSharePct - 1) > 0.001;
+
+  const updateSub = (i, k, v) => {
+    update("subs", (comp.subs || []).map((s, j) => (j === i ? Object.assign({}, s, { [k]: v }) : s)));
+  };
+  const addSub = () => {
+    update("subs", [...(comp.subs || []), {
+      id: Math.random().toString(36).slice(2, 9),
+      name: (window.I18N ? I18N.t("New use") : "New use"),
+      enabled: true, gfaSharePct: 0, costPerSqmGFA: 2500, efficiency: 0.78,
+      mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1200,
+      occupancy: 0.85, opexPct: 0.30, operatingPeriodMonths: 60, exitCapRate: 0.075,
+    }]);
+  };
+  const removeSub = (i) => update("subs", (comp.subs || []).filter((_, j) => j !== i));
+
   // Units / keys derived
   const basis = comp.revenueBasis || "sqm";
   let units = 0;
@@ -392,7 +422,11 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
   // Revenue derived
   let revenue = 0, gross = 0;
-  if (comp.mode === "sale") {
+  if (isMixed) {
+    // Sum whatever the subs produce — a building can sell and let at once.
+    revenue = subsComputed.reduce((t, s) => t + (s.salesRevenue || 0) + (s.noi || 0), 0);
+    gross = subsComputed.reduce((t, s) => t + (s.grossIncome || 0), 0);
+  } else if (comp.mode === "sale") {
     if (basis === "sqm") revenue = nsa * (+comp.pricePerSqm || 0);
     if (basis === "unit") revenue = units * (+comp.pricePerUnit || 0);
     if (basis === "key") revenue = keys * (+comp.pricePerKey || 0);
@@ -441,19 +475,27 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {/* Mode toggle */}
       <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>Mode</div>
-        <Segmented
-          value={comp.mode}
-          onChange={v => update("mode", v)}
-          options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
-        />
+        {isMixed ? (
+          <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.4 }}>
+            Each use below is sold or let on its own terms.
+          </div>
+        ) : (
+          <Segmented
+            value={comp.mode}
+            onChange={v => update("mode", v)}
+            options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
+          />
+        )}
       </div>
 
       {/* Land & massing */}
       <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Land & massing</div>
-      <Row cols={2}>
-        <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" tip="Efficiency — the share of built floor area that can actually be sold or let. The rest is corridors, stairs, lifts, plant rooms and wall thickness. Typically 65–85%, lower for hotels." />
-        <div />
-      </Row>
+      {!isMixed && (
+        <Row cols={2}>
+          <PctField label="Efficiency" value={comp.efficiency} onChange={v => update("efficiency", v)} hint="NSA / GFA" tip="Efficiency — the share of built floor area that can actually be sold or let. The rest is corridors, stairs, lifts, plant rooms and wall thickness. Typically 65–85%, lower for hotels." />
+          <div />
+        </Row>
+      )}
 
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>
@@ -486,9 +528,15 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         </>
       )}
 
-      {/* Construction rates — apply to above-ground GFA */}
+      {/* Construction rates — apply to above-ground GFA.
+          A mixed-use building costs each use at its own rate, so the building
+          keeps only the site-works percentage. */}
       <Row cols={2}>
-        <Field label="Built-up cost" suffix="SAR/m² GFA" value={comp.costPerSqmGFA} onChange={v => update("costPerSqmGFA", v)} step={50} hint="Above-ground construction rate" tip="Construction cost per m² of above-ground floor area (GFA). Excludes the basement, which carries its own rate, and excludes site works, design fees and contingency." />
+        {isMixed
+          ? <div style={{ fontSize: 11, color: "var(--fg-3)", alignSelf: "center", lineHeight: 1.4 }}>
+              Build cost is set per use below.
+            </div>
+          : <Field label="Built-up cost" suffix="SAR/m² GFA" value={comp.costPerSqmGFA} onChange={v => update("costPerSqmGFA", v)} step={50} hint="Above-ground construction rate" tip="Construction cost per m² of above-ground floor area (GFA). Excludes the basement, which carries its own rate, and excludes site works, design fees and contingency." />}
         <PctField label="Site work (incl. setbacks)" value={comp.siteWorkPct} onChange={v => update("siteWorkPct", v)} hint="% of construction cost" step={0.5} tip="Site works — everything outside the building footprint: boundary walls, landscaping, parking, external utilities and setbacks. Expressed as a percentage of construction cost." />
       </Row>
 
@@ -554,25 +602,157 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
             {Feas.formatNumber(gfa + (comp.hasBasement ? basementArea : 0))} m²
           </span>
         </div>
-        <div>{comp.mode === "sale" ? "Saleable" : "Leasable"}<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(nsa)} m²</span></div>
+        <div>{isMixed ? "Saleable / leasable" : comp.mode === "sale" ? "Saleable" : "Leasable"}<br /><span className="tabnum" style={{ color: "var(--fg-1)", fontSize: 12, fontWeight: 500 }}>{Feas.formatNumber(nsa)} m²</span></div>
       </div>
 
-      {/* Revenue basis */}
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Revenue basis</div>
-      <div style={{ marginBottom: 10 }}>
-        <Segmented
-          value={comp.revenueBasis || "sqm"}
-          onChange={v => update("revenueBasis", v)}
-          options={[
-            { value: "sqm",  label: "per m²" },
-            { value: "unit", label: "per unit" },
-            { value: "key",  label: "per key" },
-          ]}
-        />
-      </div>
+      {/* ---------- Mixed use: the sub-components ---------- */}
+      {isMixed && (
+        <>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" }}>Uses in this building</div>
+            <span className="tabnum" style={{
+              fontSize: 11, fontWeight: 600,
+              color: subShareOff ? "var(--ad-danger)" : "var(--ad-success)",
+            }}>{Feas.formatPct(subSharePct)} of GFA</span>
+          </div>
+
+          {subShareOff && (
+            <div style={{
+              fontSize: 11, lineHeight: 1.45, padding: "7px 9px", marginBottom: 8,
+              border: "1px solid var(--ad-danger)", background: "var(--bg-2)", color: "var(--ad-danger)",
+            }}>
+              {subSharePct > 1
+                ? "The uses add up to more than the building's GFA. Reduce one or more shares."
+                : "Some of the building's GFA is unassigned — it is built and costed but earns nothing."}
+            </div>
+          )}
+
+          {(comp.subs || []).map((s, i) => {
+            const sc = subsComputed[i] || {};
+            const sBasis = s.revenueBasis || "sqm";
+            return (
+              <div key={s.id || i} style={{
+                border: "1px solid var(--border-1)", background: "var(--bg-1)",
+                padding: "9px 10px", marginBottom: 8,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                  <input
+                    value={s.name || ""}
+                    onChange={e => updateSub(i, "name", e.target.value)}
+                    style={{
+                      flex: 1, border: "none", borderBottom: "1px dashed var(--border-2)",
+                      background: "transparent", font: "inherit", fontSize: 12, fontWeight: 600,
+                      color: "var(--fg-1)", padding: "2px 0",
+                    }}
+                  />
+                  <button type="button" onClick={() => removeSub(i)} title="Remove this use" style={{
+                    border: "none", background: "transparent", cursor: "pointer",
+                    color: "var(--fg-3)", fontSize: 14, lineHeight: 1, padding: "0 2px",
+                  }}>×</button>
+                </div>
+
+                <Row cols={2}>
+                  <PctField label="Share of GFA" value={s.gfaSharePct} onChange={v => updateSub(i, "gfaSharePct", v)} hint="of the building's GFA" tip="How much of this building's total floor area this use takes. All the uses together should come to 100%." />
+                  <PctField label="Efficiency" value={s.efficiency} onChange={v => updateSub(i, "efficiency", v)} hint="NSA / GFA" tip="The share of this use's floor area that can actually be sold or let. Offices and retail differ." />
+                </Row>
+
+                <Row cols={2}>
+                  <Field label="Built-up cost" suffix="SAR/m² GFA" value={s.costPerSqmGFA} onChange={v => updateSub(i, "costPerSqmGFA", v)} step={50} hint="This use's build rate" tip="Construction cost per m² for this use. A retail shell and an office fit-out cost very different amounts." />
+                  <div style={{ alignSelf: "end", fontSize: 10, color: "var(--fg-3)", lineHeight: 1.5 }}>
+                    GFA <span className="tabnum" style={{ color: "var(--fg-1)" }}>{Feas.formatNumber(sc.gfa || 0)}</span> m²<br />
+                    NSA <span className="tabnum" style={{ color: "var(--fg-1)" }}>{Feas.formatNumber(sc.nsa || 0)}</span> m²
+                  </div>
+                </Row>
+
+                <div style={{ marginBottom: 8 }}>
+                  <Segmented
+                    value={s.mode || "lease"}
+                    onChange={v => updateSub(i, "mode", v)}
+                    options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
+                  />
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <Segmented
+                    value={sBasis}
+                    onChange={v => updateSub(i, "revenueBasis", v)}
+                    options={[
+                      { value: "sqm",  label: "per m²" },
+                      { value: "unit", label: "per unit" },
+                      { value: "key",  label: "per key" },
+                    ]}
+                  />
+                </div>
+
+                {s.mode === "sale" ? (
+                  <>
+                    <Row cols={2}>
+                      {sBasis === "sqm" && <Field label="Sale price" suffix="SAR/m² NSA" value={s.pricePerSqm} onChange={v => updateSub(i, "pricePerSqm", v)} step={100} />}
+                      {sBasis === "unit" && <Field label="Avg unit size" suffix="m²" value={s.avgUnitSize} onChange={v => updateSub(i, "avgUnitSize", v)} step={5} />}
+                      {sBasis === "unit" && <Field label="Unit price" suffix="SAR" value={s.pricePerUnit} onChange={v => updateSub(i, "pricePerUnit", v)} step={50000} />}
+                      {sBasis === "key" && <Field label="Keys" value={s.keys} onChange={v => updateSub(i, "keys", v)} step={1} />}
+                      {sBasis === "key" && <Field label="Price per key" suffix="SAR" value={s.pricePerKey} onChange={v => updateSub(i, "pricePerKey", v)} step={50000} />}
+                      <Field label="Sales period" suffix="months" value={s.salesPeriodMonths} onChange={v => updateSub(i, "salesPeriodMonths", v)} step={1} hint="Sell-down window" />
+                    </Row>
+                  </>
+                ) : (
+                  <>
+                    <Row cols={2}>
+                      {sBasis === "sqm" && <Field label="Rent" suffix="SAR/m²·yr" value={s.rentPerSqmYr} onChange={v => updateSub(i, "rentPerSqmYr", v)} step={25} />}
+                      {sBasis === "unit" && <Field label="Avg unit size" suffix="m²" value={s.avgUnitSize} onChange={v => updateSub(i, "avgUnitSize", v)} step={5} />}
+                      {sBasis === "unit" && <Field label="Rent per unit" suffix="SAR/unit·yr" value={s.rentPerUnitYr} onChange={v => updateSub(i, "rentPerUnitYr", v)} step={1000} />}
+                      {sBasis === "key" && <Field label="Keys" value={s.keys} onChange={v => updateSub(i, "keys", v)} step={1} />}
+                      {sBasis === "key" && <Field label="ADR" suffix="SAR/night" value={s.adr} onChange={v => updateSub(i, "adr", v)} step={25} />}
+                      <PctField label="Stabilized occupancy" value={s.occupancy} onChange={v => updateSub(i, "occupancy", v)} />
+                    </Row>
+                    <Row cols={2}>
+                      <PctField label="OpEx" value={s.opexPct} onChange={v => updateSub(i, "opexPct", v)} hint="% of gross income" />
+                      <PctField label="Exit cap rate" value={s.exitCapRate} onChange={v => updateSub(i, "exitCapRate", v)} step={0.25} tip="The yield a buyer would accept for this use at exit. Stabilised NOI divided by the cap rate gives the exit value." />
+                    </Row>
+                    <Row cols={2}>
+                      <Field label="Operating period" suffix="months" value={s.operatingPeriodMonths} onChange={v => updateSub(i, "operatingPeriodMonths", v)} step={1} hint="Held before exit" />
+                      <div />
+                    </Row>
+                  </>
+                )}
+
+                <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>
+                  {s.mode === "sale" ? "Sales revenue " : "Annual NOI "}
+                  <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 600 }}>
+                    {Feas.formatCurrency(s.mode === "sale" ? (sc.salesRevenue || 0) : (sc.noi || 0))}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+
+          <button type="button" onClick={addSub} style={{
+            width: "100%", padding: "8px", marginBottom: 12, cursor: "pointer",
+            border: "1px dashed var(--border-2)", background: "transparent",
+            color: "var(--ad-navy-700)", font: "inherit", fontSize: 11, fontWeight: 600,
+          }}>+ Add a use</button>
+        </>
+      )}
+
+      {/* Revenue basis — per use on a mixed-use building, so hidden here */}
+      {!isMixed && (
+        <>
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Revenue basis</div>
+          <div style={{ marginBottom: 10 }}>
+            <Segmented
+              value={comp.revenueBasis || "sqm"}
+              onChange={v => update("revenueBasis", v)}
+              options={[
+                { value: "sqm",  label: "per m²" },
+                { value: "unit", label: "per unit" },
+                { value: "key",  label: "per key" },
+              ]}
+            />
+          </div>
+        </>
+      )}
 
       {/* Revenue inputs depend on basis + mode */}
-      {comp.mode === "sale" && (
+      {!isMixed && comp.mode === "sale" && (
         <Row cols={3}>
           {basis === "sqm" && (
             <>
@@ -597,7 +777,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           )}
         </Row>
       )}
-      {comp.mode === "lease" && (
+      {!isMixed && comp.mode === "lease" && (
         <>
           <Row cols={3}>
             {basis === "sqm" && (
@@ -644,17 +824,21 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         </>
       )}
 
-      {/* Timing */}
-      <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6 }}>Timing</div>
-      <Row cols={2}>
-        {comp.mode === "sale" && (
-          <Field label="Sales period" suffix="months" value={comp.salesPeriodMonths} onChange={v => update("salesPeriodMonths", v)} />
-        )}
-        {comp.mode === "lease" && (
-          <Field label="Operating period" suffix="months → exit" value={comp.operatingPeriodMonths} onChange={v => update("operatingPeriodMonths", v)} hint="Hold until exit" />
-        )}
-        <div />
-      </Row>
+      {/* Timing — set per use on a mixed-use building */}
+      {!isMixed && (
+        <>
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6 }}>Timing</div>
+          <Row cols={2}>
+            {comp.mode === "sale" && (
+              <Field label="Sales period" suffix="months" value={comp.salesPeriodMonths} onChange={v => update("salesPeriodMonths", v)} />
+            )}
+            {comp.mode === "lease" && (
+              <Field label="Operating period" suffix="months → exit" value={comp.operatingPeriodMonths} onChange={v => update("operatingPeriodMonths", v)} hint="Hold until exit" />
+            )}
+            <div />
+          </Row>
+        </>
+      )}
 
       {/* Summary */}
       <div style={{
@@ -662,10 +846,10 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         display: "flex", justifyContent: "space-between", fontSize: 11,
       }}>
         <span style={{ color: "var(--fg-3)" }}>
-          {comp.mode === "sale" ? "Sales revenue" : "Annual NOI"}
+          {isMixed ? "Sales revenue + annual NOI" : comp.mode === "sale" ? "Sales revenue" : "Annual NOI"}
         </span>
         <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>
-          {Feas.formatCurrency(revenue)} {comp.mode === "lease" ? "/yr" : ""}
+          {Feas.formatCurrency(revenue)} {(!isMixed && comp.mode === "lease") ? "/yr" : ""}
         </span>
       </div>
     </div>
@@ -714,9 +898,13 @@ function ComponentPicker({ onPick, hasComponents, landArea }) {
               <span style={{ fontSize: 18, color: "var(--ad-navy-700)", lineHeight: 1 }}>{p.icon}</span>
               <span style={{
                 fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase",
-                color: p.mode === "sale" ? "var(--ad-success)" : "var(--ad-gold-600)",
+                // A mixed-use building has no single purpose — each sub-component
+                // is sold or leased on its own terms.
+                color: p.mode === "mixed" ? "var(--ad-navy-700)"
+                     : p.mode === "sale"  ? "var(--ad-success)"
+                     : "var(--ad-gold-600)",
                 fontWeight: 600,
-              }}>{p.mode === "sale" ? "Sale" : "Lease"}</span>
+              }}>{p.mode === "mixed" ? "Sale + Lease" : p.mode === "sale" ? "Sale" : "Lease"}</span>
             </div>
             <div style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-1)", marginTop: 4 }}>{p.label}</div>
             <div style={{ fontSize: 10, color: "var(--fg-3)", lineHeight: 1.3 }}>{p.blurb}</div>
@@ -1055,6 +1243,16 @@ function Sidebar({ input, setInput }) {
       salesPeriodMonths: preset.salesPeriodMonths,
       operatingPeriodMonths: preset.operatingPeriodMonths,
     };
+    // Mixed use: deep-copy the preset's sub-components and give each a fresh
+    // id. Sharing the preset array by reference would make every mixed-use
+    // building on the project edit the same subs.
+    if (preset.subs) {
+      newComp.subs = preset.subs.map(s => Object.assign({}, s, {
+        id: Math.random().toString(36).slice(2, 9),
+        enabled: true,
+        name: (window.I18N ? I18N.t(s.name) : s.name),
+      }));
+    }
     upd("components", [...input.components, newComp]);
   };
 
