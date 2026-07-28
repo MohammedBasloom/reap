@@ -219,7 +219,7 @@ function App() {
               <HeaderStat label="Profit" value={Feas.formatCurrency(k.profit)}
             tone={k.profit >= 0 ? "ok" : "bad"} />
               <Divider />
-              <HeaderStat label="Total cost" value={Feas.formatCurrency(k.devCostExFinance + (k.totalInterest || 0) + (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0))} />
+              <HeaderStat label="Total cost" value={Feas.formatCurrency((k.totalCost || 0) + (k.totalInterest || 0))} />
               <Divider />
               <HeaderStat label="Equity req." value={Feas.formatCurrency(k.totalEquity)} sub="Total capital called" />
             </> :
@@ -273,7 +273,7 @@ function App() {
               <span>Equity IRR <b className="tabnum">{Feas.formatPct(k.equityIRR)}</b></span>
               <span>NPV <b className="tabnum">{Feas.formatCurrency(k.equityNPV)}</b></span>
               <span>Profit <b className="tabnum">{Feas.formatCurrency(k.profit)}</b></span>
-              <span>Total cost <b className="tabnum">{Feas.formatCurrency(k.devCostExFinance + (k.totalInterest || 0) + (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0))}</b></span>
+              <span>Total cost <b className="tabnum">{Feas.formatCurrency((k.totalCost || 0) + (k.totalInterest || 0))}</b></span>
               <span>Equity req. <b className="tabnum">{Feas.formatCurrency(k.totalEquity)}</b></span>
             </div>
           )}
@@ -468,8 +468,11 @@ function DashboardEmptyState({ input }) {
   const comps = (input.components || []).filter((c) => c.enabled);
   const hasComponents = comps.length > 0;
   const allocated = comps.reduce((s, c) => s + (+c.allocationPct || 0), 0);
-  const totalLandCost = landArea * landPrice;
-  const totalLandIn = totalLandCost * (1 + (input.landTransferFeesPct || 0));
+  // On a ground lease nothing is bought and no RETT falls due, so this landing
+  // screen must not present a purchase cost the project will never incur.
+  const isLeasehold = (input.landTenure || "own") === "lease";
+  const totalLandCost = isLeasehold ? 0 : landArea * landPrice;
+  const totalLandIn = isLeasehold ? 0 : totalLandCost * (1 + (input.landTransferFeesPct || 0));
 
   // Six steps in sidebar order. The first three track live; the rest come
   // pre-filled with sensible defaults the user reviews.

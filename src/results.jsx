@@ -265,7 +265,7 @@ function CashflowPanel({ result, input }) {
 
   // Monthly project (unlevered) flow — all uses & revenues, no debt/interest.
   const projFlow = months.map((_, i) =>
-    cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + (cf.infra ? cf.infra[i] : 0) + cf.siteWork[i] +
+    cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + cf.siteWork[i] +
     cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.sales[i] + cf.rent[i] + cf.exit[i]);
 
   const ViewToggle = ({ view, setView }) => (
@@ -308,7 +308,7 @@ function CashflowPanel({ result, input }) {
                 { label: "Ground rent", color: "var(--ad-navy-800)", values: cf.landRent || months.map(() => 0) },
                 { label: "Soft costs", color: "var(--ad-navy-700)", values: cf.soft },
                 { label: "Construction", color: "var(--ad-navy-500)", values: cf.construction },
-                { label: "Site work", color: "var(--ad-navy-400)", values: months.map((_, i) => cf.siteWork[i] + (cf.infra ? cf.infra[i] : 0)) },
+                { label: "Site work", color: "var(--ad-navy-400)", values: cf.siteWork },
                 { label: "Contingency", color: "var(--ad-sand-700)", values: cf.contingency },
                 { label: "Selling costs", color: "var(--ad-sand-500)", values: cf.selling },
                 { label: "OpEx",     color: "var(--ad-sand-900)", values: cf.opex },
@@ -565,16 +565,25 @@ function revenueToProfitSteps(result) {
 function CostPanel({ result, input }) {
   const k = result.kpi;
   const totalDev = k.devCostExFinance;
-  const totalAll = totalDev + k.totalInterest + k.marketing + k.salesCommission + k.govFees;
+  /* All-in cost is the engine's own total plus financing — assembling it from
+     devCostExFinance dropped ground rent and OpEx, exactly as the waterfall
+     below once did. kpi.totalCost already carries land, ground rent,
+     construction, site works, soft, contingency, selling AND OpEx. */
+  const totalAll = (k.totalCost || 0) + (k.totalInterest || 0);
+  const opexAllPeriod = -(result.cashflow.opex || []).reduce((s, v) => s + v, 0);
 
   const donutData = [
     { label: "Land", value: k.landCost, color: "var(--ad-navy-900)" },
+    { label: "Ground rent", value: k.totalLandRent || 0, color: "var(--ad-navy-800)" },
     { label: "Transfer fees", value: k.landTransferFees, color: "var(--ad-navy-700)" },
     { label: "Construction", value: k.constructionCost, color: "var(--ad-navy-500)" },
     { label: "Infrastructure", value: k.landInfraCost || 0, color: "var(--ad-navy-600)" },
     { label: "Site work", value: k.siteWorkCost - (k.landInfraCost || 0), color: "var(--ad-navy-400)" },
     { label: "Soft", value: k.softCosts, color: "var(--ad-navy-300)" },
     { label: "Contingency", value: k.contingency, color: "var(--ad-sand-500)" },
+    // Running the buildings is a project cost like any other, and over a long
+    // hold one of the largest — it belongs in the composition.
+    { label: "OpEx", value: opexAllPeriod, color: "var(--ad-sand-900)" },
     { label: "Selling", value: k.marketing + k.salesCommission + k.govFees, color: "var(--ad-sand-300)" },
     { label: "Interest", value: k.totalInterest, color: "var(--ad-danger)" },
   ].filter(d => d.value > 0);
@@ -1291,7 +1300,7 @@ function WaterfallPanel({ result, input }) {
 
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
         <Eyebrow>Uses &amp; Sources</Eyebrow>
-        <ReturnsSplit k={k} input={input} />
+        <ReturnsSplit k={k} input={input} cf={cf} />
       </div>
     </div>
   );
@@ -1919,7 +1928,7 @@ function CashSweepTable({ cf }) {
   );
 }
 
-function ReturnsSplit({ k, input }) {
+function ReturnsSplit({ k, input, cf }) {
   // ----- USES: every dollar the project spends, over its life -----
   const usesItems = [
     { label: "Land + transfer fees", value: k.landCost + k.landTransferFees,            color: "var(--ad-navy-900)" },
@@ -1939,7 +1948,14 @@ function ReturnsSplit({ k, input }) {
   // ----- SOURCES: tie to uses — equity (cash called), debt drawn, and
   //   revenue the project retained against costs (interest rolled past the
   //   facility cap, selling costs netted from receipts).
-  const debtDrawn = k.debtDrawnTotal || 0;
+  /* Debt must be the facility's FULL contribution — cash drawn plus interest
+     rolled into the balance. k.debtDrawnTotal counts only the cash draws, so
+     capitalised interest fell out of "Debt drawn" and, because revenue is a
+     residual plug, silently reappeared as "Revenue applied". The engine already
+     publishes the right figure as cashflow.coverageTotals.debt, which the
+     coverage chart in this same panel uses. */
+  const cov = (cf && cf.coverageTotals) || null;
+  const debtDrawn = cov ? (cov.debt || 0) : (k.debtDrawnTotal || 0);
   const equity = k.totalEquity;
   const revenueApplied = Math.max(0, totalUses - equity - debtDrawn);
   const sourcesItems = [

@@ -391,6 +391,17 @@
         if (w) {
           const nf = Object.keys(w.buckets || {}).filter(k => !Number.isFinite(w.buckets[k]));
           if (nf.length) fails.push("waterfall buckets non-finite: " + nf.join(","));
+          /* Every riyal distributed must land in exactly one bucket — return of
+             capital, preferred return, promote or pro-rata residual. If the
+             buckets and the distributions disagree, the fund tab is dividing up
+             a different amount of money than the project actually paid out. */
+          const bucketTotal = Object.keys(w.buckets || {})
+            .reduce((s, key) => s + (w.buckets[key] || 0), 0);
+          const distributed = (r.cashflow.distributions || []).reduce((s, v) => s + v, 0);
+          if (Math.abs(bucketTotal - distributed) > 2) {
+            fails.push(`waterfall buckets total ${Math.round(bucketTotal)} but ` +
+                       `${Math.round(distributed)} was distributed (gap ${Math.round(bucketTotal - distributed)})`);
+          }
           snapshot[cfg.name + " ::waterfall"] = round(w.buckets || {});
         }
       } catch (e) { fails.push("waterfall threw: " + (e && e.message)); }

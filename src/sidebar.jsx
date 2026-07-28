@@ -275,9 +275,17 @@ const COMPONENT_PRESETS = {
 /* ---------- Floor-by-floor breakdown (coverage mode) ---------- */
 
 function FloorBreakdown({ comp, land }) {
-  const landCov = +comp.landCoveragePct || 0;
-  const upperCov = +comp.upperFloorCoveragePct || 0;
-  const lastPct = +comp.lastFloorPct || 0;
+  /* Mirrors the engine's coverage massing (calc.js computeComponent): clamp the
+     coverages to [0,1] and default a missing top-floor share to 100%, NOT to 0.
+     Reading it as 0 made this table show a last floor of nothing and a total
+     GFA below the figure the engine reported two rows further down the panel. */
+  const clamp01 = (v, dflt) => {
+    const n = (v === null || v === undefined || v === "" || isNaN(+v)) ? dflt : +v;
+    return Math.max(0, Math.min(1, n));
+  };
+  const landCov = clamp01(comp.landCoveragePct, 0);
+  const upperCov = clamp01(comp.upperFloorCoveragePct, 0);
+  const lastPct = clamp01(comp.lastFloorPct, 1);
   const maxFloors = Math.max(0, +comp.maxFloors || 0);
   if (maxFloors === 0 || land === 0) {
     return (
@@ -432,30 +440,28 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
     update("subs", subs.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)));
   };
 
-  // Units / keys derived
+  // Units / keys — from the engine, so the rounding rule lives in one place.
   const basis = comp.revenueBasis || "sqm";
-  let units = 0;
-  if (basis === "unit") {
-    const avgUnit = +comp.avgUnitSize || 0;
-    units = avgUnit > 0 ? Math.floor(nsa / avgUnit) : 0;
-  }
-  const keys = basis === "key" ? (+comp.keys || 0) : 0;
+  const units = computed.units || 0;
+  const keys = computed.keys || 0;
 
-  // Revenue derived
+  /* Revenue — taken from the engine, not recomputed.
+
+     This panel used to re-derive it with `+comp.occupancy || 0` and
+     `+comp.opexPct || 0`, while the engine uses numOr(..., 0.85) and
+     numOr(..., 0.30). A component with either left blank therefore showed ZERO
+     revenue here while every other view showed the real, default-based figure.
+     `computed` is Feas.computeComponent for this very component. */
   let revenue = 0, gross = 0;
   if (isMixed) {
-    // Sum whatever the subs produce — a building can sell and let at once.
-    revenue = subsComputed.reduce((t, s) => t + (s.salesRevenue || 0) + (s.noi || 0), 0);
-    gross = subsComputed.reduce((t, s) => t + (s.grossIncome || 0), 0);
+    // A building can sell and let at once, so both streams count.
+    revenue = (computed.salesRevenue || 0) + (computed.noi || 0);
+    gross = computed.grossIncome || 0;
   } else if (comp.mode === "sale") {
-    if (basis === "sqm") revenue = nsa * (+comp.pricePerSqm || 0);
-    if (basis === "unit") revenue = units * (+comp.pricePerUnit || 0);
-    if (basis === "key") revenue = keys * (+comp.pricePerKey || 0);
+    revenue = computed.salesRevenue || 0;
   } else if (comp.mode === "lease") {
-    if (basis === "sqm") gross = nsa * (+comp.rentPerSqmYr || 0) * (+comp.occupancy || 0);
-    if (basis === "unit") gross = units * (+comp.rentPerUnitYr || 0) * (+comp.occupancy || 0);
-    if (basis === "key") gross = keys * (+comp.adr || 0) * (+comp.occupancy || 0) * 365;
-    revenue = gross * (1 - (+comp.opexPct || 0));
+    gross = computed.grossIncome || 0;
+    revenue = computed.noi || 0;
   }
 
   return (
@@ -1337,7 +1343,10 @@ function Sidebar({ input, setInput }) {
     ? (input.landArea || 0) * (input.landRentPerSqmYr || 0) : 0;
   const totalLandIn = totalLandCost + landTransferFees;
   const isRawLand = input.landType === "raw";
-  const developablePct = isRawLand ? (input.developablePct ?? 0.70) : 1;
+  // Clamped to [0,1] as the engine does, so an out-of-range entry cannot make
+  // this panel's net developable area disagree with what the engine allocates.
+  const developablePct = isRawLand
+    ? Math.max(0, Math.min(1, input.developablePct ?? 0.70)) : 1;
   const netDevelopableArea = (input.landArea || 0) * developablePct;
   const landInfraCost = (input.landArea || 0) * (input.landInfraCostPerSqm || 0);
 
