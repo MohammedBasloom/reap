@@ -373,6 +373,25 @@
       if (run([plain]) !== run([asMixed])) {
         fails.push(`mixed horizon ${run([asMixed])} differs from the equivalent plain component ${run([plain])}`);
       }
+
+      /* The sidebar read-out calls Feas.autoHorizonMonths while the engine
+         derives its own horizon internally. They were once separate
+         implementations and silently disagreed on mixed use, so assert they
+         still agree across a spread of shapes. */
+      [
+        [mixed([Object.assign({}, leaseNoTiming, { operatingPeriodMonths: 60 })])],
+        [mixed([Object.assign({}, saleNoTiming, { salesPeriodMonths: 48 })])],
+        [mixed([])],
+        [plain],
+        [mixed([Object.assign({}, leaseNoTiming, { operatingPeriodMonths: 120 })]), plain],
+        [Object.assign({}, plain, { enabled: false })],
+      ].forEach((comps, i) => {
+        const engine = F.runFeasibility(Object.assign({}, P, { components: comps })).kpi.autoHorizonMonths;
+        const display = F.autoHorizonMonths(Object.assign({}, P, { components: comps }));
+        if (engine !== display) {
+          fails.push(`case ${i}: engine horizon ${engine} but the read-out says ${display}`);
+        }
+      });
     } catch (e) { fails.push("threw: " + (e && e.message)); }
 
     if (fails.length) failures++;

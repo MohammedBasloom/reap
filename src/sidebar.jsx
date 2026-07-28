@@ -132,25 +132,12 @@ function PctField({ label, value, onChange, hint, tip, suffix = "%", step = 0.5,
 }
 
 function AutoHorizonDisplay({ input }) {
-  const predesign = Math.max(0, input.predesignMonths | 0);
-  const construction = Math.max(1, input.constructionMonths | 0);
-  const preSalesStart = input.preSalesStartMonth !== undefined
-    ? Math.max(0, input.preSalesStartMonth | 0)
-    : predesign;
-  const conEnd = predesign + construction;
-  let endMonth = conEnd;
-  (input.components || []).forEach((c) => {
-    if (!c || !c.enabled) return;
-    if (c.mode === "sale") {
-      const e = preSalesStart + Math.max(1, c.salesPeriodMonths | 0);
-      if (e > endMonth) endMonth = e;
-    } else if (c.mode === "lease") {
-      const e = conEnd + Math.max(1, c.operatingPeriodMonths | 0);
-      if (e > endMonth) endMonth = e;
-    }
-  });
-  const tailMonths = 3;
-  const horizon = Math.max(12, endMonth + tailMonths);
+  /* Ask the engine rather than recomputing. This used to be a second copy of
+     the horizon maths that branched on the component's own mode, so a
+     Mixed-Use Building — whose mode is "mixed" — extended it by nothing and
+     the read-out showed construction plus three while the model ran for
+     years. */
+  const horizon = Feas.autoHorizonMonths(input);
   const years = (horizon / 12);
   return (
     <div>

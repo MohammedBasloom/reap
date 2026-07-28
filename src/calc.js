@@ -178,6 +178,43 @@ function revenueUnits(c) {
 const salePeriodOf  = (u) => Math.max(1, Math.round(numOr(u.salesPeriodMonths, 36)));
 const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonths, 60)));
 
+/* Auto horizon in months: construction, then the longest sell-down or hold of
+   any revenue unit, plus a short tail.
+
+   Exported and used by BOTH the engine and the sidebar read-out. They were
+   previously two separate implementations, and the sidebar's copy branched on
+   the component's own mode — so a Mixed-Use Building, whose mode is "mixed",
+   matched neither branch and extended the horizon by nothing. The displayed
+   horizon collapsed to construction plus three while the engine computed the
+   real one. One implementation removes the possibility of drift. */
+function projectEndMonth(components, conEnd, preSalesStart) {
+  let endMonth = conEnd;
+  (components || []).forEach((c) => {
+    if (!c || !c.enabled) return;
+    revenueUnits(c).forEach((u) => {
+      if (!u || u.enabled === false) return;
+      if (u.mode === "sale") {
+        const e = preSalesStart + salePeriodOf(u);
+        if (e > endMonth) endMonth = e;
+      } else if (u.mode === "lease") {
+        const e = conEnd + leasePeriodOf(u);
+        if (e > endMonth) endMonth = e;
+      }
+    });
+  });
+  return endMonth;
+}
+
+function autoHorizonMonths(input) {
+  const predesign = Math.max(0, input.predesignMonths | 0);
+  const construction = Math.max(1, input.constructionMonths | 0);
+  const preSalesStart = input.preSalesStartMonth !== undefined
+    ? Math.max(0, input.preSalesStartMonth | 0)
+    : predesign;
+  const conEnd = predesign + construction;
+  return Math.max(12, projectEndMonth(input.components, conEnd, preSalesStart) + 3);
+}
+
 /* Revenue for one unit (a plain component, or one sub of a mixed-use
    building) given its already-derived net saleable/leasable area. */
 function computeUnitRevenue(u, nsa) {
@@ -444,21 +481,10 @@ function runFeasibility(input) {
   /* ---------- Auto horizon (derived from project assumptions) ----------
      Horizon = predesign + construction + max(sell-down, operating) + small tail.
      A user-supplied `horizonMonths` acts as a floor / upper-cap override.    */
-  let endMonth = conEnd;
-  components.forEach((c) => {
-    if (!c.enabled) return;
-    revenueUnits(c).forEach((u) => {
-      if (u.mode === "sale") {
-        const e = preSalesStartMonth + salePeriodOf(u);
-        if (e > endMonth) endMonth = e;
-      } else if (u.mode === "lease") {
-        const e = conEnd + leasePeriodOf(u);
-        if (e > endMonth) endMonth = e;
-      }
-    });
-  });
-  const tailMonths = 3;
-  const autoHorizon = Math.max(12, endMonth + tailMonths);
+  // Shared with the sidebar's horizon read-out via autoHorizonMonths(), so the
+  // two can never disagree about how long the project runs.
+  const endMonth = projectEndMonth(components, conEnd, preSalesStartMonth);
+  const autoHorizon = Math.max(12, endMonth + 3);
   const userHorizon = Math.max(0, a.horizonMonths | 0);
   // If the user pinned a horizon, honour it as a minimum (never shorter than auto).
   const horizon = userHorizon > autoHorizon ? userHorizon : autoHorizon;
@@ -1500,6 +1526,7 @@ window.Feas = {
   sCurveCdf, sCurveMonthly, npv, irr, paybackMonths,
   sampleTri, sampleNormal, percentile,
   runFeasibility, tornado, buildScenarios, monteCarlo,
+  autoHorizonMonths,
   runWaterfall,
   formatCurrency, formatPct, formatNumber,
   computeComponent,
