@@ -287,16 +287,33 @@
         ? `categories walk to ${Math.round(walked)} but profit is ${Math.round(k.profit)} (gap ${Math.round(walked - k.profit)})`
         : null;
     }],
+    /* Total uses and the headline Total cost describe the same money, so they
+       must agree. They once differed by exactly the OpEx: ground rent was
+       counted as a use while OpEx was not, though both are operating costs
+       paid across the hold. Nothing on screen explained the gap. */
+    ["total uses equals total cost plus interest", (r) => {
+      const c = r.cashflow.usesByCat || {};
+      const tot = (a) => (a || []).reduce((s, v) => s + v, 0);
+      const uses = tot(c.land) + tot(c.construction) + tot(c.siteWork) +
+                   tot(c.soft) + tot(c.contingency) + tot(c.opex) +
+                   tot(c.marketing) + tot(c.interest);
+      const headline = (r.kpi.totalCost || 0) + (r.kpi.totalInterest || 0);
+      return Math.abs(uses - headline) > 2
+        ? `uses ${Math.round(uses)} vs total cost + interest ${Math.round(headline)} (gap ${Math.round(uses - headline)})`
+        : null;
+    }],
     ["uses by category reconcile to the KPI totals", (r) => {
       const c = r.cashflow.usesByCat || {};
       const tot = (a) => (a || []).reduce((s, v) => s + v, 0);
       const fromCats = tot(c.land) + tot(c.construction) + tot(c.siteWork) +
-                       tot(c.soft) + tot(c.contingency) + tot(c.marketing) + tot(c.interest);
+                       tot(c.soft) + tot(c.contingency) + tot(c.opex) +
+                       tot(c.marketing) + tot(c.interest);
       const k = r.kpi;
+      const opexWholePeriod = -(r.cashflow.opex || []).reduce((s, v) => s + v, 0);
       const fromKpi =
         (k.landCost + k.landTransferFees) + (k.totalLandRent || 0) +
         k.constructionCost + k.siteWorkCost +
-        k.softCosts + k.contingency +
+        k.softCosts + k.contingency + opexWholePeriod +
         k.marketing + k.salesCommission + k.govFees + k.totalInterest;
       return Math.abs(fromCats - fromKpi) > 2
         ? `categories ${Math.round(fromCats)} vs KPI totals ${Math.round(fromKpi)}`

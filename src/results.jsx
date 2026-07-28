@@ -1397,17 +1397,18 @@ function UsesYearTable({ cf }) {
       siteWork: slice(cats.siteWork, y),
       soft: slice(cats.soft, y),
       contingency: slice(cats.contingency, y),
+      opex: slice(cats.opex, y),
       selling: slice(cats.marketing, y),
       interest: slice(cats.interest, y),
     };
-    r.total = r.land + r.construction + r.siteWork + r.soft + r.contingency + r.selling + r.interest;
+    r.total = r.land + r.construction + r.siteWork + r.soft + r.contingency + r.opex + r.selling + r.interest;
     cum += r.total;
     r.cum = cum;
     if (r.total < 0.5) continue;
     rows.push(r);
   }
-  const keys = ["land", "construction", "siteWork", "soft", "contingency", "selling", "interest", "total"];
-  const tot = rows.reduce((t, r) => { keys.forEach(kk => t[kk] += r[kk]); return t; }, { land: 0, construction: 0, siteWork: 0, soft: 0, contingency: 0, selling: 0, interest: 0, total: 0 });
+  const keys = ["land", "construction", "siteWork", "soft", "contingency", "opex", "selling", "interest", "total"];
+  const tot = rows.reduce((t, r) => { keys.forEach(kk => t[kk] += r[kk]); return t; }, { land: 0, construction: 0, siteWork: 0, soft: 0, contingency: 0, opex: 0, selling: 0, interest: 0, total: 0 });
   const cell = (v, extra) => <td style={{ ...tdNum(v), ...(extra || {}) }}>{v > 0.5 ? fc(v) : "—"}</td>;
   return (
     <div style={{ overflowX: "auto" }}>
@@ -1420,6 +1421,7 @@ function UsesYearTable({ cf }) {
             <th style={thStyleNum}>Site work</th>
             <th style={thStyleNum}>Soft costs</th>
             <th style={thStyleNum}>Contingency</th>
+            <th style={thStyleNum}>OpEx</th>
             <th style={thStyleNum}>Selling costs</th>
             <th style={thStyleNum}>Interest</th>
             <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>Total uses</th>
@@ -1430,14 +1432,14 @@ function UsesYearTable({ cf }) {
           {rows.map(r => (
             <tr key={r.y} style={{ borderBottom: "1px solid var(--border-2)" }}>
               <td style={tdStyle}>Y{r.y + 1}</td>
-              {cell(r.land)}{cell(r.construction)}{cell(r.siteWork)}{cell(r.soft)}{cell(r.contingency)}{cell(r.selling)}{cell(r.interest)}
+              {cell(r.land)}{cell(r.construction)}{cell(r.siteWork)}{cell(r.soft)}{cell(r.contingency)}{cell(r.opex)}{cell(r.selling)}{cell(r.interest)}
               <td style={{ ...tdNum(r.total), fontWeight: 600, background: "var(--ad-navy-50)" }}>{fc(r.total)}</td>
               <td style={{ ...tdNum(r.cum), color: "var(--fg-2)", fontSize: 11 }}>{fc(r.cum)}</td>
             </tr>
           ))}
           <tr style={{ background: "var(--bg-2)", borderTop: "2px solid var(--border-strong)" }}>
             <td style={{ ...tdStyle, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.12em", fontSize: 10 }}>Total</td>
-            {cell(tot.land, { fontWeight: 700 })}{cell(tot.construction, { fontWeight: 700 })}{cell(tot.siteWork, { fontWeight: 700 })}{cell(tot.soft, { fontWeight: 700 })}{cell(tot.contingency, { fontWeight: 700 })}{cell(tot.selling, { fontWeight: 700 })}{cell(tot.interest, { fontWeight: 700 })}
+            {cell(tot.land, { fontWeight: 700 })}{cell(tot.construction, { fontWeight: 700 })}{cell(tot.siteWork, { fontWeight: 700 })}{cell(tot.soft, { fontWeight: 700 })}{cell(tot.contingency, { fontWeight: 700 })}{cell(tot.opex, { fontWeight: 700 })}{cell(tot.selling, { fontWeight: 700 })}{cell(tot.interest, { fontWeight: 700 })}
             <td style={{ ...tdNum(tot.total), fontWeight: 700, background: "var(--ad-navy-50)" }}>{fc(tot.total)}</td>
             <td style={tdStyle} />
           </tr>
@@ -1929,6 +1931,8 @@ function CashSweepTable({ cf }) {
 }
 
 function ReturnsSplit({ k, input, cf }) {
+  // Declared before the uses list below, which spends it.
+  const opexWholePeriod = -((cf && cf.opex) || []).reduce((s, v) => s + v, 0);
   // ----- USES: every dollar the project spends, over its life -----
   const usesItems = [
     { label: "Land + transfer fees", value: k.landCost + k.landTransferFees,            color: "var(--ad-navy-900)" },
@@ -1938,6 +1942,9 @@ function ReturnsSplit({ k, input, cf }) {
     { label: "Site work",            value: k.siteWorkCost - (k.landInfraCost || 0),    color: "var(--ad-navy-500)" },
     { label: "Soft costs",           value: k.softCosts,                                color: "var(--ad-navy-300)" },
     { label: "Contingency",          value: k.contingency,                              color: "var(--ad-sand-700)" },
+    // Operating cost of running the buildings — shown for the same reason
+    // ground rent is: it is money the project spends over the hold.
+    { label: "Operating expenses",   value: opexWholePeriod,                            color: "var(--ad-sand-900)" },
     { label: "Marketing",            value: k.marketing,                                color: "var(--ad-sand-500)" },
     { label: "Sales commission",     value: k.salesCommission,                          color: "var(--ad-sand-300)" },
     { label: "Government fees",      value: k.govFees,                                  color: "var(--ad-sand-200)" },

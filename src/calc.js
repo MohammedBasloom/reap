@@ -907,11 +907,15 @@ function runFeasibility(input) {
      streams that cover them: debt drawn + pre-sales/operating revenue applied
      + equity injected (plug). Used by the Capital coverage timeline chart. */
   const usesByCatFlow = {
-    land:         arr(), // land + transfer fees
+    land:         arr(), // purchase + transfer fees, or ground rent on a lease
     construction: arr(), // hard cost above ground
     siteWork:     arr(),
     soft:         arr(),
     contingency:  arr(),
+    // Running the buildings. Like ground rent it is an operating cost paid
+    // across the hold, and the two must be treated alike: including one and
+    // not the other left Total uses short of Total cost by exactly the OpEx.
+    opex:         arr(),
     marketing:    arr(), // marketing + commission + gov fees (all pro-rata to sales)
     interest:     arr(),
   };
@@ -929,11 +933,13 @@ function runFeasibility(input) {
     usesByCatFlow.siteWork[m]     = -siteWorkFlow[m];
     usesByCatFlow.soft[m]         = -softFlow[m];
     usesByCatFlow.contingency[m]  = -contingencyFlow[m];
+    usesByCatFlow.opex[m]         = -opexFlow[m];
     usesByCatFlow.marketing[m]    = -sellingFlow[m];
     usesByCatFlow.interest[m]     = -interestFlow[m];
     const u =
       usesByCatFlow.land[m] + usesByCatFlow.construction[m] + usesByCatFlow.siteWork[m] +
-      usesByCatFlow.soft[m] + usesByCatFlow.contingency[m] + usesByCatFlow.marketing[m] +
+      usesByCatFlow.soft[m] + usesByCatFlow.contingency[m] + usesByCatFlow.opex[m] +
+      usesByCatFlow.marketing[m] +
       usesByCatFlow.interest[m];
     totalUsesFlow[m] = u;
     const debtThisMonth = debtDrawFlow[m] || 0;
@@ -1011,14 +1017,21 @@ function runFeasibility(input) {
   let peakEqOut = 0, cumEq = 0;
   for (const v of equityCashflow) { cumEq += v; if (cumEq < peakEqOut) peakEqOut = cumEq; }
   const peakEquityAtRisk = -peakEqOut;
-  // Total equity = Total uses − Debt drawn, by accounting identity. This is
-  // THE invariant that makes Sources ≡ Uses in the Capital tab.
-  // Total uses = devCostExFinance (land + transfer + construction + site +
-  //   soft + contingency) + selling (marketing + commission + gov fees) +
-  //   total interest paid.
+  /* Total equity = Total uses − Debt drawn, by accounting identity. This is
+     THE invariant that makes Sources ≡ Uses in the Capital tab.
+
+     Uses = land (purchase + RETT, or ground rent) + construction + site works
+     + soft costs + contingency + OpEx + selling + interest — every riyal the
+     project spends, so it equals the headline Total cost. OpEx used to be
+     excluded on the grounds that rental income already arrives net of it, but
+     ground rent was included, and treating two operating costs differently
+     left Total uses short of Total cost by exactly the OpEx with nothing on
+     screen to explain the gap. Including both keeps the two totals equal; the
+     rent that pays for them shows up on the sources side as revenue applied. */
   const totalUsesForBalance =
     (landCost + landTransferFees + totalConstructionCost + totalSiteWorkCost +
      softCosts + contingency) + totalLandRent +
+    (-opexFlow.reduce((s, v) => s + v, 0)) +
     (marketing + salesCommission + govFees) +
     (-interestFlow.reduce((s, v) => s + v, 0));
   // Equity required = actual CASH called from investors — only what neither
