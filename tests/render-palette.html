@@ -23,10 +23,8 @@
     allocationPct: 1.0, massingMode: "far", far: 3.0,
     hasBasement: false, basementCoveragePct: 0.40, basementCostPerSqm: 2000,
     siteWorkPct: 0.07,
-    subs: [
-      { id: "r", name: "تجزئة", enabled: true, gfaSharePct: 0.40, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
-      { id: "o", name: "مكاتب", enabled: true, gfaSharePct: 0.60, costPerSqmGFA: 3600, efficiency: 0.75, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.080 },
-    ],
+    // Starts EMPTY, as a freshly added building does.
+    subs: [],
   };
 
   function Harness() {

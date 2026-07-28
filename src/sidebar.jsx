@@ -270,11 +270,10 @@ const COMPONENT_PRESETS = {
   // One building, one envelope, several uses. Massing, basement and site works
   // are unified; each sub takes a share of the GFA with its own build cost,
   // efficiency, purpose, rate, occupancy, timing and exit cap.
+  // Starts with NO spaces: the user adds them from inside the component, so
+  // nothing is assumed about what the building contains.
   "mixed":     { mode: "mixed", label: "Mixed-Use Building",   blurb: "Several uses in one building", icon: "▥", basis: "sqm", far: 3.0,  landCoveragePct: 0.50, maxFloors: 10, upperFloorCoveragePct: 0.50, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.78,
-    subs: [
-      { name: "Retail",  gfaSharePct: 0.40, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
-      { name: "Offices", gfaSharePct: 0.60, costPerSqmGFA: 3600, efficiency: 0.75, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.080 },
-    ] },
+    subs: [] },
   "apartment": { mode: "sale",  label: "Residential Building", blurb: "Strata residences", icon: "▣", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
   "btr":       { mode: "lease", label: "Build-to-Rent",    blurb: "Residential rental", icon: "◫", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 100, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075 },
   "retail":    { mode: "lease", label: "Retail",           blurb: "Leasable retail GLA", icon: "◰", basis: "sqm",  far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
@@ -392,24 +391,36 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   /* Mixed-Use Building: the envelope (massing, basement, site works) belongs to
      the building, while purpose, efficiency, build cost and pricing belong to
      each sub-component. The engine has already sized every sub on `computed`. */
-  const isMixed = !!(comp.subs && comp.subs.length);
+  // A mixed-use building is identified by HAVING a subs array, even an empty
+  // one — an unfilled building must not fall back to the plain-component fields.
+  const isMixed = Array.isArray(comp.subs);
   const subsComputed = computed.subs || [];
-  const subSharePct = (comp.subs || []).reduce((t, s) => t + (+s.gfaSharePct || 0), 0);
-  const subShareOff = isMixed && Math.abs(subSharePct - 1) > 0.001;
+  const subs = comp.subs || [];
+  const subSharePct = subs.reduce((t, s) => t + (+s.gfaSharePct || 0), 0);
+  const subShareOff = isMixed && subs.length > 0 && Math.abs(subSharePct - 1) > 0.001;
 
   const updateSub = (i, k, v) => {
-    update("subs", (comp.subs || []).map((s, j) => (j === i ? Object.assign({}, s, { [k]: v }) : s)));
+    update("subs", subs.map((s, j) => (j === i ? Object.assign({}, s, { [k]: v }) : s)));
   };
-  const addSub = () => {
-    update("subs", [...(comp.subs || []), {
+  /* Two kinds of space, and a building may hold several of either — leased
+     retail and leased offices are both "for lease" but priced quite
+     differently, so they are separate spaces. */
+  const addSub = (mode) => {
+    const baseLabel = mode === "sale" ? "Spaces for sale" : "Spaces for lease";
+    const localised = window.I18N ? I18N.t(baseLabel) : baseLabel;
+    const sameMode = subs.filter(s => s.mode === mode).length;
+    const name = sameMode === 0 ? localised : `${localised} ${sameMode + 1}`;
+    const common = {
       id: Math.random().toString(36).slice(2, 9),
-      name: (window.I18N ? I18N.t("New use") : "New use"),
-      enabled: true, gfaSharePct: 0, costPerSqmGFA: 2500, efficiency: 0.78,
-      mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1200,
-      occupancy: 0.85, opexPct: 0.30, operatingPeriodMonths: 60, exitCapRate: 0.075,
-    }]);
+      name, enabled: true, mode,
+      gfaSharePct: 0, efficiency: 0.78, revenueBasis: "sqm",
+    };
+    const byMode = mode === "sale"
+      ? { costPerSqmGFA: 2500, pricePerSqm: 6000, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 }
+      : { costPerSqmGFA: 3600, rentPerSqmYr: 1200, occupancy: 0.85, opexPct: 0.30, operatingPeriodMonths: 60, exitCapRate: 0.075 };
+    update("subs", [...subs, Object.assign(common, byMode)]);
   };
-  const removeSub = (i) => update("subs", (comp.subs || []).filter((_, j) => j !== i));
+  const removeSub = (i) => update("subs", subs.filter((_, j) => j !== i));
 
   // Units / keys derived
   const basis = comp.revenueBasis || "sqm";
@@ -609,12 +620,23 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       {isMixed && (
         <>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 6 }}>
-            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" }}>Uses in this building</div>
-            <span className="tabnum" style={{
-              fontSize: 11, fontWeight: 600,
-              color: subShareOff ? "var(--ad-danger)" : "var(--ad-success)",
-            }}>{Feas.formatPct(subSharePct)} of GFA</span>
+            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" }}>Spaces in this building</div>
+            {subs.length > 0 && (
+              <span className="tabnum" style={{
+                fontSize: 11, fontWeight: 600,
+                color: subShareOff ? "var(--ad-danger)" : "var(--ad-success)",
+              }}>{Feas.formatPct(subSharePct)} of GFA</span>
+            )}
           </div>
+
+          {subs.length === 0 && (
+            <div style={{
+              fontSize: 11, lineHeight: 1.5, padding: "10px 11px", marginBottom: 8,
+              border: "1px dashed var(--border-2)", background: "var(--bg-2)", color: "var(--fg-3)",
+            }}>
+              No spaces yet. Add the spaces this building holds — you can add several of either kind, so leased retail and leased offices sit side by side.
+            </div>
+          )}
 
           {subShareOff && (
             <div style={{
@@ -725,11 +747,18 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
             );
           })}
 
-          <button type="button" onClick={addSub} style={{
-            width: "100%", padding: "8px", marginBottom: 12, cursor: "pointer",
-            border: "1px dashed var(--border-2)", background: "transparent",
-            color: "var(--ad-navy-700)", font: "inherit", fontSize: 11, fontWeight: 600,
-          }}>+ Add a use</button>
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            <button type="button" onClick={() => addSub("sale")} style={{
+              flex: 1, padding: "8px", cursor: "pointer",
+              border: "1px dashed var(--ad-success)", background: "transparent",
+              color: "var(--ad-success)", font: "inherit", fontSize: 11, fontWeight: 600,
+            }}>+ Spaces for sale</button>
+            <button type="button" onClick={() => addSub("lease")} style={{
+              flex: 1, padding: "8px", cursor: "pointer",
+              border: "1px dashed var(--ad-gold-600)", background: "transparent",
+              color: "var(--ad-gold-600)", font: "inherit", fontSize: 11, fontWeight: 600,
+            }}>+ Spaces for lease</button>
+          </div>
         </>
       )}
 

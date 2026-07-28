@@ -159,9 +159,13 @@ const numOr = (v, dflt) => {
    on one plot, but two very different revenue streams.
 
    A plain component is its own single revenue unit, so every component without
-   subs[] follows exactly the path it always did. */
+   subs[] follows exactly the path it always did.
+
+   The test is the PRESENCE of a subs array, not whether it has entries: a
+   mixed-use building the user has not filled in yet must earn nothing rather
+   than falling back to the plain-component fields. */
 function revenueUnits(c) {
-  return (c.subs && c.subs.length) ? c.subs : [c];
+  return Array.isArray(c.subs) ? c.subs : [c];
 }
 
 /* Revenue for one unit (a plain component, or one sub of a mixed-use
@@ -234,14 +238,14 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
      OWN efficiency and build rate to that share. A plain component has no
      subs[]: `subs` stays null and every figure below is derived exactly as
      before. */
-  const rawSubs = (c.subs && c.subs.length)
+  const rawSubs = Array.isArray(c.subs)
     ? c.subs.filter(s => s && s.enabled !== false)
     : null;
 
   let subs = null;
   let nsa, aboveGroundConstructionCost;
 
-  if (rawSubs && rawSubs.length) {
+  if (rawSubs) {
     subs = rawSubs.map(s => {
       const share = Math.max(0, +s.gfaSharePct || 0);
       const subGfa = gfa * share;
