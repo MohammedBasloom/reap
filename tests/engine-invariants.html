@@ -169,23 +169,28 @@
       const last = b.length ? b[b.length - 1] : 0;
       return Math.abs(last) > 0.01 ? `closing balance ${last.toFixed(2)}` : null;
     }],
-    // New DRAWS are capped at the facility; capitalised interest is not, so the
-    // balance can drift above the cap once the facility is fully drawn and the
-    // project has no cash to pay interest. That drift is tracked as a snapshot
-    // metric (maxOverFacility) rather than asserted away. What must always hold
-    // is that the excess is fully explained by capitalised interest — if a DRAW
-    // ever breached the cap, this check fails.
-    ["excess over facility is only capitalised interest", (r, input) => {
+    // The LTC facility is a hard cap on the BALANCE, not just on new draws:
+    // interest that can be neither paid from cash nor capitalised within the
+    // cap is cured by an equity call. Nothing may ever sit above the facility.
+    ["debt balance never exceeds the facility", (r, input) => {
       const cap = (r.kpi.devCostExFinance || 0) * (+input.ltc || 0);
       const b = r.cashflow.debtBalance || [];
+      const i = b.findIndex(v => v > cap + 1);
+      return i >= 0
+        ? `month ${i}: ${b[i].toFixed(0)} > facility ${cap.toFixed(0)}`
+        : null;
+    }],
+    // Interest accrued each month must be fully accounted for: settled with the
+    // lender (from cash or an equity cure) or capitalised into the balance.
+    ["interest is fully accounted for", (r) => {
       const int = r.cashflow.interest || [];
       const paid = r.cashflow.interestPaid || [];
-      let capitalised = 0;
-      for (let m = 0; m < b.length; m++) {
-        capitalised += Math.max(0, (-(int[m] || 0)) - (-(paid[m] || 0)));
-        if (b[m] > cap + capitalised + 1) {
-          return `month ${m}: ${b[m].toFixed(0)} exceeds cap ${cap.toFixed(0)} ` +
-                 `by more than the ${capitalised.toFixed(0)} capitalised to date`;
+      const cap = r.cashflow.intCapitalised || [];
+      for (let m = 0; m < int.length; m++) {
+        const accrued = -(int[m] || 0);
+        const settled = (paid[m] || 0) + (cap[m] || 0);
+        if (Math.abs(accrued - settled) > 0.01) {
+          return `month ${m}: accrued ${accrued.toFixed(2)} vs settled+capitalised ${settled.toFixed(2)}`;
         }
       }
       return null;

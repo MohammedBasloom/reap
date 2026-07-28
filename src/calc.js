@@ -625,11 +625,20 @@ function runFeasibility(input) {
       }
       const cashForService = totalCash;
 
-      // 4) Interest is paid in cash whenever cash exists; only the unpaid
-      //    remainder capitalises into the balance.
+      // 4) Interest is paid in cash whenever cash exists. The unpaid remainder
+      //    capitalises — but ONLY as far as the facility still allows. The LTC
+      //    limit is a hard cap on the balance, not merely on new draws: once
+      //    the facility is fully drawn, interest that can be neither paid from
+      //    cash nor capitalised within the cap is cured by equity, exactly as a
+      //    revolver covenant would require. Without this cure the balance
+      //    compounds past the stated LTC without limit.
       const intPaid = Math.min(interest, totalCash);
       totalCash -= intPaid;
-      const intCapitalised = interest - intPaid;
+      const intUnpaid = interest - intPaid;
+      const capHeadroom = Math.max(0, debtFacility - (outstanding + draw));
+      const intCapitalised = Math.min(intUnpaid, capHeadroom);
+      const intCuredByEquity = intUnpaid - intCapitalised;
+      if (intCuredByEquity > 0) equityNeeded += intCuredByEquity;
 
       // 5) ALL remaining cash sweeps the principal immediately — even during
       //    construction — since repaid amounts can be redrawn later.
@@ -637,7 +646,8 @@ function runFeasibility(input) {
       const principalPaid = Math.min(balancePreSweep, totalCash);
       totalCash -= principalPaid;
       let newOutstanding = balancePreSweep - principalPaid;
-      let repay = intPaid + principalPaid;
+      // Equity-cured interest reaches the lender just as cash-paid interest does.
+      let repay = intPaid + intCuredByEquity + principalPaid;
       let forcedPrincipal = 0;
 
       // Force-clear any residual at the project's natural exit month —
@@ -665,7 +675,9 @@ function runFeasibility(input) {
       F.debtRepayFlow[m] = -repay;
       F.interestFlow[m] = -interest;
       F.debtBalance[m] = outstanding;
-      F.interestPaidFlow[m] = intPaid;
+      // Interest actually settled with the lender this month — from cash, plus
+      // any cured by an equity call when the facility had no headroom left.
+      F.interestPaidFlow[m] = intPaid + intCuredByEquity;
       F.principalRepayFlow[m] = principalPaid + forcedPrincipal;
       // Cash that was available for debt service this month (after costs).
       F.cashAvailableFlow[m] = cashForService;
@@ -885,6 +897,9 @@ function runFeasibility(input) {
       debtDraw: debtDrawFlow, debtRepay: debtRepayFlow, interest: interestFlow,
       // Decomposition for the "Cash sweep" table:
       interestPaid: interestPaidFlow,
+      // Interest rolled into the balance because there was no cash to pay it
+      // AND the facility still had headroom. accrued = paid + capitalised.
+      intCapitalised: intCapitalisedFlow,
       principalRepay: principalRepayFlow,
       cashAvailable: cashAvailableFlow,
       // Retained-cash account: monthly distributions to equity and the
