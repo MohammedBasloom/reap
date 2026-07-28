@@ -134,6 +134,8 @@
     "Exit value is capitalised from this figure, not the NOI above — a buyer inherits the ground lease and prices the income net of it.":
       "تُحتسب قيمة التخارج برسملة هذا الرقم لا صافي الدخل أعلاه — فالمشتري يرث عقد إيجار الأرض ويُسعّر الدخل بعد خصمه.",
     "Ground rent (whole period)": "إيجار الأرض (كامل الفترة)",
+    "−OpEx": "−التشغيل",
+    "−Ground rent": "−إيجار الأرض",
     "capitalised after ground rent": "مرسملة بعد إيجار الأرض",
     "Land rent": "قيمة إيجار الأرض",
     "Annual ground rent": "الإيجار السنوي للأرض",

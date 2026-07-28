@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — cost / waterfall render check</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/results.jsx"></script>
+<script type="text/babel">
+  /* Renders the Cost panel — which carries the Revenue → Profit waterfall —
+     for a mixed-use scheme on leased land, so every cost category can be
+     checked without the auth gate on model.html. */
+  const INPUT = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: "lease", landRentPerSqmYr: 300,
+    landRentEscalationYears: 5, landRentEscalationPct: 0.05,
+    predesignMonths: 6, constructionMonths: 18, preSalesStartMonth: 14, horizonMonths: 0,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10, fund: { enabled: false },
+    components: [{ id: "m", kind: "mixed", name: "Mixed", mode: "mixed", enabled: true,
+      allocationPct: 1.0, massingMode: "far", far: 2.0, siteWorkPct: 0.07,
+      subs: [
+        { id: "r", name: "Retail", enabled: true, gfaSharePct: 0.5, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, initialOccupancy: 0.30, yearsToStabilization: 1, operatingPeriodMonths: 120, exitCapRate: 0.075 },
+        { id: "f", name: "Flats", enabled: true, gfaSharePct: 0.5, costPerSqmGFA: 2500, efficiency: 0.78, mode: "sale", revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
+      ] }],
+  };
+  const RESULT = Feas.runFeasibility(INPUT);
+  window.__result = RESULT;
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <CostPanel result={RESULT} input={INPUT} />
+  );
+  window.__READY = true;
+</script>
+</body>
+</html>

@@ -263,6 +263,30 @@
         ? `profitUnlevered ${Math.round(r.kpi.profitUnlevered)} vs revenue-less-cost ${Math.round(expect)}`
         : null;
     }],
+    /* The Revenue → Profit waterfall walks from revenue down to profit through
+       named cost categories. Those categories must account for every riyal, or
+       the bars stop short of the profit they claim to explain — OpEx and ground
+       rent were both once missing from it. Note OpEx must come from the
+       cashflow: k.totalOpex is the stabilised ANNUAL figure while the chart is
+       whole-period. */
+    ["the revenue-to-profit categories walk exactly to profit", (r) => {
+      const k = r.kpi;
+      const opexWholePeriod = (r.cashflow.opex || []).reduce((s, v) => s + v, 0);
+      const walked =
+        k.totalRevenue
+        - (k.landCost + k.landTransferFees)
+        - (k.totalLandRent || 0)
+        - k.constructionCost
+        - k.siteWorkCost
+        - k.softCosts
+        - k.contingency
+        + opexWholePeriod
+        - (k.marketing + k.salesCommission + k.govFees)
+        - k.totalInterest;
+      return Math.abs(walked - (k.profit || 0)) > 2
+        ? `categories walk to ${Math.round(walked)} but profit is ${Math.round(k.profit)} (gap ${Math.round(walked - k.profit)})`
+        : null;
+    }],
     ["uses by category reconcile to the KPI totals", (r) => {
       const c = r.cashflow.usesByCat || {};
       const tot = (a) => (a || []).reduce((s, v) => s + v, 0);

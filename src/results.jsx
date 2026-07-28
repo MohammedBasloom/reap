@@ -525,6 +525,38 @@ const tdNum = (v) => ({
 
 /* ---------- Cost breakdown panel ---------- */
 
+/* Revenue → profit, step by step.
+
+   Every cost the project pays must appear, or the bars stop short of the
+   profit they claim to explain. OpEx and ground rent were both absent, and the
+   chart silently failed to reconcile — ground rent especially, since on a long
+   leasehold hold it can be the largest single deduction.
+
+   OpEx is taken from the CASHFLOW, not k.totalOpex: that KPI is the stabilised
+   ANNUAL figure while revenue, profit and this chart are all whole-period.
+   Mixing an annual cost into a whole-period walk would understate it.
+
+   One builder, used by the chart — there were previously two copies of this
+   list, one of them dead code that quietly drifted. */
+function revenueToProfitSteps(result) {
+  const k = result.kpi;
+  const opexWholePeriod = -(result.cashflow.opex || []).reduce((s, v) => s + v, 0);
+  return [
+    { label: "Revenue",      value: k.totalRevenue, type: "start" },
+    { label: "−Land",        value: -(k.landCost + k.landTransferFees), type: "delta" },
+    { label: "−Ground rent", value: -(k.totalLandRent || 0), type: "delta" },
+    { label: "−Constr.",     value: -k.constructionCost, type: "delta" },
+    { label: "−Infra",       value: -(k.landInfraCost || 0), type: "delta" },
+    { label: "−Site",        value: -(k.siteWorkCost - (k.landInfraCost || 0)), type: "delta" },
+    { label: "−Soft",        value: -k.softCosts, type: "delta" },
+    { label: "−Cont.",       value: -k.contingency, type: "delta" },
+    { label: "−OpEx",        value: -opexWholePeriod, type: "delta" },
+    { label: "−Selling",     value: -(k.marketing + k.salesCommission + k.govFees), type: "delta" },
+    { label: "−Interest",    value: -k.totalInterest, type: "delta" },
+    { label: "Profit",       value: k.profit, type: "end" },
+  ].filter(s => s.type !== "delta" || Math.abs(s.value) > 0.5);
+}
+
 function CostPanel({ result, input }) {
   const k = result.kpi;
   const totalDev = k.devCostExFinance;
@@ -544,18 +576,6 @@ function CostPanel({ result, input }) {
 
   const barData = donutData.map(d => ({ label: d.label, value: d.value, color: d.color }));
 
-  const waterfallSteps = [
-    { label: "Revenue", value: k.totalRevenue, type: "start" },
-    { label: "−Land",   value: -(k.landCost + k.landTransferFees),    type: "delta" },
-    { label: "−Constr.", value: -k.constructionCost, type: "delta" },
-    { label: "−Infra",   value: -(k.landInfraCost || 0), type: "delta" },
-    { label: "−Site",    value: -(k.siteWorkCost - (k.landInfraCost || 0)), type: "delta" },
-    { label: "−Soft",    value: -k.softCosts, type: "delta" },
-    { label: "−Cont.",   value: -k.contingency, type: "delta" },
-    { label: "−Selling", value: -(k.marketing + k.salesCommission + k.govFees), type: "delta" },
-    { label: "−Interest", value: -k.totalInterest, type: "delta" },
-    { label: "Profit",   value: k.profit, type: "end" },
-  ].filter(s => s.type !== "delta" || Math.abs(s.value) > 0.5);
 
   return (
     <div style={{ padding: 32 }}>
@@ -2285,18 +2305,7 @@ function ReturnsPanel({ result, input }) {
       {/* Revenue → Profit waterfall (moved from Cost tab) */}
       <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginBottom: 24 }}>
         <Eyebrow>Revenue → Profit waterfall</Eyebrow>
-        <Waterfall steps={[
-          { label: "Revenue",  value: k.totalRevenue, type: "start" },
-          { label: "−Land",    value: -(k.landCost + k.landTransferFees), type: "delta" },
-          { label: "−Constr.", value: -k.constructionCost, type: "delta" },
-          { label: "−Infra",   value: -(k.landInfraCost || 0), type: "delta" },
-          { label: "−Site",    value: -(k.siteWorkCost - (k.landInfraCost || 0)), type: "delta" },
-          { label: "−Soft",    value: -k.softCosts, type: "delta" },
-          { label: "−Cont.",   value: -k.contingency, type: "delta" },
-          { label: "−Selling", value: -(k.marketing + k.salesCommission + k.govFees), type: "delta" },
-          { label: "−Interest",value: -k.totalInterest, type: "delta" },
-          { label: "Profit",   value: k.profit, type: "end" },
-        ].filter(s => s.type !== "delta" || Math.abs(s.value) > 0.5)} height={260} formatY={v => `${(v / 1e6).toFixed(0)}M`} />
+        <Waterfall steps={revenueToProfitSteps(result)} height={260} formatY={v => `${(v / 1e6).toFixed(0)}M`} />
       </div>
     </div>
   );
