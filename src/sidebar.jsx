@@ -159,7 +159,7 @@ function AutoHorizonDisplay({ input }) {
         <span style={{ color: "var(--fg-3)", fontSize: 11 }}>{years.toFixed(1)} yrs</span>
       </div>
       <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>
-        Predesign + construction + hold / sell-down + tail
+        Predesign + construction + hold / sell-down
       </div>
     </div>
   );

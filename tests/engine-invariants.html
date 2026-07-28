@@ -110,6 +110,12 @@
   add("leasehold land",                { landTenure: "lease", landRentPerSqmYr: 300, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [saleComp(), leaseComp()] });
   add("leasehold, no escalation",      { landTenure: "lease", landRentPerSqmYr: 300, landRentEscalationYears: 5, landRentEscalationPct: 0, components: [saleComp(), leaseComp()] });
   add("leasehold, lease-only scheme",  { landTenure: "lease", landRentPerSqmYr: 250, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [leaseComp({ allocationPct: 1.0 })] });
+  /* Leasehold with NO exit. The one case where a month of ground rent past the
+     end of the hold has nothing else in it to hide behind — with an exit, the
+     disposal proceeds land in that same month and it looks populated. This is
+     the configuration that shows a trailing year carrying a single land
+     payment and no income. */
+  add("leasehold, zero exit cap",      { landTenure: "lease", landRentPerSqmYr: 250, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [leaseComp({ allocationPct: 1.0, exitCapRate: 0 })] });
   add("expensive land forces equity",  { landPricePerSqm: 12000, ltc: 0.30, components: [saleComp(), leaseComp()] });
   add("equity funded, fund on",        { ltc: 0.20, components: [saleComp(), leaseComp()], fund: fundOn });
   add("equity funded, lease only",     { ltc: 0.20, components: [leaseComp({ allocationPct: 1.0 })], fund: fundOn });
@@ -152,6 +158,42 @@
   const arrFinite = (a) => !Array.isArray(a) || a.every(Number.isFinite);
 
   const CHECKS = [
+    /* The timeline ends ON the last trading month.
+
+       Ground rent used to run one month past the last month of income, so a
+       24-month build plus a 60-month hold — 84 months, seven years to the
+       month — produced an eighty-fifth month carrying rent and nothing else,
+       and the yearly tables grew a spurious eighth year holding a single land
+       payment. Two rules, because they fail independently: rent must not
+       outlast the income that pays it, and the horizon must not outlast the
+       project. The second is what stops a tail being reintroduced to paper
+       over the first. */
+    ["ground rent never outlasts the income", (r) => {
+      const cf = r.cashflow;
+      const rent = cf.landRent || [];
+      const lastRent = rent.reduce((acc, v, i) => (v < -TOL ? i : acc), -1);
+      if (lastRent < 0) return null;                 // freehold — nothing to check
+      const earns = (i) =>
+        Math.abs((cf.sales || [])[i] || 0) > TOL ||
+        Math.abs((cf.noi || [])[i] || 0) > TOL ||
+        Math.abs((cf.exit || [])[i] || 0) > TOL;
+      const lastEarn = rent.reduce((acc, _, i) => (earns(i) ? i : acc), -1);
+      return lastRent > lastEarn
+        ? `rent charged to month ${lastRent} but income stops at ${lastEarn}`
+        : null;
+    }],
+    ["horizon ends on a month the project trades", (r) => {
+      const cf = r.cashflow;
+      // A pinned horizon deliberately runs past the exit; only the auto one
+      // is required to land on the last active month.
+      if ((r.kpi.horizonMonths || 0) > (r.kpi.autoHorizonMonths || 0)) return null;
+      const last = r.kpi.autoHorizonMonths || 0;
+      const live =
+        Math.abs((cf.sales || [])[last] || 0) > TOL ||
+        Math.abs((cf.noi || [])[last] || 0) > TOL ||
+        Math.abs((cf.exit || [])[last] || 0) > TOL;
+      return live ? null : `final month ${last} carries no sales, NOI or exit`;
+    }],
     ["KPIs are finite", (r) => {
       const bad = Object.keys(r.kpi).filter(k => !finite(r.kpi[k]));
       return bad.length ? `non-finite: ${bad.join(",")}` : null;
@@ -376,6 +418,10 @@
   ];
 
   /* ---------- run ---------- */
+
+  // Exposed so a failing row can be reproduced from the console:
+  //   Feas.runFeasibility(__CONFIGS.find(c => c.name === "sale + lease, fund on").input)
+  window.__CONFIGS = CONFIGS;
 
   const rows = [];
   const snapshot = {};

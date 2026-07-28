@@ -1537,7 +1537,7 @@ function CoverageChart({ cf, k }) {
         <LegendChip color="transparent" dashed label="Uses incurred (cumulative)" value={cumUse[horizon]} />
       </div>
       <div style={{ marginTop: 8, fontSize: 11, color: "var(--fg-3)" }}>
-        Horizon auto-sized to <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{horizon} months</span> ({(horizon / 12).toFixed(1)} yrs) — predesign + construction + sell-down / hold + tail.
+        Horizon auto-sized to <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500 }}>{horizon} months</span> ({(horizon / 12).toFixed(1)} yrs) — predesign + construction + sell-down / hold, ending on the last trading month.
       </div>
     </div>
   );

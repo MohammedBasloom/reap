@@ -178,8 +178,18 @@ function revenueUnits(c) {
 const salePeriodOf  = (u) => Math.max(1, Math.round(numOr(u.salesPeriodMonths, 36)));
 const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonths, 60)));
 
-/* Auto horizon in months: construction, then the longest sell-down or hold of
-   any revenue unit, plus a short tail.
+/* The project's LAST ACTIVE MONTH: construction, then the longest sell-down or
+   hold of any revenue unit.
+
+   The convention is inclusive — the month returned is one the project is still
+   trading in, not the first month after it. A unit that operates for `p` months
+   from `conEnd` occupies months conEnd .. conEnd+p-1, so its last month is
+   conEnd+p-1. The exclusive form used previously named a month in which nothing
+   happens, and every consumer then had to decide for itself whether to include
+   it. They disagreed: the operating loop stopped short of it while ground rent
+   ran through it, so a 24-month build plus a 60-month hold — 84 months, seven
+   years to the month — charged an eighty-fifth month of land rent against no
+   income and produced a spurious eighth year holding nothing else.
 
    Exported and used by BOTH the engine and the sidebar read-out. They were
    previously two separate implementations, and the sidebar's copy branched on
@@ -188,16 +198,16 @@ const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonth
    horizon collapsed to construction plus three while the engine computed the
    real one. One implementation removes the possibility of drift. */
 function projectEndMonth(components, conEnd, preSalesStart) {
-  let endMonth = conEnd;
+  let endMonth = Math.max(0, conEnd - 1);
   (components || []).forEach((c) => {
     if (!c || !c.enabled) return;
     revenueUnits(c).forEach((u) => {
       if (!u || u.enabled === false) return;
       if (u.mode === "sale") {
-        const e = preSalesStart + salePeriodOf(u);
+        const e = preSalesStart + salePeriodOf(u) - 1;
         if (e > endMonth) endMonth = e;
       } else if (u.mode === "lease") {
-        const e = conEnd + leasePeriodOf(u);
+        const e = conEnd + leasePeriodOf(u) - 1;
         if (e > endMonth) endMonth = e;
       }
     });
@@ -212,7 +222,11 @@ function autoHorizonMonths(input) {
     ? Math.max(0, input.preSalesStartMonth | 0)
     : predesign;
   const conEnd = predesign + construction;
-  return Math.max(12, projectEndMonth(input.components, conEnd, preSalesStart) + 3);
+  // No tail. The timeline ends on the month the project stops trading, which is
+  // also the month the exit lands, so the last year on every table is a year the
+  // project is actually in. A three-month tail beyond it only ever produced an
+  // extra, near-empty year.
+  return Math.max(12, projectEndMonth(input.components, conEnd, preSalesStart));
 }
 
 /* Revenue for one unit (a plain component, or one sub of a mixed-use
@@ -532,12 +546,13 @@ function runFeasibility(input) {
     softCosts + contingency;
 
   /* ---------- Auto horizon (derived from project assumptions) ----------
-     Horizon = predesign + construction + max(sell-down, operating) + small tail.
-     A user-supplied `horizonMonths` acts as a floor / upper-cap override.    */
+     Horizon = predesign + construction + max(sell-down, operating), ending ON
+     the last trading month. A user-supplied `horizonMonths` acts as a floor.  */
   // Shared with the sidebar's horizon read-out via autoHorizonMonths(), so the
-  // two can never disagree about how long the project runs.
+  // two can never disagree about how long the project runs. Keep this line and
+  // that function identical.
   const endMonth = projectEndMonth(components, conEnd, preSalesStartMonth);
-  const autoHorizon = Math.max(12, endMonth + 3);
+  const autoHorizon = Math.max(12, endMonth);
   const userHorizon = Math.max(0, a.horizonMonths | 0);
   // If the user pinned a horizon, honour it as a minimum (never shorter than auto).
   const horizon = userHorizon > autoHorizon ? userHorizon : autoHorizon;
@@ -572,6 +587,8 @@ function runFeasibility(input) {
   const landRentEscalationPct = numOr(a.landRentEscalationPct, 0);
   let totalLandRent = 0;
   if (landRentPerSqmYr > 0) {
+    // Inclusive of endMonth, which is the last month the project trades — the
+    // same month the exit lands. Rent stops with the income, not after it.
     const rentLastMonth = Math.min(horizon, Math.max(0, endMonth));
     for (let m = 0; m <= rentLastMonth; m++) {
       const steps = Math.floor(Math.floor(m / 12) / landRentEscalationYears);
@@ -651,7 +668,11 @@ function runFeasibility(input) {
       if (u.mode !== "lease") return;
       const opStart = conEnd;
       const opPeriod = leasePeriodOf(u);
-      const opEnd = Math.min(horizon, opStart + opPeriod);
+      // `horizon` is the last valid month INDEX, so the exclusive end that may
+      // still be reached is horizon + 1. Clamping to `horizon` itself would
+      // drop the final month of income — invisible while the horizon ran past
+      // the hold, fatal once it ends exactly on it.
+      const opEnd = Math.min(horizon + 1, opStart + opPeriod);
 
       const stabOcc = numOr(u.occupancy, 0.85);
       const initOcc = Math.max(0, Math.min(stabOcc, numOr(u.initialOccupancy, 0.30)));
@@ -669,13 +690,11 @@ function runFeasibility(input) {
         opexFlow[m] -= monthOpex;
         noiFlow[m]  += monthGross - monthOpex;
       }
-      // Exit at end of operating period
-      if (opEnd <= horizon) {
-        exitFlow[opEnd] += u.exitValue || 0;
-      } else {
-        // If operating period exceeds horizon, exit at horizon
-        exitFlow[horizon] += u.exitValue || 0;
-      }
+      // Exit ON the last operating month, not the month after it. The asset is
+      // sold out of the final month of income, so the disposal and the last
+      // rent cheque land together and the timeline ends there.
+      const exitMonth = Math.max(0, Math.min(horizon, opEnd - 1));
+      exitFlow[exitMonth] += u.exitValue || 0;
     });
   });
 
@@ -1189,13 +1208,26 @@ function runWaterfall(input, result) {
 
   const equityCF = result.cashflow.net;
 
-  /* The fund LIFE ends when the project naturally exits (last sale / lease exit
-     + tail). Iterating past that point keeps charging asset-mgmt fees on any
+  /* The fund LIFE ends when the project naturally exits — the last sale or
+     lease-exit month. Iterating past that point keeps charging asset-mgmt fees on any
      residual unreturned equity (loss-makers) and produces phantom GP income +
      negative LP IRR — a modelling artefact. So we cap the waterfall at the
-     project's auto-horizon, not the user-pinned horizon. */
-  const fundLife = Math.min(equityCF.length, result.kpi.autoHorizonMonths || equityCF.length);
-  const horizon = fundLife;
+     project's auto-horizon, not the user-pinned horizon.
+
+     `horizon` here is a COUNT of months, not a last index — everything below
+     depends on that reading (`new Array(horizon)`, `.slice(0, horizon)`,
+     `horizon - 1`, and a `m < horizon` sweep). autoHorizonMonths is a last
+     index, so the count is one more. Conflating the two silently zeroes the
+     final month: `new Array(n)[n] += v` yields NaN, so the buckets and the
+     per-month party flows disagree with each other rather than throwing.
+     It matters now in a way it did not before — the exit lands ON the last
+     month of fund life, so that month carries the largest distribution of the
+     whole fund. While the horizon ran three months past the exit, an
+     off-by-one here fell in empty months and cost nothing. */
+  const lastMonth = Math.min(
+    Math.max(0, equityCF.length - 1),
+    numOr(result.kpi.autoHorizonMonths, equityCF.length - 1));
+  const horizon = lastMonth + 1;
 
   // Normalise equity splits to sum to 1
   const lpIn = +f.lpEquityPct || 0;
@@ -1441,7 +1473,7 @@ function runWaterfall(input, result) {
     party,
     totals: { lp: lpT, dev: devT, gp: gpT },
     horizon,
-    fundLifeMonths: fundLife,
+    fundLifeMonths: horizon,
     config: {
       preferredReturnPct: prefAnnual,
       promoteSplit: promote,

@@ -410,7 +410,7 @@
     /* Sidebar — timing / costs / financing */
     "Project Timing": "الجدول الزمني", "Pre-design": "ما قبل التصميم", "Construction": "الإنشاء",
     "Pre-sales start": "بدء البيع على الخارطة", "Horizon": "الأفق الزمني", "Auto": "تلقائي",
-    "Predesign + construction + hold / sell-down + tail": "التصميم + الإنشاء + التشغيل / البيع + هامش",
+    "Predesign + construction + hold / sell-down": "التصميم + الإنشاء + التشغيل / البيع",
     "General Costs": "التكاليف العامة", "Soft costs": "التكاليف غير المباشرة", "Contingency": "الاحتياطي",
     "Marketing": "التسويق", "Sales commission": "عمولة البيع", "Gov / sales fees": "رسوم حكومية / بيع",
     "Financing": "التمويل", "LTC": "نسبة التمويل LTC", "Interest": "الفائدة",
@@ -606,7 +606,7 @@
     "Outstanding balance (top) · monthly draws and repayments (bottom)": "الرصيد القائم (أعلى) · السحوبات والسداد الشهري (أسفل)",
     "Outstanding balance": "الرصيد القائم", "Monthly flows": "التدفقات الشهرية",
     "Horizon auto-sized to": "الأفق محسوب تلقائيًا:", "months": "شهرًا",
-    "yrs) — predesign + construction + sell-down / hold + tail.": "سنة) — التصميم + الإنشاء + البيع/التشغيل + هامش.",
+    "yrs) — predesign + construction + sell-down / hold, ending on the last trading month.": "سنة) — التصميم + الإنشاء + البيع/التشغيل، وينتهي في آخر شهر تشغيلي.",
     /* Scenarios paragraph (split around <strong>) */
     "Scenario assumptions:": "فرضيات السيناريوهات:",
     "Downside shifts pricing −10%, construction +10%, and adds 3-month delay. Upside shifts pricing +10%, construction −5%, removes 2 months. Base = your inputs.": "المتحفّظ: أسعار −10%، إنشاء +10%، وتأخير 3 أشهر. المتفائل: أسعار +10%، إنشاء −5%، واختصار شهرين. الأساسي = مدخلاتك.",
@@ -944,7 +944,7 @@
     [/^(SAR .+)\/yr$/, "$1/سنة"],
     [/^Facility (.+) \((.+) LTC\) · peak balance (.+) of cap$/, "تسهيلات $1 (‏LTC ‏$2) · ذروة الرصيد $3 من السقف"],
     [/^Total capital called · peak (.+)$/, "إجمالي المستدعى · الذروة $1"],
-    [/^Horizon auto-sized to (\d+) months \((.+) yrs\) — predesign \+ construction \+ sell-down \/ hold \+ tail\.$/, "الأفق محسوب تلقائيًا: $1 شهرًا ($2 سنة) — التصميم + الإنشاء + البيع/التشغيل + هامش."],
+    [/^Horizon auto-sized to (\d+) months \((.+) yrs\) — predesign \+ construction \+ sell-down \/ hold, ending on the last trading month\.$/, "الأفق محسوب تلقائيًا: $1 شهرًا ($2 سنة) — التصميم + الإنشاء + البيع/التشغيل، وينتهي في آخر شهر تشغيلي."],
     [/^Base IRR (.+)$/, "‏IRR الأساس $1"],
     [/^(.+) build cost$/, "تكلفة بناء $1"],
     [/^(.+) price\/unit$/, "سعر وحدة $1"],
