@@ -460,14 +460,23 @@ function runFeasibility(input) {
   const landFlow = arr();
   landFlow[0] = -(landCost + landTransferFees);
 
-  /* Ground rent (leasehold only) — paid annually IN ADVANCE, escalating by a
-     fixed percentage every N years (5 by default), and running until the
-     project exits rather than to the end of the horizon.
+  /* Ground rent (leasehold only) — an OPERATING cost of holding the site,
+     accrued MONTHLY exactly as OpEx is, escalating by a fixed percentage every
+     N years (5 by default) and running until the project exits rather than to
+     the end of the horizon.
 
-     The final year is pro-rated to the exit month so the model never charges
-     rent for time the project no longer holds the land. Escalation steps on
-     completed multiples of the review period, so with a 5-year review the
-     first four years sit at the base rate and year 5 is the first uplift. */
+     Monthly, not annually in advance, and this matters well beyond
+     presentation. A once-a-year lump makes needFlow spike far above that
+     month's operating income, which both forces an equity call and drags
+     `lastCall` later; distributions are locked before the last equity call, so
+     one rent lump late in the hold froze every distribution before it and the
+     equity curve sat flat until exit. Rent is not development capex that
+     equity must pre-fund — it is paid out of the income the asset produces, so
+     it belongs on the operating side and spread like any other running cost.
+
+     Escalation steps on completed multiples of the review period: with a
+     5-year review the first five years sit at the opening rate and the first
+     uplift lands in year six. */
   const landRentFlow = arr();
   const landRentPerSqmYr = isLeasehold ? Math.max(0, numOr(a.landRentPerSqmYr, 0)) : 0;
   const landRentEscalationYears = Math.max(1, Math.round(numOr(a.landRentEscalationYears, 5)));
@@ -475,12 +484,10 @@ function runFeasibility(input) {
   let totalLandRent = 0;
   if (landRentPerSqmYr > 0) {
     const rentLastMonth = Math.min(horizon, Math.max(0, endMonth));
-    for (let m = 0; m <= rentLastMonth; m += 12) {
-      const yearIndex = Math.floor(m / 12);
-      const steps = Math.floor(yearIndex / landRentEscalationYears);
+    for (let m = 0; m <= rentLastMonth; m++) {
+      const steps = Math.floor(Math.floor(m / 12) / landRentEscalationYears);
       const annual = landArea * landRentPerSqmYr * Math.pow(1 + landRentEscalationPct, steps);
-      const monthsHeld = Math.min(12, rentLastMonth - m + 1);
-      const due = annual * (monthsHeld / 12);
+      const due = annual / 12;
       landRentFlow[m] -= due;
       totalLandRent += due;
     }
@@ -613,8 +620,12 @@ function runFeasibility(input) {
   const incomeNetFlow = arr();
   const needFlow = arr();
   for (let m = 0; m <= horizon; m++) {
-    outlayFlow[m] = -(landFlow[m] + landRentFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] + contingencyFlow[m]);
-    incomeNetFlow[m] = salesFlow[m] + noiFlow[m] + exitFlow[m] + sellingFlow[m];
+    // Ground rent sits on the INCOME side, not in outlay: it is an operating
+    // cost met from the project's own receipts, not development capex that
+    // equity has to pre-fund. Keeping it out of outlay is what stops it
+    // inflating futureNeed and locking distributions.
+    outlayFlow[m] = -(landFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] + contingencyFlow[m]);
+    incomeNetFlow[m] = salesFlow[m] + noiFlow[m] + exitFlow[m] + sellingFlow[m] + landRentFlow[m];
     needFlow[m] = outlayFlow[m] - incomeNetFlow[m];
   }
   // Backward pass: futureNeed[m] = the peak cumulative funding shortfall in

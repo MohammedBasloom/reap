@@ -1,7 +1,7 @@
 {
   "_comment": "Baseline of tests/engine-invariants.html. Each value hashes that configuration's rounded KPI set; open the harness and treat any changed fingerprint on an unchanged configuration as a regression. __all hashes the whole set.",
   "_caveat": "The hash covers the WHOLE KPI object, so ADDING an output key changes every fingerprint even though no number moved. A wholesale change across unrelated configurations usually means new KPI keys, not a regression. Confirm by extracting the previous engine (git show <prev>:src/calc.js), running both against the same inputs, and comparing only the keys that existed before. Re-baseline once that shows no drift.",
-  "_history": "860fe56 pre mixed-use. Mixed-use left all 34 fingerprints byte-identical. The debt-facility fix deliberately moved 29. Leasehold land added 5 KPI keys (landTenure, totalLandRent, landRentPerSqmYr, landRentEscalationYears, landRentEscalationPct), which re-hashed everything; a value-level diff over 270 numbers across 6 freehold configurations confirmed zero drift.",
+  "_history": "860fe56 pre mixed-use. Mixed-use left all 34 fingerprints byte-identical. The debt-facility fix deliberately moved 29. Leasehold land added 5 KPI keys (landTenure, totalLandRent, landRentPerSqmYr, landRentEscalationYears, landRentEscalationPct), which re-hashed everything; a value-level diff over 270 numbers across 6 freehold configurations confirmed zero drift. Ground rent then moved from an annual lump to a monthly accrual (treated as OpEx), which moved only the four leasehold fingerprints.",
   "coverage massing": "ef9946fa",
   "disabled component": "a8a77e61",
   "equity funded, fund on": "102abc79",
@@ -23,9 +23,9 @@
   "late presales": "2921d287",
   "lease by unit": "35288e98",
   "lease only": "f1cced84",
-  "leasehold land": "1bff5c3e",
-  "leasehold, lease-only scheme": "a68a531e",
-  "leasehold, no escalation": "4b39b684",
+  "leasehold land": "177d8a66",
+  "leasehold, lease-only scheme": "4486ea12",
+  "leasehold, no escalation": "fe0a78c4",
   "long predesign": "a7927eb8",
   "loss making": "85e93765",
   "low ltc (0.20) forces equity": "102abc79",
@@ -35,7 +35,7 @@
   "mixed: disabled sub": "7d2c0fb0",
   "mixed: fund on": "ef957251",
   "mixed: fund on ::waterfall": "3911ada4",
-  "mixed: on leased land": "586dfb63",
+  "mixed: on leased land": "9fba98b3",
   "mixed: sale + lease": "0ea26078",
   "mixed: three uses": "ddeb82c1",
   "mixed: under-allocated GFA": "323f5b5a",
@@ -57,5 +57,5 @@
   "with basement": "c0eb855e",
   "zero debt (ltc 0)": "7c2d482b",
   "zero soft/contingency": "bb8cb790",
-  "__all": "fc240a3e"
+  "__all": "7661bc78"
 }

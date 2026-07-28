@@ -357,15 +357,24 @@
       const lastPaid = rf.reduce((last, v, i) => (v !== 0 ? i : last), -1);
       if (lastPaid > (L.kpi.autoHorizonMonths || 0)) fails.push(`rent charged at month ${lastPaid}, past the project exit`);
 
-      // Paid annually in advance: payments land on month multiples of 12 only.
-      const offSchedule = rf.map((v, i) => (v !== 0 && i % 12 !== 0 ? i : -1)).filter(i => i >= 0);
-      if (offSchedule.length) fails.push(`rent paid off the annual schedule at month(s) ${offSchedule.slice(0, 3).join(",")}`);
+      /* Accrued monthly, like OpEx — NOT as an annual lump. A once-a-year
+         payment spikes the funding need far above that month's operating
+         income, which forces an equity call and drags the distribution lock
+         later. Every month up to exit must therefore carry a charge, and no
+         month may carry a year's worth. */
+      const charged = rf.filter(v => v !== 0).length;
+      const lastPaidIdx = rf.reduce((last, v, i) => (v !== 0 ? i : last), -1);
+      if (charged < lastPaidIdx) fails.push(`rent charged in only ${charged} of ${lastPaidIdx + 1} months — not accruing monthly`);
+      const biggest = Math.max.apply(null, rf.map(v => Math.abs(v)));
+      const smallest = Math.min.apply(null, rf.filter(v => v !== 0).map(v => Math.abs(v)));
+      if (biggest > smallest * 2) fails.push(`rent is lumpy: largest month ${Math.round(biggest)} vs smallest ${Math.round(smallest)}`);
 
-      // Escalation: with a 5-year review at 10%, year 5's payment is 1.1x year 0's.
-      const y0 = Math.abs(rf[0] || 0), y4 = Math.abs(rf[48] || 0), y5 = Math.abs(rf[60] || 0);
-      if (y4 && Math.abs(y4 - y0) > 1) fails.push("rent escalated before the review period elapsed");
-      if (y5 && Math.abs(y5 - y0 * 1.10) > Math.max(1, y0 * 1e-6)) {
-        fails.push(`year 5 rent ${Math.round(y5)} is not 1.10x year 0 rent ${Math.round(y0)}`);
+      // Escalation: with a 5-year review at 10%, the year-5 monthly charge is
+      // 1.1x the opening one, and nothing steps before the review elapses.
+      const m0 = Math.abs(rf[0] || 0), m48 = Math.abs(rf[48] || 0), m60 = Math.abs(rf[60] || 0);
+      if (m48 && Math.abs(m48 - m0) > 1) fails.push("rent escalated before the review period elapsed");
+      if (m60 && Math.abs(m60 - m0 * 1.10) > Math.max(1, m0 * 1e-6)) {
+        fails.push(`month 60 rent ${Math.round(m60)} is not 1.10x month 0 rent ${Math.round(m0)}`);
       }
 
       // A zero rent must cost nothing at all.
