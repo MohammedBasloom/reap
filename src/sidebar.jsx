@@ -950,10 +950,11 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
 function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
   const entries = Object.entries(COMPONENT_PRESETS);
-  // Nothing can be sold on leased land — the project holds no title to pass on
-  // — so every sale-only component is unavailable while the tenure is a lease.
-  // A Mixed-Use Building stays available: it can still hold leased spaces.
-  const blocked = (p) => isLeasehold && p.mode === "sale";
+  /* Every component type stays available on leased land — a villa or an
+     apartment block can perfectly well be BUILT and LET on a ground lease.
+     What is unavailable is SELLING it, which is enforced on each component's
+     purpose toggle rather than by withholding the building type. A sale-preset
+     component added here simply arrives set to lease. */
   return (
     <div style={{ marginBottom: hasComponents ? 4 : 0 }}>
       <div style={{
@@ -976,20 +977,17 @@ function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
           <button
             key={k}
             type="button"
-            disabled={blocked(p)}
-            onClick={() => { if (!blocked(p)) onPick(k); }}
-            title={blocked(p) ? "Units cannot be sold on leased land" : p.blurb}
+            onClick={() => onPick(k)}
+            title={p.blurb}
             style={{
               display: "flex", flexDirection: "column", alignItems: "flex-start",
               gap: 4, padding: "10px 10px 9px",
-              border: "1px solid var(--border-1)",
-              background: blocked(p) ? "var(--bg-2)" : "var(--bg-1)",
-              cursor: blocked(p) ? "not-allowed" : "pointer", textAlign: "left",
-              opacity: blocked(p) ? 0.4 : 1,
+              border: "1px solid var(--border-1)", background: "var(--bg-1)",
+              cursor: "pointer", textAlign: "left",
               transition: "background 120ms var(--ease-out), border-color 120ms var(--ease-out)",
             }}
-            onMouseEnter={e => { if (blocked(p)) return; e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
-            onMouseLeave={e => { if (blocked(p)) return; e.currentTarget.style.background = "var(--bg-1)"; e.currentTarget.style.borderColor = "var(--border-1)"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-1)"; e.currentTarget.style.borderColor = "var(--border-1)"; }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: 18, color: "var(--ad-navy-700)", lineHeight: 1 }}>{p.icon}</span>
@@ -1282,6 +1280,9 @@ function EquitySplitBar({ lp, dev, gp }) {
 /* ---------- Sidebar ---------- */
 
 function Sidebar({ input, setInput }) {
+  // Declared first: addComp below closes over it, and several land figures
+  // depend on it.
+  const isLeasehold = (input.landTenure || "own") === "lease";
   const upd = (k, v) => setInput({ ...input, [k]: v });
   const updComp = (idx, c) => {
     const arr = input.components.slice();
@@ -1340,6 +1341,20 @@ function Sidebar({ input, setInput }) {
       salesPeriodMonths: preset.salesPeriodMonths,
       operatingPeriodMonths: preset.operatingPeriodMonths,
     };
+    /* On leased land a sale preset cannot arrive set to sell — the project has
+       no title to pass on. It comes in leasable instead, with the fields
+       leasing needs, so the building type stays available and only the purpose
+       is constrained. */
+    if (isLeasehold && newComp.mode === "sale") {
+      newComp.mode = "lease";
+      if (newComp.rentPerSqmYr == null) newComp.rentPerSqmYr = 1200;
+      if (newComp.rentPerUnitYr == null) newComp.rentPerUnitYr = 85000;
+      if (newComp.occupancy == null) newComp.occupancy = 0.85;
+      if (newComp.opexPct == null) newComp.opexPct = 0.30;
+      if (newComp.exitCapRate == null) newComp.exitCapRate = 0.075;
+      if (newComp.operatingPeriodMonths == null) newComp.operatingPeriodMonths = 60;
+    }
+
     // Mixed use: deep-copy the preset's sub-components and give each a fresh
     // id. Sharing the preset array by reference would make every mixed-use
     // building on the project edit the same subs.
@@ -1355,8 +1370,8 @@ function Sidebar({ input, setInput }) {
 
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const hasComponents = input.components.filter(c => c.enabled).length > 0;
-  // Tenure: bought outright, or held on a ground lease with no title and no RETT.
-  const isLeasehold = (input.landTenure || "own") === "lease";
+  // Tenure (isLeasehold declared at the top of Sidebar): bought outright, or
+  // held on a ground lease with no title and no RETT.
   const totalLandCost = isLeasehold ? 0 : (input.landArea || 0) * (input.landPricePerSqm || 0);
   const landTransferFees = totalLandCost * (isLeasehold ? 0 : (input.landTransferFeesPct || 0));
   const annualGroundRent = isLeasehold
