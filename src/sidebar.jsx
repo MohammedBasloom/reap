@@ -425,6 +425,26 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   };
   const removeSub = (i) => update("subs", subs.filter((_, j) => j !== i));
 
+  /* Switching a space between sale and lease must also give it the fields its
+     new purpose needs. A space added as leasable carries no sales period, so
+     flipping it to saleable left the sell-down undefined — which used to
+     collapse the project's auto horizon to construction plus three months. */
+  const switchSubMode = (i, mode) => {
+    const s = subs[i] || {};
+    const patch = { mode };
+    if (mode === "sale") {
+      if (s.salesPeriodMonths == null) patch.salesPeriodMonths = 36;
+    } else {
+      if (s.operatingPeriodMonths == null) patch.operatingPeriodMonths = 60;
+      if (s.occupancy == null) patch.occupancy = 0.85;
+      if (s.opexPct == null) patch.opexPct = 0.30;
+      if (s.exitCapRate == null) patch.exitCapRate = 0.075;
+      if (s.initialOccupancy == null) patch.initialOccupancy = 0.30;
+      if (s.yearsToStabilization == null) patch.yearsToStabilization = 1;
+    }
+    update("subs", subs.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)));
+  };
+
   // Units / keys derived
   const basis = comp.revenueBasis || "sqm";
   let units = 0;
@@ -496,7 +516,22 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
         ) : (
           <Segmented
             value={comp.mode}
-            onChange={v => update("mode", v)}
+            onChange={v => {
+              /* Presets carry only the period their own purpose needs, so
+                 flipping a leasable component to saleable (or back) would
+                 otherwise leave the new period undefined and collapse the
+                 auto horizon. */
+              const patch = { mode: v };
+              if (v === "sale") {
+                if (comp.salesPeriodMonths == null) patch.salesPeriodMonths = 36;
+              } else {
+                if (comp.operatingPeriodMonths == null) patch.operatingPeriodMonths = 60;
+                if (comp.occupancy == null) patch.occupancy = 0.85;
+                if (comp.opexPct == null) patch.opexPct = 0.30;
+                if (comp.exitCapRate == null) patch.exitCapRate = 0.075;
+              }
+              onChange(Object.assign({}, comp, patch));
+            }}
             options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
           />
         )}
@@ -692,7 +727,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                 <div style={{ marginBottom: 8 }}>
                   <Segmented
                     value={s.mode || "lease"}
-                    onChange={v => updateSub(i, "mode", v)}
+                    onChange={v => switchSubMode(i, v)}
                     options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
                   />
                 </div>

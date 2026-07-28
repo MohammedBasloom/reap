@@ -168,6 +168,16 @@ function revenueUnits(c) {
   return Array.isArray(c.subs) ? c.subs : [c];
 }
 
+/* How long a unit sells down / is held.
+
+   `+v | 0` on a missing period yields 0, and Math.max(1, 0) then crams the
+   whole sell-down or hold into a SINGLE month — which silently collapses the
+   auto horizon to construction + 3. That happens whenever a unit carries the
+   timing for one purpose and is switched to the other, so fall back to the
+   preset period rather than to one month. An explicit 0 still floors at 1. */
+const salePeriodOf  = (u) => Math.max(1, Math.round(numOr(u.salesPeriodMonths, 36)));
+const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonths, 60)));
+
 /* Revenue for one unit (a plain component, or one sub of a mixed-use
    building) given its already-derived net saleable/leasable area. */
 function computeUnitRevenue(u, nsa) {
@@ -439,10 +449,10 @@ function runFeasibility(input) {
     if (!c.enabled) return;
     revenueUnits(c).forEach((u) => {
       if (u.mode === "sale") {
-        const e = preSalesStartMonth + Math.max(1, u.salesPeriodMonths | 0);
+        const e = preSalesStartMonth + salePeriodOf(u);
         if (e > endMonth) endMonth = e;
       } else if (u.mode === "lease") {
-        const e = conEnd + Math.max(1, u.operatingPeriodMonths | 0);
+        const e = conEnd + leasePeriodOf(u);
         if (e > endMonth) endMonth = e;
       }
     });
@@ -526,7 +536,7 @@ function runFeasibility(input) {
     revenueUnits(c).forEach(u => {
       if (u.mode !== "sale") return;
       const salesStart = preSalesStartMonth;
-      const salesPeriod = Math.max(1, u.salesPeriodMonths | 0);
+      const salesPeriod = salePeriodOf(u);
       const dist = sCurveMonthly(salesPeriod);
       for (let i = 0; i < dist.length; i++) {
         const m = salesStart + i;
@@ -561,7 +571,7 @@ function runFeasibility(input) {
     revenueUnits(c).forEach(u => {
       if (u.mode !== "lease") return;
       const opStart = conEnd;
-      const opPeriod = Math.max(1, u.operatingPeriodMonths | 0);
+      const opPeriod = leasePeriodOf(u);
       const opEnd = Math.min(horizon, opStart + opPeriod);
 
       const stabOcc = numOr(u.occupancy, 0.85);

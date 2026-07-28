@@ -340,6 +340,45 @@
   document.getElementById("out").innerHTML = html + "</table>";
   document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
 
+  /* ---------- A missing period must not collapse the auto horizon ----------
+     Presets and newly added spaces carry only the period their own purpose
+     needs. Flipping a unit between sale and lease therefore used to leave the
+     new period undefined, and `+undefined | 0` crammed the whole sell-down or
+     hold into one month — silently shrinking the project to construction plus
+     three. A mixed-use building must also extend the horizon exactly as the
+     equivalent plain component does. */
+  (function horizonSurvivesMissingTiming() {
+    const fails = [];
+    try {
+      const P = Object.assign({}, baseProject, { horizonMonths: 0, predesignMonths: 12, constructionMonths: 12, preSalesStartMonth: 6 });
+      const run = (comps) => F.runFeasibility(Object.assign({}, P, { components: comps })).kpi.autoHorizonMonths;
+      const conEndPlusTail = 12 + 12 + 3;
+
+      const leaseNoTiming = { id: "x", name: "X", enabled: true, gfaSharePct: 1.0, costPerSqmGFA: 3000,
+        efficiency: 0.78, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1200, occupancy: 0.85,
+        opexPct: 0.30, exitCapRate: 0.075 };
+      const saleNoTiming = Object.assign({}, leaseNoTiming, { mode: "sale", revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000 });
+      const mixed = (subs) => ({ id: "m", kind: "mixed", name: "M", mode: "mixed", enabled: true,
+        allocationPct: 1.0, massingMode: "far", far: 3.0, siteWorkPct: 0.07, subs });
+
+      if (run([mixed([leaseNoTiming])]) <= conEndPlusTail + 1) fails.push("a leased space with no operating period collapsed the horizon");
+      if (run([mixed([saleNoTiming])])  <= conEndPlusTail + 1) fails.push("a sale space with no sales period collapsed the horizon");
+      if (run([Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined })]) <= conEndPlusTail + 1) {
+        fails.push("a plain leased component with no operating period collapsed the horizon");
+      }
+
+      // A mixed building must reach exactly as far as the plain equivalent.
+      const plain = Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined, operatingPeriodMonths: 60 });
+      const asMixed = mixed([Object.assign({}, leaseNoTiming, { operatingPeriodMonths: 60 })]);
+      if (run([plain]) !== run([asMixed])) {
+        fails.push(`mixed horizon ${run([asMixed])} differs from the equivalent plain component ${run([plain])}`);
+      }
+    } catch (e) { fails.push("threw: " + (e && e.message)); }
+
+    if (fails.length) failures++;
+    rows.push({ name: "HORIZON: a missing period does not shrink the project", fails });
+  })();
+
   /* ---------- Leasehold land ----------
      Leasing pays no purchase price and no RETT, pays ground rent annually in
      advance until exit, escalating every N years, and must NOT let that rent
