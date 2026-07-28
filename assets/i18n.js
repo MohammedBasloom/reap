@@ -111,7 +111,11 @@
     "Add another component": "أضف مكوّنًا آخر",
     "No components yet": "لا توجد مكوّنات بعد",
     "Pick from the tiles above to build your program.": "اختر من البطاقات أعلاه لبناء برنامجك.",
+    /* "Apartment" stays «شقة» — the valuation page uses it for a single unit
+       being valued. The feasibility component is a whole building sold as
+       units, so it carries its own key. */
     "Villa": "فيلا", "Townhouse": "تاون هاوس", "Apartment": "شقة", "Build-to-Rent": "سكني للتأجير",
+    "Residential Building": "عمارة سكنية - بيع وحدات",
     "Retail": "تجزئة", "Office": "مكاتب", "Hotel": "فندق", "Serviced Apartment": "شقق فندقية",
     "Custom": "مخصص",
     "Detached homes for sale": "مساكن مستقلة للبيع", "Attached homes for sale": "مساكن متلاصقة للبيع",
