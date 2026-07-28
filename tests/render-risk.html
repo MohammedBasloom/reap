@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — risk tab diagnostics</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/results.jsx"></script>
+<script type="text/babel">
+  /* Renders the Risk tab's quick diagnostics without the auth gate on
+     model.html, so the cost-structure shares can be seen to add to 100% and
+     the interest cover can be read on a leasehold scheme.
+
+     Leasehold on purpose: it is the case that exposed both faults. The land
+     share was computed from the purchase price alone, so a leased site
+     reported 0% — no cost at all for securing the land — and the ground rent
+     that replaced the purchase went uncounted. And the old "Min DSCR" divided
+     income by whatever the cash sweep repaid, which on this scheme was a
+     construction month with no income at all, giving 0.00x in red. */
+  const INPUT = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: "lease", landRentPerSqmYr: 300,
+    landRentEscalationYears: 5, landRentEscalationPct: 0.05,
+    predesignMonths: 6, constructionMonths: 18, preSalesStartMonth: 6,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10, fund: { enabled: false },
+    components: [{
+      id: "m1", kind: "mixed", name: "Mixed-Use Building", enabled: true, mode: "mixed",
+      allocationPct: 1.0, massingMode: "far", far: 3.0, siteWorkPct: 0.07,
+      subs: [
+        { id: "r", name: "Retail", enabled: true, mode: "lease", gfaSharePct: 0.4,
+          costPerSqmGFA: 3600, efficiency: 0.75, revenueBasis: "sqm", rentPerSqmYr: 1450,
+          occupancy: 0.88, opexPct: 0.28, initialOccupancy: 0.30, yearsToStabilization: 1,
+          operatingPeriodMonths: 60, exitCapRate: 0.075 },
+        { id: "o", name: "Offices", enabled: true, mode: "lease", gfaSharePct: 0.6,
+          costPerSqmGFA: 3200, efficiency: 0.80, revenueBasis: "sqm", rentPerSqmYr: 1150,
+          occupancy: 0.85, opexPct: 0.32, initialOccupancy: 0.30, yearsToStabilization: 2,
+          operatingPeriodMonths: 60, exitCapRate: 0.08 },
+      ],
+    }],
+  };
+  window.__result = Feas.runFeasibility(INPUT);
+  window.__input = INPUT;
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <RiskPanel result={window.__result} input={INPUT} />
+  );
+  window.__READY = true;
+</script>
+</body>
+</html>

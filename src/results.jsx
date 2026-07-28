@@ -81,7 +81,15 @@ function SummaryPanel({ result, input, scenarios }) {
         <KPI eyebrow="Annual rent (stab.)" value={fc(k.totalGrossIncome)} sub="Gross, at stabilization" />
         <KPI eyebrow="Annual NOI (stab.)" value={fc(k.totalNOI)} sub={`OpEx ${fc(k.totalOpex)}`} />
         <KPI eyebrow="Peak debt" value={fc(k.peakDebt)} sub={`${fp(input.ltc)} LTC`} />
-        <KPI eyebrow="Min DSCR" value={k.minDSCR ? `${k.minDSCR.toFixed(2)}×` : "—"} tone={(k.minDSCR ?? 0) < 1.2 ? "warning" : "default"} />
+        {/* null means the question does not apply — a sale scheme repays from
+            proceeds, an ungeared one has no interest — so it must NOT be
+            treated as a failing 0.00×. */}
+        <KPI
+          eyebrow="Interest cover"
+          value={k.interestCover != null ? `${k.interestCover.toFixed(2)}×` : "—"}
+          sub={k.interestCover != null ? "NOI ÷ interest, stabilised" : "No debt in operations"}
+          tone={k.interestCover != null && k.interestCover < 1.2 ? "warning" : "default"}
+        />
       </div>
 
       {/* Project facts */}
@@ -2117,24 +2125,36 @@ function RiskPanel({ result, input }) {
       </div>
 
       {(() => {
-        const dev = Math.max(1, k.devCostExFinance);
         const allInCost = k.totalCost + k.totalInterest;
+        /* Cost structure base. site + build + soft is EXACTLY
+           devCostExFinance + ground rent — the engine builds
+           devCostExFinance from those same six lines — so the three shares
+           below add to 100% by construction, not by rounding. */
+        const siteCost  = (k.landCost || 0) + (k.landTransferFees || 0) + (k.totalLandRent || 0);
+        const buildCost = (k.constructionCost || 0) + (k.siteWorkCost || 0);
+        const softCost  = (k.softCosts || 0) + (k.contingency || 0);
+        const costBase  = Math.max(1, siteCost + buildCost + softCost);
         const facility = k.devCostExFinance * (input.ltc || 0);
         const cov = (result.cashflow && result.cashflow.coverageTotals) || { equity: 0, debt: 0, revenue: 0 };
         const funded = Math.max(1, cov.equity + cov.debt + cov.revenue);
         const groups = [
           {
             name: "Cost structure",
-            note: "\"Development cost\" here = land + transfer fees + construction + site work and infrastructure + soft costs + contingency. It EXCLUDES financing interest and selling costs (marketing, sales commission, government fees). It is also the base for the debt facility (LTC × development cost).",
+            note: "Three shares of one base, and they add to exactly 100%. The base is land + transfer fees + ground rent + construction + site works + soft costs + contingency. It excludes financing interest and selling costs, which are shown under Financing below. Previously these shares were taken over a base that omitted site works and transfer fees, so they summed to about 95% and never quite accounted for the project.",
             rows: [
-              { label: "Land as % of dev cost", value: fp(k.landCost / dev), ok: (k.landCost / dev) < 0.30,
-                note: "Land's share of development cost. Much above 30% and the deal is land-heavy, which squeezes the margin." },
-              { label: "Construction as % of dev cost", value: fp(k.constructionCost / dev), ok: true,
-                note: "Hard construction as a share of development cost — normally the largest single line." },
-              { label: "Soft costs & contingency", value: fp((k.softCosts + k.contingency) / dev), ok: ((k.softCosts + k.contingency) / dev) < 0.25,
-                note: "Design, permits, management and the risk buffer, as a share of development cost." },
-              { label: "Build cost per m² GFA", value: k.gfa > 0 ? `${fn((k.constructionCost + k.siteWorkCost) / k.gfa)} SAR/m²` : "—", ok: true,
-                note: "All-in construction and site work per m² of built area — compare it against local benchmarks." },
+              /* Ground rent belongs in the land share. On a leasehold scheme
+                 there is no purchase price, so a land share built from
+                 landCost alone reported 0% — the cost of securing the site
+                 read as nothing at all, and was flagged OK for being low.
+                 This matches how the Capital tab already groups it. */
+              { label: "Land & ground rent", value: fp(siteCost / costBase), ok: (siteCost / costBase) < 0.30,
+                note: "What it costs to secure the site: purchase price and transfer fees if bought, ground rent over the whole hold if leased. Much above 30% and the deal is land-heavy, which squeezes the margin." },
+              { label: "Construction & site works", value: fp(buildCost / costBase), ok: true,
+                note: "Hard construction plus site works and infrastructure — normally the largest single line." },
+              { label: "Soft costs & contingency", value: fp(softCost / costBase), ok: (softCost / costBase) < 0.25,
+                note: "Design, permits, management and the risk buffer." },
+              { label: "Build cost per m² GFA", value: k.gfa > 0 ? `${fn(buildCost / k.gfa)} SAR/m²` : "—", ok: true,
+                note: "All-in construction and site works per m² of built area — compare it against local benchmarks." },
             ],
           },
           {
@@ -2152,15 +2172,25 @@ function RiskPanel({ result, input }) {
           },
           {
             name: "Financing & liquidity",
+            note: "How much the money costs, how hard the facility is working, and whether operating income covers the interest.",
             rows: [
-              { label: "Interest / dev cost", value: fp(k.totalInterest / dev), ok: (k.totalInterest / dev) < 0.10,
-                note: "Total financing interest as a share of development cost (land, construction, site work, soft costs and contingency — interest itself is not in that base). High values point to heavy leverage or a long build." },
+              /* Against ALL-IN cost, not development cost. Over development
+                 cost this ran 20–29% on every realistic scheme while the pass
+                 mark was 10%, so it was permanently red and told the reader
+                 nothing. As a share of everything spent it is both a fairer
+                 test and an easier sentence: this much of each riyal goes to
+                 the lender. */
+              { label: "Interest as % of all-in cost", value: allInCost > 0 ? fp(k.totalInterest / allInCost) : "—", ok: allInCost <= 0 || (k.totalInterest / allInCost) < 0.20,
+                note: "Financing interest as a share of every riyal the project spends, interest included. High values point to heavy leverage or a long build." },
               { label: "Peak debt vs facility", value: facility > 0 ? fp((k.peakDebt || 0) / facility) : "—", ok: facility <= 0 || (k.peakDebt || 0) / facility < 1.001,
                 note: "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left." },
               { label: "Equity share of funding", value: fp(cov.equity / funded), ok: true,
-                note: "Share of project spending funded by investor cash, rather than by debt or by sales and rental income." },
-              { label: "Min DSCR", value: k.minDSCR ? `${k.minDSCR.toFixed(2)}×` : "—", ok: k.minDSCR === null || k.minDSCR >= 1.2,
-                note: "Lowest ratio of operating cash to debt service in any month. Lenders usually want at least 1.2×." },
+                note: "Investor cash as a share of everything that funded the project — the rest comes from the loan and from the project's own sales and rental income." },
+              /* null is "does not apply", not a failure: a sale scheme repays
+                 from proceeds and an ungeared one pays no interest. The old
+                 Min DSCR reported 0.00× for both and flagged them red. */
+              { label: "Interest cover (stabilised)", value: k.interestCover != null ? `${k.interestCover.toFixed(2)}×` : "—", ok: k.interestCover == null || k.interestCover >= 1.2,
+                note: "Operating income after ground rent, divided by the interest due, at its worst month once the lease-up has finished. Below 1× the rent does not cover the interest. Shown as — when the question does not apply: a scheme that sells repays from proceeds, and an ungeared scheme pays no interest." },
             ],
           },
         ];
@@ -2565,7 +2595,7 @@ function ScenariosPanel({ scenarios, input }) {
     ["Peak debt", "peakDebt", fc],
     ["Peak equity", "totalEquity", fc],
     ["Total interest", "totalInterest", fc],
-    ["Min DSCR", "minDSCR", v => v ? `${v.toFixed(2)}×` : "—"],
+    ["Interest cover", "interestCover", v => v != null ? `${v.toFixed(2)}×` : "—"],
     ["Equity payback (mo)", "equityPayback", v => v ? `${v}` : "—"],
   ];
 

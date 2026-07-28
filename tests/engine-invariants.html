@@ -221,6 +221,32 @@
        flipped to leasable was never given one. Asserting on revenue rather
        than on OpEx catches the sale side of the same hole, where a flipped
        unit silently has no price. */
+    /* The Risk tab's cost structure shows three shares and states that they
+       add to 100%. They only do so while this identity holds — the previous
+       version took its shares over devCostExFinance while omitting site works
+       and transfer fees from the numerators, so they summed to about 95% and
+       the reader was left looking for the missing twentieth of the project. */
+    ["cost structure covers the whole development cost", (r) => {
+      const k = r.kpi;
+      const site  = (k.landCost || 0) + (k.landTransferFees || 0) + (k.totalLandRent || 0);
+      const build = (k.constructionCost || 0) + (k.siteWorkCost || 0);
+      const soft  = (k.softCosts || 0) + (k.contingency || 0);
+      const base  = (k.devCostExFinance || 0) + (k.totalLandRent || 0);
+      const gap = (site + build + soft) - base;
+      return Math.abs(gap) > 0.01
+        ? `shares total ${Math.round(site + build + soft)} vs base ${Math.round(base)} (gap ${Math.round(gap)})`
+        : null;
+    }],
+    /* Interest cover must never report 0.00x for "no debt to cover". The
+       measure it replaced did exactly that on every sale scheme, because it
+       divided by whatever the cash sweep happened to repay — including in
+       months during construction that carried no income at all. */
+    ["interest cover is null, not zero, when it does not apply", (r) => {
+      const k = r.kpi;
+      if (k.interestCover == null) return null;
+      if (!(k.interestCover > 0)) return `reported ${k.interestCover} rather than null`;
+      return (k.totalGrossIncome || 0) > 0 ? null : "reported a ratio on a scheme with no leased income";
+    }],
     ["a unit with area earns in its purpose", (r) => {
       const units = [];
       (r.components || []).forEach((c) => {

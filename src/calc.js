@@ -1111,19 +1111,53 @@ function runFeasibility(input) {
   // null when the facility funds everything (ROI on zero equity is undefined).
   const equityROI = totalEquityContributed > 0 ? profit / totalEquityContributed : null;
 
-  let minDSCR = Infinity;
-  for (let m = 0; m <= horizon; m++) {
-    // Debt service = actual cash applied to the loan this month (debtRepay
-    // already covers both principal AND any interest paid — see note in the
-    // Net cashflow block above for why we don't add interestFlow again).
-    const ds = -debtRepayFlow[m];
-    if (ds > 1) {
-      const inc = salesFlow[m] + noiFlow[m] + exitFlow[m];
-      const r = inc / ds;
-      if (r < minDSCR) minDSCR = r;
+  /* ---------- Interest cover, once the asset has stabilised ----------
+
+     This replaces a "minimum DSCR" that could not work in this model. DSCR
+     divides income by DEBT SERVICE, but the facility here has no amortisation
+     schedule — it is a revolving sweep that applies whatever cash exists to
+     the loan. So debt service was not an obligation to be covered, it was
+     simply the cash the project happened to have, and the ratio could only
+     ever return one of two numbers: 0.00 when a month repaid out of cash
+     retained earlier and so carried no income of its own (a month DURING
+     CONSTRUCTION, typically), or exactly 1.00 when the sweep took the whole
+     of that month's income. Both are arithmetic restatements of the sweep,
+     not statements about the project, and 0.00 was being flagged red.
+
+     What can be answered is whether operating income covers the INTEREST it
+     has to pay, which is the only genuine periodic obligation. Measured:
+       - from stabilisation, not from handover. The minimum otherwise always
+         lands in the first operating month, when the lease-up ramp starts
+         near 30% occupancy — true of every scheme and so worth nothing.
+       - net of ground rent, which a leasehold project must pay before it
+         pays a lender.
+       - only in months that actually carry interest; once the sweep clears
+         the loan there is nothing left to cover.
+
+     null, not zero, when the question does not apply: a sale scheme repays
+     from sale proceeds rather than from operations, and an ungeared scheme
+     has no interest at all. Reporting 0.00× for those read as a failure. */
+  let interestCover = Infinity;
+  if (totalGrossIncome > 0) {
+    let rampMonths = 0;
+    components.forEach((c) => {
+      if (!c.enabled) return;
+      revenueUnits(c).forEach((u) => {
+        if (!u || u.enabled === false || u.mode !== "lease") return;
+        rampMonths = Math.max(rampMonths, Math.max(1, Math.round(numOr(u.yearsToStabilization, 1) * 12)));
+      });
+    });
+    for (let m = conEnd + rampMonths; m <= horizon; m++) {
+      const interestDue = -interestFlow[m];
+      if (interestDue > 1) {
+        // landRentFlow is already negative, so adding it deducts the rent.
+        const incomeAfterRent = noiFlow[m] + landRentFlow[m];
+        const r = incomeAfterRent / interestDue;
+        if (r < interestCover) interestCover = r;
+      }
     }
   }
-  if (!isFinite(minDSCR)) minDSCR = null;
+  if (!isFinite(interestCover)) interestCover = null;
 
   const risks = computeRisks({
     a, projectIRR, equityIRR, projectROI, profit, ltc, contingencyPct,
@@ -1140,7 +1174,7 @@ function runFeasibility(input) {
       profit, profitUnlevered,
       totalRevenue: totalCashRevenue, totalCost: totalCashCosts,
       peakDebt, totalEquity: totalEquityContributed, peakEquity: peakEquityAtRisk, debtDrawnTotal,
-      minDSCR,
+      interestCover,
       gfa: totalGFA, nsa: totalNSA, totalUnits, totalKeys,
       landCost, landTransferFees,
       // Leasehold: ground rent is a cost of the project but never part of

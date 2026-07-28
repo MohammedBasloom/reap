@@ -432,7 +432,7 @@
     "Equity NPV": "NPV الملكية", "Equity Multiple": "مضاعف الملكية", "Payback (equity)": "فترة الاسترداد (الملكية)",
     "Profit (levered)": "الربح (بعد التمويل)", "Project IRR": "IRR المشروع",
     "Annual rent (stab.)": "الإيجار السنوي (مستقر)", "Annual NOI (stab.)": "صافي الدخل التشغيلي (مستقر)",
-    "Peak debt": "ذروة الدين", "Min DSCR": "أدنى تغطية لخدمة الدين",
+    "Peak debt": "ذروة الدين",
     "Cumulative Net Cashflow (Levered)": "صافي التدفق النقدي التراكمي (بعد التمويل)",
     "Massing": "الكتلة العمرانية", "Scenario Range": "نطاق السيناريوهات",
     "Cashflow · S-Curve & Annual Table": "التدفقات النقدية · منحنى S والجدول السنوي",
@@ -686,11 +686,15 @@
     "yrs — fund closes at exit; no fees accrue past Y": "سنة — يُغلق الصندوق عند التخارج ولا تُستحق رسوم بعد السنة ",
     "vs": "مقابل", "pref": "عائد ممتاز",
     /* Quick diagnostics labels */
-    "Land as % of dev cost": "الأرض كنسبة من تكلفة التطوير",
-    "Construction as % of dev cost": "الإنشاء كنسبة من تكلفة التطوير",
+    "Land & ground rent": "الأرض وإيجار الأرض",
+    "Construction & site works": "الإنشاء وأعمال الموقع",
     "Profit margin (on revenue)": "هامش الربح (على الإيراد)",
     "ROI on cost": "العائد على التكلفة",
-    "Interest / dev cost": "الفوائد / تكلفة التطوير",
+    "Interest as % of all-in cost": "الفوائد كنسبة من إجمالي التكلفة",
+    "Interest cover (stabilised)": "تغطية الفوائد (عند الاستقرار)",
+    "Interest cover": "تغطية الفوائد",
+    "NOI ÷ interest, stabilised": "صافي الدخل التشغيلي ÷ الفوائد، عند الاستقرار",
+    "No debt in operations": "لا يوجد دين خلال التشغيل",
     "Selling cost / revenue": "تكاليف البيع / الإيراد",
     /* Diagnostics — categories, new metrics and their explanations */
     "Cost structure": "تركيبة التكاليف",
@@ -701,13 +705,13 @@
     "Revenue per m² sellable / leasable": "الإيراد لكل م² قابل للبيع أو التأجير",
     "Peak debt vs facility": "ذروة الدين مقابل سقف التسهيلات",
     "Equity share of funding": "حصة الملكية من التمويل",
-    "Land's share of development cost. Much above 30% and the deal is land-heavy, which squeezes the margin.":
-      "حصة الأرض من تكلفة التطوير. وتجاوزها 30% كثيرًا يعني ثقل تكلفة الأرض مما يضغط على الهامش.",
-    "Hard construction as a share of development cost — normally the largest single line.":
-      "تكلفة الإنشاء المباشرة كنسبة من تكلفة التطوير — وهي عادةً أكبر بند منفرد.",
-    "Design, permits, management and the risk buffer, as a share of development cost.":
-      "التصميم والتراخيص والإدارة واحتياطي المخاطر، كنسبة من تكلفة التطوير.",
-    "All-in construction and site work per m² of built area — compare it against local benchmarks.":
+    "What it costs to secure the site: purchase price and transfer fees if bought, ground rent over the whole hold if leased. Much above 30% and the deal is land-heavy, which squeezes the margin.":
+      "ما يلزم لتأمين الموقع: ثمن الشراء ورسوم النقل في حالة التملّك، أو إيجار الأرض طوال فترة الاحتفاظ في حالة الإيجار. وتجاوزها 30% كثيرًا يعني ثقل تكلفة الأرض مما يضغط على الهامش.",
+    "Hard construction plus site works and infrastructure — normally the largest single line.":
+      "تكلفة الإنشاء المباشرة مع أعمال الموقع والبنية التحتية — وهي عادةً أكبر بند منفرد.",
+    "Design, permits, management and the risk buffer.":
+      "التصميم والتراخيص والإدارة واحتياطي المخاطر.",
+    "All-in construction and site works per m² of built area — compare it against local benchmarks.":
       "إجمالي تكلفة الإنشاء وأعمال الموقع لكل م² مبني — قارنها بالمعدلات السائدة في السوق.",
     "Profit after financing as a share of total revenue. Under ~12% leaves little room for error.":
       "الربح بعد التمويل كنسبة من إجمالي الإيراد. وأقل من نحو 12% يترك هامش خطأ ضيقًا.",
@@ -717,16 +721,18 @@
       "إجمالي الإيراد لكل م² قابل للبيع أو التأجير — فحص سريع لمنطقية الأسعار مقابل السوق.",
     "Financing cost as a share of development cost. High values point to heavy leverage or a long build.":
       "تكلفة التمويل كنسبة من تكلفة التطوير. وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
-    "\"Development cost\" here = land + transfer fees + construction + site work and infrastructure + soft costs + contingency. It EXCLUDES financing interest and selling costs (marketing, sales commission, government fees). It is also the base for the debt facility (LTC × development cost).":
-      "المقصود بـ«تكلفة التطوير» هنا: الأرض + رسوم النقل + الإنشاء + أعمال الموقع والبنية التحتية + التكاليف غير المباشرة + الاحتياطي. ولا تشمل فوائد التمويل ولا تكاليف البيع (التسويق وعمولة البيع والرسوم الحكومية). وهي أيضًا الأساس الذي يُحتسب عليه سقف التمويل (نسبة التمويل إلى التكلفة × تكلفة التطوير).",
-    "Total financing interest as a share of development cost (land, construction, site work, soft costs and contingency — interest itself is not in that base). High values point to heavy leverage or a long build.":
-      "إجمالي فوائد التمويل كنسبة من تكلفة التطوير (الأرض والإنشاء وأعمال الموقع والتكاليف غير المباشرة والاحتياطي — والفوائد نفسها ليست ضمن هذا الأساس). وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
+    "Three shares of one base, and they add to exactly 100%. The base is land + transfer fees + ground rent + construction + site works + soft costs + contingency. It excludes financing interest and selling costs, which are shown under Financing below. Previously these shares were taken over a base that omitted site works and transfer fees, so they summed to about 95% and never quite accounted for the project.":
+      "ثلاث حصص من أساس واحد، ومجموعها 100% بالضبط. والأساس هو: الأرض + رسوم النقل + إيجار الأرض + الإنشاء + أعمال الموقع + التكاليف غير المباشرة + الاحتياطي. ولا يشمل فوائد التمويل ولا تكاليف البيع، وهي معروضة ضمن «التمويل» أدناه. وكانت هذه الحصص تُحتسب سابقًا على أساس يغفل أعمال الموقع ورسوم النقل، فكان مجموعها نحو 95% ولا يغطي المشروع بالكامل.",
+    "How much the money costs, how hard the facility is working, and whether operating income covers the interest.":
+      "كم تكلّف الأموال، وإلى أي مدى تُستخدم التسهيلات، وهل يغطي الدخل التشغيلي الفوائد.",
+    "Financing interest as a share of every riyal the project spends, interest included. High values point to heavy leverage or a long build.":
+      "فوائد التمويل كنسبة من كل ريال ينفقه المشروع، شاملًا الفوائد نفسها. وارتفاعها يشير إلى رفع مالي كبير أو فترة إنشاء طويلة.",
     "Highest loan balance against the facility cap. At 100% the facility is fully used, with no headroom left.":
       "أعلى رصيد للقرض مقابل سقف التسهيلات. وعند 100% تكون التسهيلات مستنفدة بالكامل دون أي متسع.",
-    "Share of project spending funded by investor cash, rather than by debt or by sales and rental income.":
-      "نسبة الإنفاق على المشروع المموّلة من نقد المستثمرين، بدلًا من الدين أو من إيرادات البيع والإيجار.",
-    "Lowest ratio of operating cash to debt service in any month. Lenders usually want at least 1.2×.":
-      "أدنى نسبة بين النقد التشغيلي وخدمة الدين في أي شهر. ويطلب المموّلون عادةً 1.2× على الأقل.",
+    "Investor cash as a share of everything that funded the project — the rest comes from the loan and from the project's own sales and rental income.":
+      "نقد المستثمرين كنسبة من إجمالي ما موّل المشروع — والباقي من القرض ومن إيرادات البيع والإيجار الخاصة بالمشروع.",
+    "Operating income after ground rent, divided by the interest due, at its worst month once the lease-up has finished. Below 1× the rent does not cover the interest. Shown as — when the question does not apply: a scheme that sells repays from proceeds, and an ungeared scheme pays no interest.":
+      "الدخل التشغيلي بعد إيجار الأرض مقسومًا على الفوائد المستحقة، في أسوأ شهر بعد اكتمال فترة التأجير التدريجي. وأقل من 1× يعني أن الإيجار لا يغطي الفوائد. وتظهر «—» عندما لا ينطبق السؤال: فالمشروع الذي يبيع يسدّد من حصيلة البيع، والمشروع غير المموّل بالدين لا يدفع فوائد.",
     "Equity · Levered": "الملكية · بعد التمويل", "Project · Unlevered": "المشروع · قبل التمويل",
     "IRR": "IRR", "Multiple": "المضاعف", "Payback": "فترة الاسترداد",
     "Cumulative cashflow — equity vs project": "التدفق التراكمي — الملكية مقابل المشروع",
