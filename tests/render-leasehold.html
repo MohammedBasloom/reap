@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — leasehold across the tabs</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/results.jsx"></script>
+<script type="text/babel">
+  /* Renders the Capital panel for a LEASEHOLD scheme, so the ground rent can
+     be checked in the uses breakdown and the Sources = Uses tie verified,
+     without the auth gate on model.html. */
+  const mk = (tenure) => ({
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: tenure, landRentPerSqmYr: 300,
+    landRentEscalationYears: 5, landRentEscalationPct: 0.05,
+    predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10, fund: { enabled: false },
+    components: [{ id: "l", kind: "retail", name: "Retail", enabled: true, mode: "lease",
+      allocationPct: 1.0, massingMode: "far", far: 1.0, costPerSqmGFA: 2500, siteWorkPct: 0.06,
+      efficiency: 0.80, revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28,
+      initialOccupancy: 0.30, yearsToStabilization: 1,
+      operatingPeriodMonths: 60, exitCapRate: 0.075 }],
+  });
+  const LEASE = mk("lease");
+  window.__own = Feas.runFeasibility(mk("own"));
+  window.__lease = Feas.runFeasibility(LEASE);
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <WaterfallPanel result={window.__lease} input={LEASE} />
+  );
+  window.__READY = true;
+</script>
+</body>
+</html>

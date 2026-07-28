@@ -793,7 +793,12 @@ function runFeasibility(input) {
   const equityInjectedFlow = arr();
   const revenueAppliedFlow = arr();
   for (let m = 0; m <= horizon; m++) {
-    usesByCatFlow.land[m]         = -landFlow[m];
+    // "Land" covers the whole cost of securing the site — the purchase and
+    // RETT on a freehold, the ground rent on a lease. Grouping them keeps the
+    // per-year uses table tying to total uses without a column that is empty
+    // for most projects; the headline Uses breakdown still shows ground rent
+    // as its own line.
+    usesByCatFlow.land[m]         = -(landFlow[m] + landRentFlow[m]);
     usesByCatFlow.construction[m] = -constructionFlow[m];
     usesByCatFlow.siteWork[m]     = -siteWorkFlow[m];
     usesByCatFlow.soft[m]         = -softFlow[m];

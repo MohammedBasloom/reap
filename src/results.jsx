@@ -91,7 +91,7 @@ function SummaryPanel({ result, input, scenarios }) {
           <StackedArea
             months={cf.months}
             series={[
-              { label: "Cost",    color: "var(--ad-danger)", values: cf.land.map((_, i) => cf.land[i] + cf.soft[i] + cf.construction[i] + cf.infra[i] + cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.interest[i]) },
+              { label: "Cost",    color: "var(--ad-danger)", values: cf.land.map((_, i) => cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + cf.infra[i] + cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.interest[i]) },
               { label: "Revenue", color: "var(--ad-success)", opacity: 0.85, values: cf.sales.map((_, i) => cf.sales[i] + cf.rent[i] + cf.exit[i]) },
               { label: "Debt",    color: "var(--ad-navy-400)", opacity: 0.6, values: cf.debtDraw.map((_, i) => cf.debtDraw[i] + cf.debtRepay[i]) },
             ]}
@@ -232,7 +232,7 @@ function CashflowPanel({ result, input }) {
       const slice = (arr) => arr.slice(y * 12, (y + 1) * 12).reduce((s, v) => s + v, 0);
       out.push({
         year: y,
-        land: slice(cf.land),
+        land: slice(cf.land) + (cf.landRent ? slice(cf.landRent) : 0),
         soft: slice(cf.soft),
         construction: slice(cf.construction),
         siteWork: slice(cf.siteWork),
@@ -260,7 +260,7 @@ function CashflowPanel({ result, input }) {
 
   // Monthly project (unlevered) flow — all uses & revenues, no debt/interest.
   const projFlow = months.map((_, i) =>
-    cf.land[i] + cf.soft[i] + cf.construction[i] + (cf.infra ? cf.infra[i] : 0) + cf.siteWork[i] +
+    cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + (cf.infra ? cf.infra[i] : 0) + cf.siteWork[i] +
     cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.sales[i] + cf.rent[i] + cf.exit[i]);
 
   const ViewToggle = ({ view, setView }) => (
@@ -300,6 +300,7 @@ function CashflowPanel({ result, input }) {
               height={260}
               series={[
                 { label: "Land",     color: "var(--ad-navy-900)", values: cf.land },
+                { label: "Ground rent", color: "var(--ad-navy-800)", values: cf.landRent || months.map(() => 0) },
                 { label: "Soft costs", color: "var(--ad-navy-700)", values: cf.soft },
                 { label: "Construction", color: "var(--ad-navy-500)", values: cf.construction },
                 { label: "Site work", color: "var(--ad-navy-400)", values: months.map((_, i) => cf.siteWork[i] + (cf.infra ? cf.infra[i] : 0)) },
@@ -599,6 +600,12 @@ function CostPanel({ result, input }) {
 }
 
 /* ---------- Units & revenue panel ---------- */
+
+/* Ground rent for month i, tolerating results produced before leasehold land
+   existed (saved models, or a cached engine mid-deploy). */
+function gr(cf, i) {
+  return (cf.landRent && cf.landRent[i]) || 0;
+}
 
 function ProgramPanel({ result, input }) {
   const k = result.kpi;
@@ -1825,6 +1832,7 @@ function ReturnsSplit({ k, input }) {
   // ----- USES: every dollar the project spends, over its life -----
   const usesItems = [
     { label: "Land + transfer fees", value: k.landCost + k.landTransferFees,            color: "var(--ad-navy-900)" },
+    { label: "Ground rent",          value: k.totalLandRent || 0,                       color: "var(--ad-navy-800)" },
     { label: "Construction",         value: k.constructionCost,                         color: "var(--ad-navy-700)" },
     { label: "Land infrastructure",  value: k.landInfraCost || 0,                       color: "var(--ad-navy-600)" },
     { label: "Site work",            value: k.siteWorkCost - (k.landInfraCost || 0),    color: "var(--ad-navy-500)" },

@@ -216,6 +216,25 @@
       return Math.abs(peak - (r.kpi.peakDebt || 0)) > 1
         ? `kpi ${r.kpi.peakDebt} vs series ${peak}` : null;
     }],
+    /* The per-category uses decomposition drives the yearly Capital table,
+       while the headline Uses breakdown is built from KPI totals. If a cost is
+       added to one and not the other the two stop tying — which is how ground
+       rent could have been charged by the engine yet invisible in the tabs. */
+    ["uses by category reconcile to the KPI totals", (r) => {
+      const c = r.cashflow.usesByCat || {};
+      const tot = (a) => (a || []).reduce((s, v) => s + v, 0);
+      const fromCats = tot(c.land) + tot(c.construction) + tot(c.siteWork) +
+                       tot(c.soft) + tot(c.contingency) + tot(c.marketing) + tot(c.interest);
+      const k = r.kpi;
+      const fromKpi =
+        (k.landCost + k.landTransferFees) + (k.totalLandRent || 0) +
+        k.constructionCost + k.siteWorkCost +
+        k.softCosts + k.contingency +
+        k.marketing + k.salesCommission + k.govFees + k.totalInterest;
+      return Math.abs(fromCats - fromKpi) > 2
+        ? `categories ${Math.round(fromCats)} vs KPI totals ${Math.round(fromKpi)}`
+        : null;
+    }],
     ["GFA equals sum of components", (r) => {
       const sum = r.components.reduce((s, c) => s + (c.gfa || 0), 0);
       return Math.abs(sum - (r.kpi.gfa || 0)) > 0.01 ? `${sum} vs ${r.kpi.gfa}` : null;
