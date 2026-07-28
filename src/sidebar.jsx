@@ -115,7 +115,7 @@ function FieldInput({ type, step, min, max, value, disabled, mono, placeholder, 
   );
 }
 
-function PctField({ label, value, onChange, hint, tip, suffix = "%", step = 0.5 }) {
+function PctField({ label, value, onChange, hint, tip, suffix = "%", step = 0.5, disabled = false }) {
   return (
     <Field
       label={label}
@@ -126,6 +126,7 @@ function PctField({ label, value, onChange, hint, tip, suffix = "%", step = 0.5 
       tip={tip}
       type="number"
       step={step}
+      disabled={disabled}
     />
   );
 }
@@ -1306,8 +1307,12 @@ function Sidebar({ input, setInput }) {
 
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const hasComponents = input.components.filter(c => c.enabled).length > 0;
-  const totalLandCost = (input.landArea || 0) * (input.landPricePerSqm || 0);
-  const landTransferFees = totalLandCost * (input.landTransferFeesPct || 0);
+  // Tenure: bought outright, or held on a ground lease with no title and no RETT.
+  const isLeasehold = (input.landTenure || "own") === "lease";
+  const totalLandCost = isLeasehold ? 0 : (input.landArea || 0) * (input.landPricePerSqm || 0);
+  const landTransferFees = totalLandCost * (isLeasehold ? 0 : (input.landTransferFeesPct || 0));
+  const annualGroundRent = isLeasehold
+    ? (input.landArea || 0) * (input.landRentPerSqmYr || 0) : 0;
   const totalLandIn = totalLandCost + landTransferFees;
   const isRawLand = input.landType === "raw";
   const developablePct = isRawLand ? (input.developablePct ?? 0.70) : 1;
@@ -1372,10 +1377,58 @@ function Sidebar({ input, setInput }) {
       <Section title="Land" n="02">
         <Row cols={2}>
           <Field label="Land area" suffix="m²" value={input.landArea} onChange={v => upd("landArea", v)} step={1000} />
-          <Field label="Land price" suffix="SAR/m²" value={input.landPricePerSqm} onChange={v => upd("landPricePerSqm", v)} step={50} />
-          <Field label="Total land cost" suffix="SAR" value={Math.round(totalLandCost)} onChange={() => {}} disabled />
-          <PctField label="Transfer / gov fees" value={input.landTransferFeesPct} onChange={v => upd("landTransferFeesPct", v)} hint="On land cost" />
+          <div />
         </Row>
+
+        {/* Tenure: the land is either bought or leased. */}
+        <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 4 }}>Land tenure</div>
+        <div style={{ display: "flex", gap: 0, marginBottom: 10, border: "1px solid var(--border-1)" }}>
+          {[
+            { key: "own",   label: "Acquisition", blurb: "Bought outright" },
+            { key: "lease", label: "Lease",       blurb: "Ground rent, no title" },
+          ].map(opt => {
+            const active = (input.landTenure || "own") === opt.key;
+            return (
+              <button key={opt.key} onClick={() => upd("landTenure", opt.key)} style={{
+                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "left",
+                background: active ? "var(--ad-navy-900)" : "var(--bg-1)",
+                color: active ? "white" : "var(--fg-2)",
+                border: "none", borderRight: opt.key === "own" ? "1px solid var(--border-1)" : "none",
+                fontFamily: "inherit",
+              }}>
+                <div style={{ fontSize: 11, fontWeight: 600 }}>{opt.label}</div>
+                <div style={{ fontSize: 9.5, opacity: 0.75, marginTop: 1 }}>{opt.blurb}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Purchase inputs — greyed out on a lease, where nothing is bought
+            and no transfer tax falls due. */}
+        <Row cols={2}>
+          <Field label="Land price" suffix="SAR/m²" value={input.landPricePerSqm} onChange={v => upd("landPricePerSqm", v)} step={50} disabled={isLeasehold} />
+          <Field label="Total land cost" suffix="SAR" value={isLeasehold ? 0 : Math.round(totalLandCost)} onChange={() => {}} disabled />
+          <PctField label="Transfer / gov fees" value={isLeasehold ? 0 : input.landTransferFeesPct} onChange={v => upd("landTransferFeesPct", v)} hint={isLeasehold ? "No RETT on a lease" : "On land cost"} disabled={isLeasehold} />
+          <div />
+        </Row>
+
+        {isLeasehold && (
+          <>
+            <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 4 }}>Ground rent</div>
+            <Row cols={2}>
+              <Field label="Land rent" suffix="SAR/m²·yr" value={input.landRentPerSqmYr} onChange={v => upd("landRentPerSqmYr", v)} step={25} hint="Annual ground rent" tip="Annual rent per m² of plot. Paid in advance at the start of each year, and it runs until the project exits — not to the end of the horizon." />
+              <Field label="Rent review" suffix="years" value={input.landRentEscalationYears ?? 5} onChange={v => upd("landRentEscalationYears", v)} step={1} min={1} hint="Escalates every" tip="How often the rent steps up. With a five-year review the first five years sit at the opening rate and the first uplift lands in year six." />
+              <PctField label="Escalation" value={input.landRentEscalationPct} onChange={v => upd("landRentEscalationPct", v)} hint="At each review" step={0.5} />
+              <Field label="First year rent" suffix="SAR" value={Math.round(annualGroundRent)} onChange={() => {}} disabled />
+            </Row>
+            <div style={{
+              fontSize: 11, lineHeight: 1.45, padding: "7px 9px", marginBottom: 10,
+              border: "1px solid var(--border-1)", background: "var(--bg-2)", color: "var(--fg-3)",
+            }}>
+              Ground rent is an operating cost, so it does not count toward the debt facility — a lender advances against build cost, not rent. Expect a smaller facility than buying the land.
+            </div>
+          </>
+        )}
 
         {/* Land condition: net (serviced) vs raw (needs infrastructure) */}
         <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 4 }}>Land condition</div>

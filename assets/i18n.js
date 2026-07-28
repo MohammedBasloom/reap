@@ -119,6 +119,28 @@
 
     /* Mixed-Use Building — one envelope, several uses, each sold or let on its
        own terms. */
+    /* Land tenure — bought outright, or held on a ground lease. */
+    "Land tenure": "حيازة الأرض",
+    "Acquisition": "تملّك",
+    "Bought outright": "شراء الأرض",
+    "Lease": "إيجار",
+    "Ground rent, no title": "إيجار أرض دون تملّك",
+    "No RETT on a lease": "لا رسوم تصرّف على الإيجار",
+    "Ground rent": "إيجار الأرض",
+    "Land rent": "قيمة إيجار الأرض",
+    "Annual ground rent": "الإيجار السنوي للأرض",
+    "Annual rent per m² of plot. Paid in advance at the start of each year, and it runs until the project exits — not to the end of the horizon.":
+      "الإيجار السنوي لكل متر مربع من الأرض. يُدفع مقدَّمًا في بداية كل سنة، ويستمر حتى تخارج المشروع لا حتى نهاية أفق الدراسة.",
+    "Rent review": "مراجعة الإيجار",
+    "Escalates every": "يتصاعد كل",
+    "How often the rent steps up. With a five-year review the first five years sit at the opening rate and the first uplift lands in year six.":
+      "كل كم سنة يرتفع الإيجار. بمراجعة كل خمس سنوات تبقى السنوات الخمس الأولى على السعر الابتدائي ويأتي أول ارتفاع في السنة السادسة.",
+    "Escalation": "نسبة التصاعد",
+    "At each review": "عند كل مراجعة",
+    "First year rent": "إيجار السنة الأولى",
+    "Ground rent is an operating cost, so it does not count toward the debt facility — a lender advances against build cost, not rent. Expect a smaller facility than buying the land.":
+      "إيجار الأرض مصروف تشغيلي، لذا لا يدخل ضمن أساس حساب التسهيل الائتماني — فالممول يقرض مقابل تكلفة البناء لا مقابل الإيجار. توقّع تسهيلًا أقل ممّا لو اشتريت الأرض.",
+
     "Mixed-Use Building": "مبنى متعدد الاستخدامات",
     "Several uses in one building": "عدة استخدامات في مبنى واحد",
     "Sale + Lease": "بيع وتأجير",

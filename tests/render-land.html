@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — land tenure render check</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; } #root { max-width: 420px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/sidebar.jsx"></script>
+<script type="text/babel">
+  /* Renders ONLY the sidebar, so the land section can be checked in Arabic
+     without signing in to the auth-gated model page. app.jsx is deliberately
+     not loaded — it would mount the whole application and hit the auth gate. */
+  const INPUT = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05,
+    landTenure: "own", landRentPerSqmYr: 300,
+    landRentEscalationYears: 5, landRentEscalationPct: 0.05,
+    landType: "net", developablePct: 0.70, landInfraCostPerSqm: 0,
+    predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10,
+    components: [], fund: { enabled: false },
+  };
+
+  function Harness() {
+    const [input, setInput] = React.useState(INPUT);
+    window.__input = input;
+    window.__setInput = setInput;
+    return <Sidebar input={input} setInput={setInput} />;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Harness />);
+  window.__READY = true;
+</script>
+</body>
+</html>

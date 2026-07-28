@@ -13,6 +13,11 @@ const SAMPLE_INPUT = {
   landArea: null, // m²
   landPricePerSqm: null, // SAR
   landTransferFeesPct: 0.05, // 5% transfer / gov
+  // Tenure: "own" buys the land; "lease" pays ground rent and no RETT.
+  landTenure: "own",
+  landRentPerSqmYr: null, // SAR/m²/yr — blank until the user sets a rent
+  landRentEscalationYears: 5, // rent review every 5 years
+  landRentEscalationPct: 0.05, // stepping up 5% at each review
   landType: "net", // "net" (serviced) | "raw" (needs infrastructure)
   developablePct: 0.70, // raw only: share of gross land the program can build on
   landInfraCostPerSqm: 0, // SAR/m² on gross land — roads, utilities (raw or net)
