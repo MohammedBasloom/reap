@@ -874,22 +874,40 @@ function SensitivityPanel({ result, input }) {
     { key: "govFeesPct",             label: "Gov / sales fees" },
     { key: "constructionMonths",     label: "Construction duration" },
   ];
-  // Add per-component price/cost drivers
+  /* Per-component price/cost drivers.
+
+     A Mixed-Use Building holds its price, rent, build cost and cap rate on its
+     spaces rather than on itself, and its mode is "mixed" — so driving off the
+     component alone would yield no revenue drivers at all and one dead build-
+     cost driver pointing at a field the engine ignores. Walk the spaces
+     instead; `patch()` already resolves nested paths like
+     components[0].subs[1].rentPerSqmYr. */
+  const pushUnitDrivers = (u, basePath, keyPrefix, label) => {
+    if (u.costPerSqmGFA) {
+      drivers.push({ key: `${keyPrefix}_buildcost`, label: `${label} build cost`, path: `${basePath}.costPerSqmGFA` });
+    }
+    if (u.mode === "sale") {
+      if (u.pricePerSqm)  drivers.push({ key: `${keyPrefix}_psqm`,  label: `${label} price/m²`,   path: `${basePath}.pricePerSqm`  });
+      if (u.pricePerUnit) drivers.push({ key: `${keyPrefix}_punit`, label: `${label} price/unit`, path: `${basePath}.pricePerUnit` });
+      if (u.pricePerKey)  drivers.push({ key: `${keyPrefix}_pkey`,  label: `${label} price/key`,  path: `${basePath}.pricePerKey`  });
+    }
+    if (u.mode === "lease") {
+      if (u.rentPerSqmYr)  drivers.push({ key: `${keyPrefix}_rsqm`,  label: `${label} rent/m²`,   path: `${basePath}.rentPerSqmYr`  });
+      if (u.rentPerUnitYr) drivers.push({ key: `${keyPrefix}_runit`, label: `${label} rent/unit`, path: `${basePath}.rentPerUnitYr` });
+      if (u.adr)           drivers.push({ key: `${keyPrefix}_adr`,   label: `${label} ADR`,       path: `${basePath}.adr`           });
+      if (u.exitCapRate)   drivers.push({ key: `${keyPrefix}_cap`,   label: `${label} exit cap`,  path: `${basePath}.exitCapRate`   });
+    }
+  };
+
   input.components.forEach((c, i) => {
     if (!c.enabled) return;
-    if (c.costPerSqmGFA) {
-      drivers.push({ key: `comp_${i}_buildcost`, label: `${c.name} build cost`, path: `components[${i}].costPerSqmGFA` });
-    }
-    if (c.mode === "sale") {
-      if (c.pricePerSqm)  drivers.push({ key: `comp_${i}_psqm`,  label: `${c.name} price/m²`,  path: `components[${i}].pricePerSqm`  });
-      if (c.pricePerUnit) drivers.push({ key: `comp_${i}_punit`, label: `${c.name} price/unit`, path: `components[${i}].pricePerUnit` });
-      if (c.pricePerKey)  drivers.push({ key: `comp_${i}_pkey`,  label: `${c.name} price/key`,  path: `components[${i}].pricePerKey`  });
-    }
-    if (c.mode === "lease") {
-      if (c.rentPerSqmYr)  drivers.push({ key: `comp_${i}_rsqm`,  label: `${c.name} rent/m²`,  path: `components[${i}].rentPerSqmYr`  });
-      if (c.rentPerUnitYr) drivers.push({ key: `comp_${i}_runit`, label: `${c.name} rent/unit`, path: `components[${i}].rentPerUnitYr` });
-      if (c.adr)           drivers.push({ key: `comp_${i}_adr`,   label: `${c.name} ADR`,       path: `components[${i}].adr`           });
-      if (c.exitCapRate)   drivers.push({ key: `comp_${i}_cap`,   label: `${c.name} exit cap`,  path: `components[${i}].exitCapRate`   });
+    if (Array.isArray(c.subs)) {
+      c.subs.forEach((s, j) => {
+        if (s.enabled === false) return;
+        pushUnitDrivers(s, `components[${i}].subs[${j}]`, `comp_${i}_sub_${j}`, `${c.name} — ${s.name}`);
+      });
+    } else {
+      pushUnitDrivers(c, `components[${i}]`, `comp_${i}`, c.name);
     }
   });
 

@@ -1298,23 +1298,44 @@ function tornado(input, drivers, deltaPct = 0.10) {
   }).sort((a, b) => b.delta - a.delta);
 }
 
+/* Apply price / cost / occupancy multipliers to one revenue unit.
+
+   On a Mixed-Use Building the price, rent, build cost and occupancy live on
+   the spaces, not the building, so a shock that stopped at the component would
+   leave a mixed building completely unmoved — scenarios and Monte Carlo would
+   report identical profit across downside, base and upside. shockComponent
+   therefore recurses into subs[]. */
+function shockUnit(u, m) {
+  return Object.assign({}, u, {
+    pricePerSqm:   u.pricePerSqm   ? u.pricePerSqm   * m.price : u.pricePerSqm,
+    pricePerUnit:  u.pricePerUnit  ? u.pricePerUnit  * m.price : u.pricePerUnit,
+    pricePerKey:   u.pricePerKey   ? u.pricePerKey   * m.price : u.pricePerKey,
+    rentPerSqmYr:  u.rentPerSqmYr  ? u.rentPerSqmYr  * m.price : u.rentPerSqmYr,
+    rentPerUnitYr: u.rentPerUnitYr ? u.rentPerUnitYr * m.price : u.rentPerUnitYr,
+    adr:           u.adr           ? u.adr           * m.price : u.adr,
+    costPerSqmGFA: u.costPerSqmGFA ? u.costPerSqmGFA * m.cost  : u.costPerSqmGFA,
+    occupancy:     u.occupancy     ? Math.max(0.3, Math.min(0.98, u.occupancy * m.occ)) : u.occupancy,
+  });
+}
+
+function shockComponent(c, m) {
+  const out = shockUnit(c, m);
+  if (Array.isArray(c.subs)) out.subs = c.subs.map(s => shockUnit(s, m));
+  return out;
+}
+
 function buildScenarios(input, shock = 0.10) {
   const downside = JSON.parse(JSON.stringify(input));
   const upside = JSON.parse(JSON.stringify(input));
-  const shockComp = (sign) => (c) => ({
-    ...c,
-    pricePerSqm: c.pricePerSqm ? c.pricePerSqm * (1 + sign * shock) : c.pricePerSqm,
-    pricePerUnit: c.pricePerUnit ? c.pricePerUnit * (1 + sign * shock) : c.pricePerUnit,
-    pricePerKey: c.pricePerKey ? c.pricePerKey * (1 + sign * shock) : c.pricePerKey,
-    rentPerSqmYr: c.rentPerSqmYr ? c.rentPerSqmYr * (1 + sign * shock) : c.rentPerSqmYr,
-    rentPerUnitYr: c.rentPerUnitYr ? c.rentPerUnitYr * (1 + sign * shock) : c.rentPerUnitYr,
-    adr: c.adr ? c.adr * (1 + sign * shock) : c.adr,
-    costPerSqmGFA: c.costPerSqmGFA ? c.costPerSqmGFA * (1 - sign * shock * 0.5) : c.costPerSqmGFA,
-    occupancy: c.occupancy ? Math.max(0.3, Math.min(0.98, c.occupancy * (1 + sign * shock * 0.3))) : c.occupancy,
+  // Downside: prices down, costs up, occupancy down. Upside mirrors it.
+  const mult = (sign) => ({
+    price: 1 + sign * shock,
+    cost:  1 - sign * shock * 0.5,
+    occ:   1 + sign * shock * 0.3,
   });
-  downside.components = downside.components.map(shockComp(-1));
+  downside.components = downside.components.map(c => shockComponent(c, mult(-1)));
   downside.constructionMonths = input.constructionMonths + 3;
-  upside.components = upside.components.map(shockComp(1));
+  upside.components = upside.components.map(c => shockComponent(c, mult(1)));
   upside.constructionMonths = Math.max(6, input.constructionMonths - 2);
   return {
     downside: runFeasibility(downside),
@@ -1331,17 +1352,9 @@ function monteCarlo(input, trials = 400) {
     const costShock = sampleNormal(1, 0.08);
     const delay = Math.round(sampleNormal(0, 2));
     const occShock = sampleNormal(1, 0.05);
-    sim.components = sim.components.map(c => ({
-      ...c,
-      pricePerSqm: c.pricePerSqm ? c.pricePerSqm * priceShock : c.pricePerSqm,
-      pricePerUnit: c.pricePerUnit ? c.pricePerUnit * priceShock : c.pricePerUnit,
-      pricePerKey: c.pricePerKey ? c.pricePerKey * priceShock : c.pricePerKey,
-      rentPerSqmYr: c.rentPerSqmYr ? c.rentPerSqmYr * priceShock : c.rentPerSqmYr,
-      rentPerUnitYr: c.rentPerUnitYr ? c.rentPerUnitYr * priceShock : c.rentPerUnitYr,
-      adr: c.adr ? c.adr * priceShock : c.adr,
-      costPerSqmGFA: c.costPerSqmGFA ? c.costPerSqmGFA * costShock : c.costPerSqmGFA,
-      occupancy: c.occupancy ? Math.max(0.3, Math.min(0.98, c.occupancy * occShock)) : c.occupancy,
-    }));
+    // Same helper as scenarios, so mixed-use spaces are shocked too.
+    sim.components = sim.components.map(c =>
+      shockComponent(c, { price: priceShock, cost: costShock, occ: occShock }));
     sim.constructionMonths = Math.max(6, input.constructionMonths + delay);
     const r = runFeasibility(sim);
     if (r.kpi.equityIRR !== null) irrs.push(r.kpi.equityIRR);

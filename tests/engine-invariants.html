@@ -298,6 +298,32 @@
   document.getElementById("out").innerHTML = html + "</table>";
   document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
 
+  /* ---------- Sensitivity must actually reach mixed-use spaces ----------
+     Price, rent and build cost live on the spaces of a Mixed-Use Building. A
+     shock that stopped at the component would leave profit identical across
+     downside, base and upside — exactly the bug this guards against. */
+  (function sensitivityReachesSubs() {
+    const mixedInput = Object.assign({}, baseProject, {
+      components: [mixedComp([retailSub, officeSub])],
+    });
+    const plainInput = Object.assign({}, baseProject, { components: [saleComp({ allocationPct: 1.0 })] });
+
+    let msg = null;
+    try {
+      [["mixed", mixedInput], ["plain", plainInput]].forEach(([what, inp]) => {
+        const s = F.buildScenarios(inp, 0.10);
+        const d = s.downside.kpi.profit, b = s.base.kpi.profit, u = s.upside.kpi.profit;
+        if (!(d < b && b < u)) {
+          msg = (msg ? msg + "; " : "") +
+            `${what}: scenarios did not separate profit (down ${Math.round(d)}, base ${Math.round(b)}, up ${Math.round(u)})`;
+        }
+      });
+    } catch (e) { msg = "threw: " + (e && e.message); }
+
+    if (msg) failures++;
+    rows.push({ name: "SENSITIVITY: shocks reach mixed-use spaces", fails: msg ? [msg] : [] });
+  })();
+
   /* ---------- Equivalence: mixed use must not invent or lose value ----------
      A Mixed-Use Building whose single sub takes 100% of the GFA, with the same
      efficiency, build rate and revenue terms, must produce numbers identical to
