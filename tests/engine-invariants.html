@@ -298,6 +298,50 @@
   document.getElementById("out").innerHTML = html + "</table>";
   document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
 
+  /* ---------- A zero input must survive as zero ----------
+     `+v || default` reads a user-entered 0 as "not supplied". A cap rate of 0
+     says the asset is held, not sold, and must produce no exit value; the same
+     applies to a top floor set back to nothing and to an undiscounted NPV. */
+  (function zerosSurvive() {
+    const fails = [];
+    const leaseWith = (over) => Object.assign({}, baseProject, {
+      components: [leaseComp(Object.assign({ allocationPct: 1.0 }, over))],
+    });
+    try {
+      // Cap rate 0 -> no exit proceeds at all.
+      const held = F.runFeasibility(leaseWith({ exitCapRate: 0 }));
+      if ((held.kpi.totalExit || 0) !== 0) {
+        fails.push(`exitCapRate 0 still produced an exit value of ${Math.round(held.kpi.totalExit)}`);
+      }
+      const exitFlowSum = (held.cashflow.exit || []).reduce((s, v) => s + v, 0);
+      if (Math.abs(exitFlowSum) > 0.01) {
+        fails.push(`exitCapRate 0 still put ${Math.round(exitFlowSum)} through the exit cashflow`);
+      }
+      // A non-zero cap rate must still capitalise, so the check above is not
+      // passing for the wrong reason.
+      const sold = F.runFeasibility(leaseWith({ exitCapRate: 0.075 }));
+      if ((sold.kpi.totalExit || 0) <= 0) fails.push("a 7.5% cap rate produced no exit value");
+
+      // Discount rate 0 -> project NPV equals the undiscounted sum of the
+      // GROSS (unlevered) flows, which is what projectNPV discounts.
+      const undisc = F.runFeasibility(Object.assign({}, leaseWith({}), { discountRate: 0 }));
+      const rawSum = (undisc.cashflow.gross || []).reduce((s, v) => s + v, 0);
+      if (Math.abs((undisc.kpi.projectNPV || 0) - rawSum) > Math.max(1, Math.abs(rawSum) * 1e-6)) {
+        fails.push(`discountRate 0 did not give an undiscounted NPV (${Math.round(undisc.kpi.projectNPV)} vs ${Math.round(rawSum)})`);
+      }
+
+      // lastFloorPct 0 -> a smaller GFA than the same massing at 0.8.
+      const flat = F.runFeasibility(leaseWith({ massingMode: "coverage", landCoveragePct: 0.5, upperFloorCoveragePct: 0.5, maxFloors: 6, lastFloorPct: 0 }));
+      const stepped = F.runFeasibility(leaseWith({ massingMode: "coverage", landCoveragePct: 0.5, upperFloorCoveragePct: 0.5, maxFloors: 6, lastFloorPct: 0.8 }));
+      if (!(flat.kpi.gfa < stepped.kpi.gfa)) {
+        fails.push(`lastFloorPct 0 did not reduce GFA (${Math.round(flat.kpi.gfa)} vs ${Math.round(stepped.kpi.gfa)})`);
+      }
+    } catch (e) { fails.push("threw: " + (e && e.message)); }
+
+    if (fails.length) failures++;
+    rows.push({ name: "ZEROS: a deliberate 0 is not replaced by a default", fails });
+  })();
+
   /* ---------- Sensitivity must actually reach mixed-use spaces ----------
      Price, rent and build cost live on the spaces of a Mixed-Use Building. A
      shock that stopped at the component would leave profit identical across

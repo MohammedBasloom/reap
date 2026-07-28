@@ -194,7 +194,11 @@ function computeUnitRevenue(u, nsa) {
     if (basis === "key")  grossIncome = keys * (+u.adr || 0) * occ * 365;
     opex = grossIncome * opexPct;
     noi = grossIncome - opex;
-    const cap = +u.exitCapRate || 0.075;
+    // numOr, not `||`: a cap rate of 0 is a deliberate statement that the asset
+    // is held rather than sold, so it must survive as 0 and produce no exit
+    // value. `+v || 0.075` would read that 0 as "not supplied" and quietly
+    // capitalise the NOI at 7.5%.
+    const cap = numOr(u.exitCapRate, 0.075);
     exitValue = cap > 0 ? noi / cap : 0;
   }
 
@@ -213,7 +217,8 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
   if (massingMode === "coverage") {
     const landCoverage = Math.max(0, Math.min(1, +c.landCoveragePct || 0));   // ground floor footprint
     const upperCoverage = Math.max(0, Math.min(1, +c.upperFloorCoveragePct || 0));
-    const lastPct = Math.max(0, Math.min(1, +c.lastFloorPct || 1));            // last floor as % of upper typical
+    // 0 is meaningful here — a top floor set back to nothing — so numOr, not `||`.
+    const lastPct = Math.max(0, Math.min(1, numOr(c.lastFloorPct, 1)));        // last floor as % of upper typical
     const maxFloors = Math.max(0, +c.maxFloors || 0);                          // total above-ground, incl. last
 
     groundArea = land * landCoverage;
@@ -263,7 +268,8 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
     nsa = subs.reduce((t, s) => t + s.nsa, 0);
     aboveGroundConstructionCost = subs.reduce((t, s) => t + s.constructionCost, 0);
   } else {
-    const efficiency = +c.efficiency || 0.78;
+    // numOr to match the sub-component path, which already used it.
+    const efficiency = numOr(c.efficiency, 0.78);
     nsa = gfa * efficiency;
     aboveGroundConstructionCost = gfa * (+c.costPerSqmGFA || 0);
   }
@@ -810,7 +816,7 @@ function runFeasibility(input) {
   const profitUnlevered = totalCashRevenue - totalCashCosts;
 
   const equityCashflow = netCashflow.slice();
-  const discount = +a.discountRate || 0.10;
+  const discount = numOr(a.discountRate, 0.10);
   const projectIRR = irr(grossCashflow);
   const equityIRR = irr(equityCashflow);
   const projectNPV = npv(grossCashflow, discount);
@@ -951,7 +957,7 @@ function computeRisks(ctx) {
     push("success", "Land allocation balanced", `${(totalAllocationPct * 100).toFixed(1)}% allocated across components.`);
   }
 
-  const hurdle = +a.discountRate || 0.12;
+  const hurdle = numOr(a.discountRate, 0.12);
   // A null IRR has two very different causes. If no equity was ever called the
   // project simply funded itself, and there is no equity series to solve — that
   // is a good outcome, not a danger. Only an unsolvable series is a red flag.
@@ -1374,7 +1380,7 @@ function monteCarlo(input, trials = 400) {
   const probPositive = irrSampleCount
     ? irrs.filter(v => v > 0).length / irrSampleCount : null;
   const probAboveHurdle = irrSampleCount
-    ? irrs.filter(v => v > (input.discountRate || 0.12)).length / irrSampleCount : null;
+    ? irrs.filter(v => v > numOr(input.discountRate, 0.12)).length / irrSampleCount : null;
   return {
     trials, irrs, npvs, profits, roiVals,
     // How many of `trials` produced a defined equity IRR.
