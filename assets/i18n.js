@@ -127,6 +127,8 @@
     "Ground rent, no title": "إيجار أرض دون تملّك",
     "No RETT on a lease": "لا رسوم تصرّف على الإيجار",
     "Ground rent": "إيجار الأرض",
+    "at exit, annual": "سنويًا عند التخارج",
+    "NOI after rent": "صافي الدخل بعد الإيجار",
     "Land rent": "قيمة إيجار الأرض",
     "Annual ground rent": "الإيجار السنوي للأرض",
     "Annual rent per m² of plot. Paid in advance at the start of each year, and it runs until the project exits — not to the end of the horizon.":

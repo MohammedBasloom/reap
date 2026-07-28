@@ -439,6 +439,59 @@ function runFeasibility(input) {
     return computeComponent(c, netDevelopableArea, isLeasehold ? 0 : landPricePerSqm);
   });
 
+  /* ----- Leasehold: the exit is of an ENCUMBERED income stream -----
+     A buyer at exit inherits the ground lease, so they capitalise the income
+     net of the rent they will have to keep paying. Capitalising the pre-rent
+     NOI would price a leasehold asset as though it were freehold — and since
+     the model also stops charging rent at exit, that would let the project
+     both walk away from the obligation and be paid as if it never existed.
+
+     The rent deducted is the annual amount payable in the exit year (escalated
+     to that date), shared across the leased units in proportion to their NOI —
+     rent is a site-level cost with no natural per-unit split, and NOI is the
+     capacity each unit has to bear it. A unit whose share exceeds its NOI is
+     worth nothing at exit rather than a negative amount. */
+  const exitYearIndex = Math.floor(
+    projectEndMonth(components, conEnd, preSalesStartMonth) / 12);
+  const rentRatePerSqmYr = isLeasehold ? Math.max(0, numOr(a.landRentPerSqmYr, 0)) : 0;
+  const rentReviewYears = Math.max(1, Math.round(numOr(a.landRentEscalationYears, 5)));
+  const rentEscalation = numOr(a.landRentEscalationPct, 0);
+  const annualRentAtExit = rentRatePerSqmYr > 0
+    ? landArea * rentRatePerSqmYr *
+      Math.pow(1 + rentEscalation, Math.floor(exitYearIndex / rentReviewYears))
+    : 0;
+
+  if (annualRentAtExit > 0) {
+    const leasedNoi = components.reduce((s, c) =>
+      s + revenueUnits(c).reduce((t, u) => t + Math.max(0, u.noi || 0), 0), 0);
+    if (leasedNoi > 0) {
+      const encumber = (u) => {
+        if (!u || !(u.noi > 0)) return u;
+        const share = annualRentAtExit * (u.noi / leasedNoi);
+        const netNoi = Math.max(0, u.noi - share);
+        const cap = numOr(u.exitCapRate, 0.075);
+        return Object.assign({}, u, {
+          groundRentAtExit: share,
+          noiAfterGroundRent: netNoi,
+          exitValue: cap > 0 ? netNoi / cap : 0,
+        });
+      };
+      for (let i = 0; i < components.length; i++) {
+        const c = components[i];
+        if (!c.enabled) continue;
+        if (Array.isArray(c.subs)) {
+          const subs = c.subs.map(encumber);
+          components[i] = Object.assign({}, c, {
+            subs,
+            exitValue: subs.reduce((s, u) => s + (u.exitValue || 0), 0),
+          });
+        } else {
+          components[i] = encumber(c);
+        }
+      }
+    }
+  }
+
   // Allocation validation
   const totalAllocationPct = components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const allocationOverflow = totalAllocationPct > 1.001;
@@ -978,7 +1031,7 @@ function runFeasibility(input) {
       landCost, landTransferFees,
       // Leasehold: ground rent is a cost of the project but never part of
       // devCostExFinance, so it never inflates the debt facility.
-      landTenure, totalLandRent,
+      landTenure, totalLandRent, annualRentAtExit,
       landRentPerSqmYr, landRentEscalationYears, landRentEscalationPct,
       landType, developablePct, netDevelopableArea, landInfraCost,
       constructionCost: totalConstructionCost,

@@ -829,6 +829,30 @@ function ProgramPanel({ result, input }) {
                 </div>
               );
             })}
+            {/* Ground rent is a site-level cost, not a component's own OpEx,
+                so it gets its own line rather than being folded into the bars
+                above — but the project only keeps what is left after it. */}
+            {(k.totalLandRent || 0) > 0 && (
+              <div style={{
+                marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border-2)",
+                display: "flex", justifyContent: "space-between", fontSize: 12,
+              }}>
+                <span style={{ color: "var(--fg-2)" }}>
+                  Ground rent
+                  <span style={{ color: "var(--fg-4)", fontSize: 10, marginInlineStart: 6 }}>
+                    at exit, annual
+                  </span>
+                </span>
+                <span className="tabnum" style={{ color: "var(--fg-1)" }}>
+                  <span style={{ color: "var(--ad-danger)" }}>− {fc(k.annualRentAtExit || 0)}</span>
+                  <span style={{ color: "var(--fg-3)", margin: "0 6px" }}>→</span>
+                  <span style={{ fontWeight: 600 }}>
+                    {fc(incomeUnits.reduce((s, u) => s + (u.noi || 0), 0) - (k.annualRentAtExit || 0))}
+                  </span>
+                  <span style={{ color: "var(--fg-3)", fontSize: 10, marginInlineStart: 6 }}>NOI after rent</span>
+                </span>
+              </div>
+            )}
             <div style={{ display: "flex", gap: 18, fontSize: 10, color: "var(--fg-3)", marginTop: 6, flexWrap: "wrap" }}>
               <Legend color="var(--ad-navy-800)" label="NOI (after OpEx)" />
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
