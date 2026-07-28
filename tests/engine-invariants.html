@@ -220,6 +220,24 @@
        while the headline Uses breakdown is built from KPI totals. If a cost is
        added to one and not the other the two stop tying — which is how ground
        rent could have been charged by the engine yet invisible in the tabs. */
+    /* Once the facility is clear there is nothing left to sweep, so surplus
+       cash must reach equity rather than pile up in the retained balance. A
+       lumpy annual ground rent used to break this: the spike forced a late
+       equity call, and distributions are locked before the last equity call,
+       so cash accumulated for years with the debt already at zero. */
+    ["cash is not hoarded once the debt is clear", (r) => {
+      const cf = r.cashflow;
+      const exit = r.kpi.autoHorizonMonths || 0;
+      for (let m = 1; m < exit - 1; m++) {
+        const debt = cf.debtBalance[m] || 0;
+        const cash = cf.cashBalance[m] || 0;
+        const dist = (cf.distributions[m] || 0);
+        if (debt < 1 && cash > 50000 && dist < 1) {
+          return `month ${m}: ${Math.round(cash)} retained with no debt outstanding and nothing distributed`;
+        }
+      }
+      return null;
+    }],
     ["uses by category reconcile to the KPI totals", (r) => {
       const c = r.cashflow.usesByCat || {};
       const tot = (a) => (a || []).reduce((s, v) => s + v, 0);
