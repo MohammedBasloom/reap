@@ -417,7 +417,9 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
     };
     const byMode = mode === "sale"
       ? { costPerSqmGFA: 2500, pricePerSqm: 6000, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 }
-      : { costPerSqmGFA: 3600, rentPerSqmYr: 1200, occupancy: 0.85, opexPct: 0.30, operatingPeriodMonths: 60, exitCapRate: 0.075 };
+      : { costPerSqmGFA: 3600, rentPerSqmYr: 1200, occupancy: 0.85, opexPct: 0.30,
+          initialOccupancy: 0.30, yearsToStabilization: 1,
+          operatingPeriodMonths: 60, exitCapRate: 0.075 };
     update("subs", [...subs, Object.assign(common, byMode)]);
   };
   const removeSub = (i) => update("subs", subs.filter((_, j) => j !== i));
@@ -723,12 +725,29 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                       {sBasis === "unit" && <Field label="Avg unit size" suffix="m²" value={s.avgUnitSize} onChange={v => updateSub(i, "avgUnitSize", v)} step={5} />}
                       {sBasis === "unit" && <Field label="Rent per unit" suffix="SAR/unit·yr" value={s.rentPerUnitYr} onChange={v => updateSub(i, "rentPerUnitYr", v)} step={1000} />}
                       {sBasis === "key" && <Field label="Keys" value={s.keys} onChange={v => updateSub(i, "keys", v)} step={1} />}
-                      {sBasis === "key" && <Field label="ADR" suffix="SAR/night" value={s.adr} onChange={v => updateSub(i, "adr", v)} step={25} />}
-                      <PctField label="Stabilized occupancy" value={s.occupancy} onChange={v => updateSub(i, "occupancy", v)} />
+                      {sBasis === "key" && <Field label="ADR" suffix="SAR/night" value={s.adr} onChange={v => updateSub(i, "adr", v)} step={25} tip="Average Daily Rate — the average room rate per night across the year. ADR × occupancy × keys × 365 gives annual room revenue." />}
+                      <div />
                     </Row>
+
+                    {/* Lease-up ramp — each space fills at its own pace, so
+                        retail and offices in one building can stabilise on
+                        different curves. */}
+                    <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                      <span>Lease-up ramp</span>
+                      <span style={{ flex: 1, height: 1, background: "var(--border-2)" }} />
+                      <span style={{ fontSize: 10, color: "var(--fg-4)", textTransform: "none", letterSpacing: 0 }}>
+                        {fmtPct(s.initialOccupancy ?? 0.30)} → {fmtPct(s.occupancy ?? 0.85)} over {fmtYrs(s.yearsToStabilization ?? 1)}
+                      </span>
+                    </div>
+                    <Row cols={3}>
+                      <PctField label="Initial occupancy" value={s.initialOccupancy ?? 0.30} onChange={v => updateSub(i, "initialOccupancy", v)} hint="Day-1 at delivery" />
+                      <Field label="Years to stabilization" suffix="years" value={s.yearsToStabilization ?? 1} onChange={v => updateSub(i, "yearsToStabilization", v)} step={0.25} min={0} hint="Lease-up period" />
+                      <PctField label="Stabilized occupancy" value={s.occupancy} onChange={v => updateSub(i, "occupancy", v)} hint="Long-term run-rate" tip="The occupancy the asset settles at once lease-up finishes — the long-run average, not the day-one figure." />
+                    </Row>
+
                     <Row cols={2}>
-                      <PctField label="OpEx" value={s.opexPct} onChange={v => updateSub(i, "opexPct", v)} hint="% of gross income" />
-                      <PctField label="Exit cap rate" value={s.exitCapRate} onChange={v => updateSub(i, "exitCapRate", v)} step={0.25} tip="The yield a buyer would accept for this use at exit. Stabilised NOI divided by the cap rate gives the exit value." />
+                      <PctField label="OpEx" value={s.opexPct} onChange={v => updateSub(i, "opexPct", v)} hint="% of gross income" tip="Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI." />
+                      <PctField label="Exit cap rate" value={s.exitCapRate} onChange={v => updateSub(i, "exitCapRate", v)} hint="Terminal cap" step={0.25} tip="The yield a buyer would accept for this use at exit. Stabilised NOI divided by the cap rate gives the exit value." />
                     </Row>
                     <Row cols={2}>
                       <Field label="Operating period" suffix="months" value={s.operatingPeriodMonths} onChange={v => updateSub(i, "operatingPeriodMonths", v)} step={1} hint="Held before exit" />
