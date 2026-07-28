@@ -731,7 +731,7 @@ function runFeasibility(input) {
      until stable. That makes "no distribution while a later contribution
      could be required" exact rather than estimated (the capacity heuristic
      alone can miss future capitalised interest). */
-  const runFundingPass = (noDistBefore) => {
+  const runFundingPass = (futureCall) => {
     const F = {
       debtDrawFlow: arr(), debtRepayFlow: arr(), interestFlow: arr(), debtBalance: arr(),
       interestPaidFlow: arr(), principalRepayFlow: arr(), cashAvailableFlow: arr(),
@@ -817,8 +817,20 @@ function runFeasibility(input) {
       // 6) Distribute only cash beyond what future needs can't get from the
       //    (re-opened) facility — and never before the locked month.
       const futureCapacity = Math.max(0, debtFacility - outstanding);
-      const retainTarget = (m >= projectExitMonth) ? 0 : Math.max(0, futureNeed[m] - futureCapacity);
-      const distribute = (m >= noDistBefore) ? Math.max(0, totalCash - retainTarget) : 0;
+      /* Retain exactly what later calls will need, then distribute the rest.
+
+         `futureNeed` covers costs the schedule already knows about, but it
+         cannot see an equity call the funding loop itself will produce — most
+         obviously the injection that clears a residual loan at exit when there
+         are no sale proceeds. `futureCall` carries that back from the previous
+         pass, so the reserve is sized to the real requirement instead of
+         blocking every distribution before the last call outright. */
+      const retainTarget = (m >= projectExitMonth) ? 0 : Math.max(
+        0,
+        futureNeed[m] - futureCapacity,
+        futureCall ? (futureCall[m] || 0) : 0
+      );
+      const distribute = Math.max(0, totalCash - retainTarget);
       cashBalance = totalCash - distribute;
 
       F.debtDrawFlow[m] = draw;
@@ -851,16 +863,30 @@ function runFeasibility(input) {
     return F;
   };
 
-  // Iterate to a fixed point: lock distributions before the last equity
-  // call and re-run. Locking only retains more cash, which can only reduce
-  // (or advance) equity needs — so the lock is monotone and converges.
-  let lock = 0;
-  let pass = runFundingPass(lock);
+  /* Iterate to a fixed point. Each pass reports the equity it had to call;
+     the next pass reserves that amount out of earlier distributions, so cash
+     is held back only to the extent a later call actually needs it. Retaining
+     more can only reduce the next call (retained cash sweeps the loan first),
+     so the sequence is monotone and settles quickly. */
+  let futureCall = null;
+  let pass = runFundingPass(futureCall);
   for (let iter = 0; iter < 6; iter++) {
-    const newLock = pass.lastCall + 1;
-    if (newLock <= lock) break;
-    lock = newLock;
-    pass = runFundingPass(lock);
+    // Equity required in the months AFTER m, from the pass just run.
+    const next = arr();
+    let running = 0;
+    for (let m = horizon; m >= 0; m--) {
+      next[m] = running;
+      running += (pass.equityNeedCashFlow[m] || 0) + (pass.deficiencyFlow[m] || 0);
+    }
+    let settled = !!futureCall;
+    if (settled) {
+      for (let m = 0; m <= horizon; m++) {
+        if (Math.abs(next[m] - (futureCall[m] || 0)) > 1) { settled = false; break; }
+      }
+    }
+    if (settled) break;
+    futureCall = next;
+    pass = runFundingPass(futureCall);
   }
   const debtDrawFlow = pass.debtDrawFlow;
   const debtRepayFlow = pass.debtRepayFlow;
