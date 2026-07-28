@@ -947,8 +947,14 @@ function runFeasibility(input) {
   const totalCashRevenue = salesFlow.reduce((s, v) => s + v, 0) +
     rentFlow.reduce((s, v) => s + v, 0) +
     exitFlow.reduce((s, v) => s + v, 0);
+  /* Every cost the project actually pays. This MUST stay in step with
+     grossCashflow — the two are the same set of flows, and profitUnlevered is
+     asserted equal to the sum of grossCashflow in the harness. Ground rent was
+     once missing here while present there, which overstated profit by the
+     whole rent. */
   const totalCashCosts = -(
     landFlow.reduce((s, v) => s + v, 0) +
+    landRentFlow.reduce((s, v) => s + v, 0) +
     softFlow.reduce((s, v) => s + v, 0) +
     constructionFlow.reduce((s, v) => s + v, 0) +
     siteWorkFlow.reduce((s, v) => s + v, 0) +

@@ -238,6 +238,31 @@
       }
       return null;
     }],
+    /* THE conservation check. grossCashflow is the unlevered project view —
+       every cost and every receipt. profitUnlevered is built from a separate
+       list of the same flows, so the two must agree exactly. Any cost added to
+       one list and not the other shows up here immediately; ground rent was
+       once in grossCashflow but absent from the profit sum, which overstated
+       profit by the entire rent. */
+    ["unlevered profit equals the sum of the project cashflow", (r) => {
+      const gross = (r.cashflow.gross || []).reduce((s, v) => s + v, 0);
+      const p = r.kpi.profitUnlevered || 0;
+      return Math.abs(gross - p) > 2
+        ? `profitUnlevered ${Math.round(p)} but the project cashflow sums to ${Math.round(gross)} (gap ${Math.round(p - gross)})`
+        : null;
+    }],
+    ["levered profit is unlevered profit less interest", (r) => {
+      const expect = (r.kpi.profitUnlevered || 0) - (r.kpi.totalInterest || 0);
+      return Math.abs((r.kpi.profit || 0) - expect) > 2
+        ? `profit ${Math.round(r.kpi.profit)} vs unlevered less interest ${Math.round(expect)}`
+        : null;
+    }],
+    ["revenue less cost equals unlevered profit", (r) => {
+      const expect = (r.kpi.totalRevenue || 0) - (r.kpi.totalCost || 0);
+      return Math.abs((r.kpi.profitUnlevered || 0) - expect) > 2
+        ? `profitUnlevered ${Math.round(r.kpi.profitUnlevered)} vs revenue-less-cost ${Math.round(expect)}`
+        : null;
+    }],
     ["uses by category reconcile to the KPI totals", (r) => {
       const c = r.cashflow.usesByCat || {};
       const tot = (a) => (a || []).reduce((s, v) => s + v, 0);
@@ -252,6 +277,56 @@
       return Math.abs(fromCats - fromKpi) > 2
         ? `categories ${Math.round(fromCats)} vs KPI totals ${Math.round(fromKpi)}`
         : null;
+    }],
+    /* A mixed-use building is only ever the sum of its spaces. If any aggregate
+       drifts from its parts, the parent is reporting something its spaces did
+       not produce. */
+    ["mixed-use parents equal the sum of their spaces", (r) => {
+      const bad = [];
+      r.components.filter(c => c.enabled && Array.isArray(c.subs)).forEach(c => {
+        const sum = (k) => c.subs.reduce((s, u) => s + (u[k] || 0), 0);
+        [["nsa", c.nsa], ["units", c.units], ["keys", c.keys],
+         ["salesRevenue", c.salesRevenue], ["grossIncome", c.grossIncome],
+         ["opex", c.opex], ["noi", c.noi], ["exitValue", c.exitValue]].forEach(([k, parent]) => {
+          if (Math.abs((parent || 0) - sum(k)) > 0.01) {
+            bad.push(`${c.name || c.id}.${k}: parent ${Math.round(parent || 0)} vs spaces ${Math.round(sum(k))}`);
+          }
+        });
+        // Build cost is each space's own rate on its own GFA, plus the shared basement.
+        const built = c.subs.reduce((s, u) => s + (u.constructionCost || 0), 0) + (c.basementCost || 0);
+        if (Math.abs((c.builtCost || 0) - built) > 0.01) {
+          bad.push(`${c.name || c.id}.builtCost: ${Math.round(c.builtCost)} vs spaces+basement ${Math.round(built)}`);
+        }
+        // Spaces cannot take more floor area than the building has.
+        const subGfa = c.subs.reduce((s, u) => s + (u.gfa || 0), 0);
+        if (subGfa > (c.gfa || 0) + 0.01) {
+          bad.push(`${c.name || c.id}: spaces take ${Math.round(subGfa)} m² of a ${Math.round(c.gfa)} m² building`);
+        }
+      });
+      return bad.length ? bad.slice(0, 3).join("; ") : null;
+    }],
+    /* The S-curves must deliver every riyal of revenue the components produced
+       — no more, no less — or the charts and the KPIs describe different
+       projects. */
+    ["cashflows deliver exactly the components' revenue", (r) => {
+      const bad = [];
+      const sumFlow = (a) => (a || []).reduce((s, v) => s + v, 0);
+      const compSales = r.components.filter(c => c.enabled)
+        .reduce((s, c) => s + (c.salesRevenue || 0), 0);
+      if (Math.abs(sumFlow(r.cashflow.sales) - compSales) > 1) {
+        bad.push(`sales flow ${Math.round(sumFlow(r.cashflow.sales))} vs components ${Math.round(compSales)}`);
+      }
+      const compExit = r.components.filter(c => c.enabled)
+        .reduce((s, c) => s + (c.exitValue || 0), 0);
+      if (Math.abs(sumFlow(r.cashflow.exit) - compExit) > 1) {
+        bad.push(`exit flow ${Math.round(sumFlow(r.cashflow.exit))} vs components ${Math.round(compExit)}`);
+      }
+      // Rent and OpEx move together through the lease-up ramp, so NOI must be
+      // exactly rent less opex month by month.
+      const noiGap = Math.abs(sumFlow(r.cashflow.noi) -
+        (sumFlow(r.cashflow.rent) + sumFlow(r.cashflow.opex)));
+      if (noiGap > 1) bad.push(`NOI flow does not equal rent less opex (gap ${Math.round(noiGap)})`);
+      return bad.length ? bad.join("; ") : null;
     }],
     ["GFA equals sum of components", (r) => {
       const sum = r.components.reduce((s, c) => s + (c.gfa || 0), 0);
