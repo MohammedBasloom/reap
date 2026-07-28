@@ -229,23 +229,31 @@ function Row({ children, cols = 2 }) {
 function Segmented({ value, onChange, options }) {
   return (
     <div style={{ display: "flex", border: "1px solid var(--border-1)" }}>
-      {options.map((o, i) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          style={{
-            flex: 1, padding: "6px 10px",
-            background: value === o.value ? "var(--ad-navy-800)" : "transparent",
-            color: value === o.value ? "white" : "var(--fg-2)",
-            border: "none",
-            borderLeft: i > 0 ? "1px solid var(--border-1)" : "none",
-            cursor: "pointer",
-            fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
-            fontWeight: 500,
-          }}
-        >{o.label}</button>
-      ))}
+      {options.map((o, i) => {
+        // An option may be disabled — used to shut off "Saleable" on leased
+        // land, where there are no units to sell.
+        const off = !!o.disabled && value !== o.value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            disabled={off}
+            title={off && o.disabledHint ? o.disabledHint : undefined}
+            onClick={() => { if (!off) onChange(o.value); }}
+            style={{
+              flex: 1, padding: "6px 10px",
+              background: value === o.value ? "var(--ad-navy-800)" : "transparent",
+              color: value === o.value ? "white" : (off ? "var(--fg-4)" : "var(--fg-2)"),
+              border: "none",
+              borderLeft: i > 0 ? "1px solid var(--border-1)" : "none",
+              cursor: off ? "not-allowed" : "pointer",
+              opacity: off ? 0.45 : 1,
+              fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
+              fontWeight: 500,
+            }}
+          >{o.label}</button>
+        );
+      })}
     </div>
   );
 }
@@ -372,7 +380,7 @@ function FloorBreakdown({ comp, land }) {
 
 /* ---------- Component editor ---------- */
 
-function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePerSqm }) {
+function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePerSqm, isLeasehold }) {
   const update = (k, v) => onChange({ ...comp, [k]: v });
   const preset = COMPONENT_PRESETS[comp.kind] || {};
 
@@ -525,7 +533,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
               }
               onChange(Object.assign({}, comp, patch));
             }}
-            options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
+            options={[{ value: "sale", label: "Saleable", disabled: isLeasehold, disabledHint: "Units cannot be sold on leased land" }, { value: "lease", label: "Leasable" }]}
           />
         )}
       </div>
@@ -721,7 +729,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                   <Segmented
                     value={s.mode || "lease"}
                     onChange={v => switchSubMode(i, v)}
-                    options={[{ value: "sale", label: "Saleable" }, { value: "lease", label: "Leasable" }]}
+                    options={[{ value: "sale", label: "Saleable", disabled: isLeasehold, disabledHint: "Units cannot be sold on leased land" }, { value: "lease", label: "Leasable" }]}
                   />
                 </div>
                 <div style={{ marginBottom: 8 }}>
@@ -796,11 +804,16 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           })}
 
           <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
-            <button type="button" onClick={() => addSub("sale")} style={{
-              flex: 1, padding: "8px", cursor: "pointer",
-              border: "1px dashed var(--ad-success)", background: "transparent",
-              color: "var(--ad-success)", font: "inherit", fontSize: 11, fontWeight: 600,
-            }}>+ Spaces for sale</button>
+            <button type="button" disabled={isLeasehold}
+              onClick={() => { if (!isLeasehold) addSub("sale"); }}
+              title={isLeasehold ? "Units cannot be sold on leased land" : undefined}
+              style={{
+                flex: 1, padding: "8px",
+                cursor: isLeasehold ? "not-allowed" : "pointer",
+                opacity: isLeasehold ? 0.4 : 1,
+                border: "1px dashed var(--ad-success)", background: "transparent",
+                color: "var(--ad-success)", font: "inherit", fontSize: 11, fontWeight: 600,
+              }}>+ Spaces for sale</button>
             <button type="button" onClick={() => addSub("lease")} style={{
               flex: 1, padding: "8px", cursor: "pointer",
               border: "1px dashed var(--ad-gold-600)", background: "transparent",
@@ -935,8 +948,12 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
 /* ---------- Component picker (tile grid) ---------- */
 
-function ComponentPicker({ onPick, hasComponents, landArea }) {
+function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
   const entries = Object.entries(COMPONENT_PRESETS);
+  // Nothing can be sold on leased land — the project holds no title to pass on
+  // — so every sale-only component is unavailable while the tenure is a lease.
+  // A Mixed-Use Building stays available: it can still hold leased spaces.
+  const blocked = (p) => isLeasehold && p.mode === "sale";
   return (
     <div style={{ marginBottom: hasComponents ? 4 : 0 }}>
       <div style={{
@@ -959,17 +976,20 @@ function ComponentPicker({ onPick, hasComponents, landArea }) {
           <button
             key={k}
             type="button"
-            onClick={() => onPick(k)}
-            title={p.blurb}
+            disabled={blocked(p)}
+            onClick={() => { if (!blocked(p)) onPick(k); }}
+            title={blocked(p) ? "Units cannot be sold on leased land" : p.blurb}
             style={{
               display: "flex", flexDirection: "column", alignItems: "flex-start",
               gap: 4, padding: "10px 10px 9px",
-              border: "1px solid var(--border-1)", background: "var(--bg-1)",
-              cursor: "pointer", textAlign: "left",
+              border: "1px solid var(--border-1)",
+              background: blocked(p) ? "var(--bg-2)" : "var(--bg-1)",
+              cursor: blocked(p) ? "not-allowed" : "pointer", textAlign: "left",
+              opacity: blocked(p) ? 0.4 : 1,
               transition: "background 120ms var(--ease-out), border-color 120ms var(--ease-out)",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-1)"; e.currentTarget.style.borderColor = "var(--border-1)"; }}
+            onMouseEnter={e => { if (blocked(p)) return; e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
+            onMouseLeave={e => { if (blocked(p)) return; e.currentTarget.style.background = "var(--bg-1)"; e.currentTarget.style.borderColor = "var(--border-1)"; }}
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: 18, color: "var(--ad-navy-700)", lineHeight: 1 }}>{p.icon}</span>
@@ -1341,6 +1361,22 @@ function Sidebar({ input, setInput }) {
   const landTransferFees = totalLandCost * (isLeasehold ? 0 : (input.landTransferFeesPct || 0));
   const annualGroundRent = isLeasehold
     ? (input.landArea || 0) * (input.landRentPerSqmYr || 0) : 0;
+
+  /* Anything still set to sell while the land is only leased — plain
+     components and individual spaces inside a mixed-use building alike. */
+  const saleOnLeasedLand = [];
+  (input.components || []).forEach(c => {
+    if (!c || !c.enabled) return;
+    if (Array.isArray(c.subs)) {
+      c.subs.forEach(s => {
+        if (s && s.enabled !== false && s.mode === "sale") {
+          saleOnLeasedLand.push(`${c.name} — ${s.name}`);
+        }
+      });
+    } else if (c.mode === "sale") {
+      saleOnLeasedLand.push(c.name);
+    }
+  });
   const totalLandIn = totalLandCost + landTransferFees;
   const isRawLand = input.landType === "raw";
   // Clamped to [0,1] as the engine does, so an out-of-range entry cannot make
@@ -1514,10 +1550,30 @@ function Sidebar({ input, setInput }) {
         n="03"
         alarm={totalAllocationPct > 1.001 ? "OVERALLOCATED" : null}
       >
+        {/* Nothing can be sold on land the project only leases, so anything
+            already set to sell is flagged rather than silently rewritten — the
+            user decides whether to convert it or drop it.
+
+            Each line below is its own string child so the i18n layer can
+            translate it; interpolating the names into one sentence would leave
+            fragments no dictionary key matches. */}
+        {isLeasehold && saleOnLeasedLand.length > 0 && (
+          <div style={{
+            fontSize: 11, lineHeight: 1.5, padding: "9px 11px", marginBottom: 10,
+            border: "1px solid var(--ad-danger)", background: "var(--bg-2)", color: "var(--ad-danger)",
+          }}>
+            <div style={{ fontWeight: 700 }}>Units cannot be sold on leased land.</div>
+            <div style={{ marginTop: 4 }}>These are still set to sell and are being counted as sales revenue:</div>
+            <div style={{ marginTop: 2, fontWeight: 600, color: "var(--fg-1)" }}>{saleOnLeasedLand.join(" · ")}</div>
+            <div style={{ marginTop: 4 }}>Switch them to leasable, remove them, or buy the land instead.</div>
+          </div>
+        )}
+
         <ComponentPicker
           onPick={addComp}
           hasComponents={hasComponents}
           landArea={netDevelopableArea}
+          isLeasehold={isLeasehold}
         />
 
         {hasComponents ? (
@@ -1547,6 +1603,7 @@ function Sidebar({ input, setInput }) {
                   onRemove={() => removeComp(i)}
                   totalLandArea={netDevelopableArea}
                   landPricePerSqm={input.landPricePerSqm || 0}
+                  isLeasehold={isLeasehold}
                 />
               ))}
             </div>
