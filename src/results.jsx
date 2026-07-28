@@ -88,12 +88,17 @@ function SummaryPanel({ result, input, scenarios }) {
       <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 24, marginBottom: 32 }}>
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)" }}>
           <Eyebrow>Cumulative Net Cashflow (Levered)</Eyebrow>
+          {/* Every band is CUMULATIVE, like the line. They were monthly, which
+              made the chart unreadable: on a long hold the largest month is a
+              fraction of the cumulative range, so the bands collapsed to
+              slivers along the axis and appeared to contradict the line they
+              were meant to explain. */}
           <StackedArea
             months={cf.months}
             series={[
-              { label: "Cost",    color: "var(--ad-danger)", values: cf.land.map((_, i) => cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + cf.infra[i] + cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.interest[i]) },
-              { label: "Revenue", color: "var(--ad-success)", opacity: 0.85, values: cf.sales.map((_, i) => cf.sales[i] + cf.rent[i] + cf.exit[i]) },
-              { label: "Debt",    color: "var(--ad-navy-400)", opacity: 0.6, values: cf.debtDraw.map((_, i) => cf.debtDraw[i] + cf.debtRepay[i]) },
+              { label: "Cost",    color: "var(--ad-danger)", values: runningTotal(cf.land.map((_, i) => cf.land[i] + gr(cf, i) + cf.soft[i] + cf.construction[i] + cf.infra[i] + cf.contingency[i] + cf.selling[i] + cf.opex[i] + cf.interest[i])) },
+              { label: "Revenue", color: "var(--ad-success)", opacity: 0.85, values: runningTotal(cf.sales.map((_, i) => cf.sales[i] + cf.rent[i] + cf.exit[i])) },
+              { label: "Debt",    color: "var(--ad-navy-400)", opacity: 0.6, values: runningTotal(cf.debtDraw.map((_, i) => cf.debtDraw[i] + cf.debtRepay[i])) },
             ]}
             height={220}
             /* The line is the engine's levered (equity) cashflow, on the SAME
@@ -625,6 +630,15 @@ function CostPanel({ result, input }) {
    existed (saved models, or a cached engine mid-deploy). */
 function gr(cf, i) {
   return (cf.landRent && cf.landRent[i]) || 0;
+}
+
+/* Running total of a monthly series. Used to put stacked bands on the same
+   cumulative footing as the line they sit behind — a monthly band and a
+   cumulative line on one axis are not comparable, and on a long hold the bands
+   shrink to nothing. */
+function runningTotal(values) {
+  let c = 0;
+  return (values || []).map(v => (c += (v || 0)));
 }
 
 function ProgramPanel({ result, input }) {
