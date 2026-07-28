@@ -1362,10 +1362,23 @@ function monteCarlo(input, trials = 400) {
     profits.push(r.kpi.profit);
     roiVals.push(r.kpi.equityROI);
   }
-  const probPositive = irrs.filter(v => v > 0).length / irrs.length;
-  const probAboveHurdle = irrs.filter(v => v > (input.discountRate || 0.12)).length / irrs.length;
+  /* These probabilities are shares of the trials that produced an equity IRR —
+     which excludes every trial where the project funded itself and called no
+     equity. On a self-funding scheme that can be nearly all of them, so the
+     sample is both tiny and selected for the trials that went badly enough to
+     need equity. `irrSampleCount` is exported so the UI can say how many trials
+     actually contributed, and null is returned rather than 0/0 = NaN when none
+     did. Whether these should instead be measured on profit or NPV — which are
+     defined in every trial — is an open question for the modeller. */
+  const irrSampleCount = irrs.length;
+  const probPositive = irrSampleCount
+    ? irrs.filter(v => v > 0).length / irrSampleCount : null;
+  const probAboveHurdle = irrSampleCount
+    ? irrs.filter(v => v > (input.discountRate || 0.12)).length / irrSampleCount : null;
   return {
     trials, irrs, npvs, profits, roiVals,
+    // How many of `trials` produced a defined equity IRR.
+    irrSampleCount,
     irrP10: percentile(irrs, 0.10),
     irrP50: percentile(irrs, 0.50),
     irrP90: percentile(irrs, 0.90),
