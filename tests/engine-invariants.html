@@ -110,6 +110,37 @@
   add("equity funded, fund on",        { ltc: 0.20, components: [saleComp(), leaseComp()], fund: fundOn });
   add("equity funded, lease only",     { ltc: 0.20, components: [leaseComp({ allocationPct: 1.0 })], fund: fundOn });
 
+  /* ---------- Mixed-Use Building ----------
+     One land allocation, one FAR, one GFA, one basement, one site-works %;
+     each sub takes a share of that GFA with its own build cost, efficiency,
+     purpose, rate, occupancy, timing and exit cap. */
+  const sub = (over) => Object.assign({
+    id: "x", name: "Sub", enabled: true, gfaSharePct: 0.5,
+    costPerSqmGFA: 2500, efficiency: 0.78, mode: "lease",
+    revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28,
+    operatingPeriodMonths: 60, exitCapRate: 0.075,
+  }, over || {});
+
+  const mixedComp = (subs, over) => Object.assign({
+    id: "m1", kind: "mixed", name: "Mixed", enabled: true,
+    allocationPct: 1.0, massingMode: "far", far: 3.0, siteWorkPct: 0.06,
+    subs: subs,
+  }, over || {});
+
+  const retailSub = sub({ id: "r", name: "Retail", gfaSharePct: 0.4, costPerSqmGFA: 4200, efficiency: 0.80, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, exitCapRate: 0.075 });
+  const officeSub  = sub({ id: "o", name: "Office", gfaSharePct: 0.6, costPerSqmGFA: 3600, efficiency: 0.75, rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, exitCapRate: 0.08 });
+  const flatsSub   = sub({ id: "a", name: "Flats",  gfaSharePct: 0.5, costPerSqmGFA: 2500, efficiency: 0.78, mode: "sale", revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 });
+
+  add("mixed: community centre",   { components: [mixedComp([retailSub, officeSub])] });
+  add("mixed: sale + lease",       { components: [mixedComp([flatsSub, retailSub.gfaSharePct === 0.4 ? sub({ id: "r2", name: "Retail", gfaSharePct: 0.5, costPerSqmGFA: 4200, efficiency: 0.80 }) : retailSub])] });
+  add("mixed: three uses",         { components: [mixedComp([sub({ id: "a", name: "Flats", gfaSharePct: 0.5, mode: "sale", revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 }), sub({ id: "r", name: "Retail", gfaSharePct: 0.3, costPerSqmGFA: 4200 }), sub({ id: "o", name: "Office", gfaSharePct: 0.2, costPerSqmGFA: 3600, rentPerSqmYr: 1150, exitCapRate: 0.08 })])] });
+  add("mixed: under-allocated GFA",{ components: [mixedComp([sub({ id: "r", name: "Retail", gfaSharePct: 0.3 })])] });
+  add("mixed: with basement",      { components: [mixedComp([retailSub, officeSub], { hasBasement: true, basementCoveragePct: 1.0, basementCostPerSqm: 2000 })] });
+  add("mixed: alongside a plain",  { components: [mixedComp([retailSub, officeSub], { allocationPct: 0.6 }), saleComp({ allocationPct: 0.4 })] });
+  add("mixed: fund on",            { components: [mixedComp([retailSub, officeSub])], fund: fundOn });
+  add("mixed: disabled sub",       { components: [mixedComp([retailSub, Object.assign({}, officeSub, { enabled: false })])] });
+  add("mixed: coverage massing",   { components: [mixedComp([retailSub, officeSub], { massingMode: "coverage", landCoveragePct: 0.55, upperFloorCoveragePct: 0.55, lastFloorPct: 0.8, maxFloors: 8 })] });
+
   /* ---------- invariants ---------- */
 
   const finite = (v) => typeof v !== "number" || Number.isFinite(v);
@@ -261,6 +292,48 @@
   });
   document.getElementById("out").innerHTML = html + "</table>";
   document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
+
+  /* ---------- Equivalence: mixed use must not invent or lose value ----------
+     A Mixed-Use Building whose single sub takes 100% of the GFA, with the same
+     efficiency, build rate and revenue terms, must produce numbers identical to
+     the plain component it mirrors. If the sub-component path drifts from the
+     plain path, this catches it immediately. */
+  (function equivalence() {
+    const shared = {
+      allocationPct: 1.0, massingMode: "far", far: 2.4, siteWorkPct: 0.06,
+      hasBasement: true, basementCoveragePct: 1.0, basementCostPerSqm: 2000,
+    };
+    const terms = {
+      costPerSqmGFA: 2500, efficiency: 0.78, mode: "sale", revenueBasis: "unit",
+      avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36,
+    };
+    const plainInput = Object.assign({}, baseProject, {
+      components: [Object.assign({ id: "p", kind: "apartment", name: "Plain", enabled: true }, shared, terms)],
+    });
+    const mixedInput = Object.assign({}, baseProject, {
+      components: [Object.assign({ id: "m", kind: "mixed", name: "Mixed", enabled: true }, shared, {
+        subs: [Object.assign({ id: "only", name: "Only", enabled: true, gfaSharePct: 1.0 }, terms)],
+      })],
+    });
+
+    let msg = null;
+    try {
+      const a = F.runFeasibility(plainInput).kpi;
+      const b = F.runFeasibility(mixedInput).kpi;
+      const drift = Object.keys(a).filter(k => {
+        const x = a[k], y = b[k];
+        if (typeof x !== "number" || typeof y !== "number") return x !== y;
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return x !== y;
+        return Math.abs(x - y) > 0.01;
+      });
+      if (drift.length) {
+        msg = drift.map(k => `${k}: plain ${a[k]} vs mixed ${b[k]}`).join("; ");
+      }
+    } catch (e) { msg = "threw: " + (e && e.message); }
+
+    if (msg) failures++;
+    rows.push({ name: "EQUIVALENCE: 1-sub mixed === plain component", fails: msg ? [msg] : [] });
+  })();
 
   /* Compact fingerprints — a stable hash per configuration. Comparing these
      against tests/baseline-fingerprints.json detects any numeric change on an

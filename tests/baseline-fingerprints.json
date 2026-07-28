@@ -1,5 +1,6 @@
 {
-  "_comment": "Baseline of tests/engine-invariants.html, captured 2026-07-27 at commit 860fe56 — BEFORE mixed-use sub-components. Each value hashes that configuration's rounded KPI set. Open the harness, compare, and treat any changed fingerprint on an unchanged configuration as a regression. __all hashes the whole set.",
+  "_comment": "Baseline of tests/engine-invariants.html. Each value hashes that configuration's rounded KPI set; open the harness and treat any changed fingerprint on an unchanged configuration as a regression. __all hashes the whole set.",
+  "_history": "Captured 2026-07-27 at 860fe56 (pre mixed-use), then re-captured after adding mixed-use sub-components. Every one of the original 34 fingerprints is byte-identical across that change, which is the proof that sub-components did not disturb existing models; only the new 'mixed: *' entries were added.",
   "coverage massing": "9493b4b9",
   "disabled component": "462fabe5",
   "equity funded, fund on": "b7dd7a6c",
@@ -24,6 +25,16 @@
   "long predesign": "8dd2e10f",
   "loss making": "4dc36818",
   "low ltc (0.20) forces equity": "b7dd7a6c",
+  "mixed: alongside a plain": "92fe6ea7",
+  "mixed: community centre": "d52bec38",
+  "mixed: coverage massing": "cf1c47b2",
+  "mixed: disabled sub": "a09d3d27",
+  "mixed: fund on": "d52bec38",
+  "mixed: fund on ::waterfall": "1177e9c8",
+  "mixed: sale + lease": "c6932ab9",
+  "mixed: three uses": "929bcbba",
+  "mixed: under-allocated GFA": "8ea8b008",
+  "mixed: with basement": "bb7ea681",
   "no selling costs": "50b5ee44",
   "pinned long horizon": "bac192fc",
   "raw land": "f8d6937e",
@@ -41,5 +52,5 @@
   "with basement": "0a90ccbb",
   "zero debt (ltc 0)": "065a1006",
   "zero soft/contingency": "164ec929",
-  "__all": "de4b2858"
+  "__all": "6b4ede93"
 }

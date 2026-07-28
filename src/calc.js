@@ -149,6 +149,54 @@ const numOr = (v, dflt) => {
 
 /* ---------- Component math ---------- */
 
+/* Revenue-bearing units of a component.
+
+   A Mixed-Use Building spreads one unified envelope — one land allocation, one
+   FAR/coverage massing, one total GFA, one basement, one site-works % — across
+   sub-components that each take a share of that GFA and carry their own build
+   cost, efficiency, purpose (sale or lease), rate, occupancy, timing and exit
+   cap. A community centre that is part retail and part offices is one building
+   on one plot, but two very different revenue streams.
+
+   A plain component is its own single revenue unit, so every component without
+   subs[] follows exactly the path it always did. */
+function revenueUnits(c) {
+  return (c.subs && c.subs.length) ? c.subs : [c];
+}
+
+/* Revenue for one unit (a plain component, or one sub of a mixed-use
+   building) given its already-derived net saleable/leasable area. */
+function computeUnitRevenue(u, nsa) {
+  const basis = u.revenueBasis || "sqm";
+  let units = 0, keys = 0;
+  let salesRevenue = 0, grossIncome = 0, opex = 0, noi = 0, exitValue = 0;
+
+  if (basis === "unit") {
+    const avgUnitSize = +u.avgUnitSize || 0;
+    units = avgUnitSize > 0 ? Math.floor(nsa / avgUnitSize) : 0;
+  } else if (basis === "key") {
+    keys = +u.keys || 0;
+  }
+
+  if (u.mode === "sale") {
+    if (basis === "sqm")  salesRevenue = nsa * (+u.pricePerSqm || 0);
+    if (basis === "unit") salesRevenue = units * (+u.pricePerUnit || 0);
+    if (basis === "key")  salesRevenue = keys  * (+u.pricePerKey  || 0);
+  } else if (u.mode === "lease") {
+    const occ = numOr(u.occupancy, 0.85);
+    const opexPct = numOr(u.opexPct, 0.30);
+    if (basis === "sqm")  grossIncome = nsa * (+u.rentPerSqmYr || 0) * occ;
+    if (basis === "unit") grossIncome = units * (+u.rentPerUnitYr || 0) * occ;
+    if (basis === "key")  grossIncome = keys * (+u.adr || 0) * occ * 365;
+    opex = grossIncome * opexPct;
+    noi = grossIncome - opex;
+    const cap = +u.exitCapRate || 0.075;
+    exitValue = cap > 0 ? noi / cap : 0;
+  }
+
+  return { units, keys, salesRevenue, grossIncome, opex, noi, exitValue };
+}
+
 function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
   const allocationPct = +c.allocationPct || 0;
   const land = projectLandArea * allocationPct;
@@ -181,10 +229,46 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
     groundArea = Math.min(land, gfa / Math.max(1, far));
   }
 
-  const efficiency = +c.efficiency || 0.78;
-  const nsa = gfa * efficiency;
+  /* ----- Sub-components (Mixed-Use Building) -----
+     Each sub takes gfaSharePct of the building's unified GFA and applies its
+     OWN efficiency and build rate to that share. A plain component has no
+     subs[]: `subs` stays null and every figure below is derived exactly as
+     before. */
+  const rawSubs = (c.subs && c.subs.length)
+    ? c.subs.filter(s => s && s.enabled !== false)
+    : null;
 
-  // ----- Basement -----
+  let subs = null;
+  let nsa, aboveGroundConstructionCost;
+
+  if (rawSubs && rawSubs.length) {
+    subs = rawSubs.map(s => {
+      const share = Math.max(0, +s.gfaSharePct || 0);
+      const subGfa = gfa * share;
+      const subEfficiency = numOr(s.efficiency, 0.78);
+      const subNsa = subGfa * subEfficiency;
+      const subConstructionCost = subGfa * (+s.costPerSqmGFA || 0);
+      return Object.assign({}, s, {
+        gfaSharePct: share,
+        gfa: subGfa,
+        efficiency: subEfficiency,
+        nsa: subNsa,
+        constructionCost: subConstructionCost,
+      }, computeUnitRevenue(s, subNsa));
+    });
+    nsa = subs.reduce((t, s) => t + s.nsa, 0);
+    aboveGroundConstructionCost = subs.reduce((t, s) => t + s.constructionCost, 0);
+  } else {
+    const efficiency = +c.efficiency || 0.78;
+    nsa = gfa * efficiency;
+    aboveGroundConstructionCost = gfa * (+c.costPerSqmGFA || 0);
+  }
+
+  // Share of GFA the user has handed to sub-components. Anything short of
+  // 100% is built and costed but earns nothing, so the UI warns on it.
+  const subGfaAllocatedPct = subs ? subs.reduce((t, s) => t + s.gfaSharePct, 0) : 0;
+
+  // ----- Basement (unified for the whole building) -----
   const hasBasement = !!c.hasBasement;
   // Coverage may exceed 100% of land: each extra 100% represents another
   // full basement floor (e.g. 200% ≈ two basement levels).
@@ -195,7 +279,8 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
   const basementCost = basementArea * basementCostPerSqm;
 
   // ----- Construction + site work -----
-  const aboveGroundConstructionCost = gfa * (+c.costPerSqmGFA || 0);
+  // aboveGroundConstructionCost is derived above: one rate on the whole GFA for
+  // a plain component, or the sum of each sub's own rate on its GFA share.
   const builtCost = aboveGroundConstructionCost + basementCost;
 
   // Site work (incl. setbacks) = % of this component's construction cost
@@ -214,32 +299,17 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
 
   const landCost = land * projectLandPricePerSqm;
 
-  // Revenue calc
-  const basis = c.revenueBasis || "sqm";
-  let units = 0, keys = 0;
-  let salesRevenue = 0, grossIncome = 0, opex = 0, noi = 0, exitValue = 0;
-
-  if (basis === "unit") {
-    const avgUnitSize = +c.avgUnitSize || 0;
-    units = avgUnitSize > 0 ? Math.floor(nsa / avgUnitSize) : 0;
-  } else if (basis === "key") {
-    keys = +c.keys || 0;
-  }
-
-  if (c.mode === "sale") {
-    if (basis === "sqm")  salesRevenue = nsa * (+c.pricePerSqm || 0);
-    if (basis === "unit") salesRevenue = units * (+c.pricePerUnit || 0);
-    if (basis === "key")  salesRevenue = keys  * (+c.pricePerKey  || 0);
-  } else if (c.mode === "lease") {
-    const occ = numOr(c.occupancy, 0.85);
-    const opexPct = numOr(c.opexPct, 0.30);
-    if (basis === "sqm")  grossIncome = nsa * (+c.rentPerSqmYr || 0) * occ;
-    if (basis === "unit") grossIncome = units * (+c.rentPerUnitYr || 0) * occ;
-    if (basis === "key")  grossIncome = keys * (+c.adr || 0) * occ * 365;
-    opex = grossIncome * opexPct;
-    noi = grossIncome - opex;
-    const cap = +c.exitCapRate || 0.075;
-    exitValue = cap > 0 ? noi / cap : 0;
+  // Revenue calc — a mixed-use building sums its sub-components; a plain
+  // component is evaluated as a single revenue unit (identical arithmetic).
+  let units, keys, salesRevenue, grossIncome, opex, noi, exitValue;
+  if (subs) {
+    const sum = (k) => subs.reduce((t, s) => t + (s[k] || 0), 0);
+    units = sum("units"); keys = sum("keys");
+    salesRevenue = sum("salesRevenue"); grossIncome = sum("grossIncome");
+    opex = sum("opex"); noi = sum("noi"); exitValue = sum("exitValue");
+  } else {
+    ({ units, keys, salesRevenue, grossIncome, opex, noi, exitValue } =
+      computeUnitRevenue(c, nsa));
   }
 
   return {
@@ -251,6 +321,9 @@ function computeComponent(c, projectLandArea, projectLandPricePerSqm) {
     groundArea, upperTypicalArea, lastFloorArea,
     // Basement
     hasBasement, basementArea, basementCost,
+    // Mixed use: computed sub-components (null for a plain component) and the
+    // share of GFA they account for.
+    subs, subGfaAllocatedPct,
     units, keys,
     salesRevenue, grossIncome, opex, noi, exitValue,
   };
@@ -340,13 +413,15 @@ function runFeasibility(input) {
   let endMonth = conEnd;
   components.forEach((c) => {
     if (!c.enabled) return;
-    if (c.mode === "sale") {
-      const e = preSalesStartMonth + Math.max(1, c.salesPeriodMonths | 0);
-      if (e > endMonth) endMonth = e;
-    } else if (c.mode === "lease") {
-      const e = conEnd + Math.max(1, c.operatingPeriodMonths | 0);
-      if (e > endMonth) endMonth = e;
-    }
+    revenueUnits(c).forEach((u) => {
+      if (u.mode === "sale") {
+        const e = preSalesStartMonth + Math.max(1, u.salesPeriodMonths | 0);
+        if (e > endMonth) endMonth = e;
+      } else if (u.mode === "lease") {
+        const e = conEnd + Math.max(1, u.operatingPeriodMonths | 0);
+        if (e > endMonth) endMonth = e;
+      }
+    });
   });
   const tailMonths = 3;
   const autoHorizon = Math.max(12, endMonth + tailMonths);
@@ -390,16 +465,19 @@ function runFeasibility(input) {
   const salesFlow = arr();
   const sellingFlow = arr();
   components.forEach(c => {
-    if (!c.enabled || c.mode !== "sale") return;
-    const salesStart = preSalesStartMonth;
-    const salesPeriod = Math.max(1, c.salesPeriodMonths | 0);
-    const dist = sCurveMonthly(salesPeriod);
-    for (let i = 0; i < dist.length; i++) {
-      const m = salesStart + i;
-      if (m <= horizon) {
-        salesFlow[m] += (c.salesRevenue || 0) * dist[i];
+    if (!c.enabled) return;
+    revenueUnits(c).forEach(u => {
+      if (u.mode !== "sale") return;
+      const salesStart = preSalesStartMonth;
+      const salesPeriod = Math.max(1, u.salesPeriodMonths | 0);
+      const dist = sCurveMonthly(salesPeriod);
+      for (let i = 0; i < dist.length; i++) {
+        const m = salesStart + i;
+        if (m <= horizon) {
+          salesFlow[m] += (u.salesRevenue || 0) * dist[i];
+        }
       }
-    }
+    });
   });
   // Selling costs flow with overall sales
   const totalSelling = marketing + salesCommission + govFees;
@@ -422,34 +500,37 @@ function runFeasibility(input) {
   const noiFlow = arr();
   const exitFlow = arr();
   components.forEach(c => {
-    if (!c.enabled || c.mode !== "lease") return;
-    const opStart = conEnd;
-    const opPeriod = Math.max(1, c.operatingPeriodMonths | 0);
-    const opEnd = Math.min(horizon, opStart + opPeriod);
+    if (!c.enabled) return;
+    revenueUnits(c).forEach(u => {
+      if (u.mode !== "lease") return;
+      const opStart = conEnd;
+      const opPeriod = Math.max(1, u.operatingPeriodMonths | 0);
+      const opEnd = Math.min(horizon, opStart + opPeriod);
 
-    const stabOcc = numOr(c.occupancy, 0.85);
-    const initOcc = Math.max(0, Math.min(stabOcc, numOr(c.initialOccupancy, 0.30)));
-    const leaseUpMonths = Math.max(1, Math.round(numOr(c.yearsToStabilization, 1) * 12));
+      const stabOcc = numOr(u.occupancy, 0.85);
+      const initOcc = Math.max(0, Math.min(stabOcc, numOr(u.initialOccupancy, 0.30)));
+      const leaseUpMonths = Math.max(1, Math.round(numOr(u.yearsToStabilization, 1) * 12));
 
-    for (let m = opStart; m < opEnd && m <= horizon; m++) {
-      const elapsed = m - opStart + 1; // 1-indexed month-in-operation
-      const t = Math.min(1, elapsed / leaseUpMonths);
-      const currentOcc = initOcc + (stabOcc - initOcc) * t;
-      // Ratio vs. the stabilized grossIncome already on the component.
-      const occRatio = stabOcc > 0 ? currentOcc / stabOcc : 1;
-      const monthGross = (c.grossIncome || 0) / 12 * occRatio;
-      const monthOpex  = (c.opex || 0) / 12 * occRatio;
-      rentFlow[m] += monthGross;
-      opexFlow[m] -= monthOpex;
-      noiFlow[m]  += monthGross - monthOpex;
-    }
-    // Exit at end of operating period
-    if (opEnd <= horizon) {
-      exitFlow[opEnd] += c.exitValue || 0;
-    } else {
-      // If operating period exceeds horizon, exit at horizon
-      exitFlow[horizon] += c.exitValue || 0;
-    }
+      for (let m = opStart; m < opEnd && m <= horizon; m++) {
+        const elapsed = m - opStart + 1; // 1-indexed month-in-operation
+        const t = Math.min(1, elapsed / leaseUpMonths);
+        const currentOcc = initOcc + (stabOcc - initOcc) * t;
+        // Ratio vs. the stabilized grossIncome already on the unit.
+        const occRatio = stabOcc > 0 ? currentOcc / stabOcc : 1;
+        const monthGross = (u.grossIncome || 0) / 12 * occRatio;
+        const monthOpex  = (u.opex || 0) / 12 * occRatio;
+        rentFlow[m] += monthGross;
+        opexFlow[m] -= monthOpex;
+        noiFlow[m]  += monthGross - monthOpex;
+      }
+      // Exit at end of operating period
+      if (opEnd <= horizon) {
+        exitFlow[opEnd] += u.exitValue || 0;
+      } else {
+        // If operating period exceeds horizon, exit at horizon
+        exitFlow[horizon] += u.exitValue || 0;
+      }
+    });
   });
 
   /* ---------- Debt model — revenue-first funding, revolving cash sweep ----------
