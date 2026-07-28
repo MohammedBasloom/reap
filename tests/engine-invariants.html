@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — engine invariants</title>
+<style>
+  body { font: 13px/1.5 ui-monospace, Consolas, monospace; margin: 24px; background:#fff; color:#111; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color:#666; margin-bottom:16px; }
+  .banner { padding:10px 14px; font-weight:700; margin-bottom:16px; }
+  .ok { background:#e6f7ed; color:#07603a; }
+  .bad { background:#fdecec; color:#8a1010; }
+  table { border-collapse: collapse; width:100%; margin-top:8px; }
+  th, td { border:1px solid #ddd; padding:4px 8px; text-align:left; vertical-align:top; }
+  th { background:#f5f5f5; }
+  td.f { color:#8a1010; font-weight:600; }
+  td.p { color:#07603a; }
+  textarea { width:100%; height:200px; margin-top:16px; font:11px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>REAP engine invariants</h1>
+<div class="sub">
+  Runs <code>src/calc.js</code> over a fixed grid of configurations, asserts structural
+  invariants, and emits a snapshot of every KPI. Compare the snapshot before and after an
+  engine change: <strong>any</strong> difference on an unchanged configuration is a regression.
+  Deterministic by design — no <code>Math.random</code>, so <code>monteCarlo</code> is excluded.
+</div>
+<div id="banner" class="banner">running…</div>
+<div id="out"></div>
+<textarea id="snap" readonly></textarea>
+
+<script src="../src/calc.js"></script>
+<script>
+(function () {
+  const F = window.Feas;
+  const TOL = 1e-6;
+
+  /* ---------- fixed configuration grid ---------- */
+
+  const baseProject = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05,
+    landType: "net", developablePct: 0.70, landInfraCostPerSqm: 0,
+    predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10,
+    fund: { enabled: false },
+  };
+
+  const saleComp = (over) => Object.assign({
+    id: "s1", kind: "apartment", name: "Sale", enabled: true, mode: "sale",
+    allocationPct: 0.5, massingMode: "far", far: 2.4,
+    costPerSqmGFA: 2500, siteWorkPct: 0.06, efficiency: 0.78,
+    revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000,
+    salesPeriodMonths: 36,
+  }, over || {});
+
+  const leaseComp = (over) => Object.assign({
+    id: "l1", kind: "retail", name: "Lease", enabled: true, mode: "lease",
+    allocationPct: 0.5, massingMode: "far", far: 1.0,
+    costPerSqmGFA: 2500, siteWorkPct: 0.06, efficiency: 0.80,
+    revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28,
+    operatingPeriodMonths: 60, exitCapRate: 0.075,
+  }, over || {});
+
+  const fundOn = {
+    enabled: true, lpEquityPct: 0.85, devEquityPct: 0.10, gpEquityPct: 0.05,
+    subscriptionFeePct: 0.01, assetMgmtFeePctYr: 0.015, developmentFeePct: 0.03,
+    preferredReturnPct: 0.08, promoteSplit: 0.20,
+  };
+
+  const CONFIGS = [];
+  const add = (name, over) => CONFIGS.push({ name, input: Object.assign({}, baseProject, over) });
+
+  add("sale only",                 { components: [saleComp({ allocationPct: 1.0 })] });
+  add("lease only",                { components: [leaseComp({ allocationPct: 1.0 })] });
+  add("sale + lease",              { components: [saleComp(), leaseComp()] });
+  add("sale + lease, fund on",     { components: [saleComp(), leaseComp()], fund: fundOn });
+  add("raw land",                  { landType: "raw", components: [saleComp(), leaseComp()] });
+  add("raw land + infra",          { landType: "raw", landInfraCostPerSqm: 120, components: [saleComp(), leaseComp()] });
+  add("coverage massing",          { components: [saleComp({ massingMode: "coverage", landCoveragePct: 0.55, upperFloorCoveragePct: 0.55, lastFloorPct: 0.8, maxFloors: 8 })] });
+  add("with basement",             { components: [saleComp({ hasBasement: true, basementCoveragePct: 1.0, basementCostPerSqm: 2000 })] });
+  add("two basements",             { components: [saleComp({ hasBasement: true, basementCoveragePct: 2.0, basementCostPerSqm: 2000 })] });
+  add("zero debt (ltc 0)",         { ltc: 0, components: [saleComp(), leaseComp()] });
+  add("high debt (ltc 0.8)",       { ltc: 0.80, components: [saleComp(), leaseComp()] });
+  add("high interest",             { interestRate: 0.15, components: [saleComp(), leaseComp()] });
+  add("self funding (cheap land)", { landPricePerSqm: 200, components: [saleComp({ pricePerUnit: 3000000, allocationPct: 1.0 })] });
+  add("loss making",               { components: [saleComp({ pricePerUnit: 200000, allocationPct: 1.0 })] });
+  add("hotel by key",              { components: [leaseComp({ kind: "hotel", revenueBasis: "key", keys: 220, adr: 1050, occupancy: 0.68, opexPct: 0.58, far: 3.0, costPerSqmGFA: 4500, allocationPct: 1.0 })] });
+  add("sqm sale basis",            { components: [saleComp({ revenueBasis: "sqm", pricePerSqm: 11500, allocationPct: 1.0 })] });
+  add("lease by unit",             { components: [leaseComp({ revenueBasis: "unit", avgUnitSize: 120, rentPerUnitYr: 85000, allocationPct: 1.0 })] });
+  add("disabled component",        { components: [saleComp(), leaseComp({ enabled: false })] });
+  add("under-allocated land",      { components: [saleComp({ allocationPct: 0.3 })] });
+  add("long predesign",            { predesignMonths: 30, components: [saleComp(), leaseComp()] });
+  add("short construction",        { constructionMonths: 12, components: [saleComp(), leaseComp()] });
+  add("late presales",             { preSalesStartMonth: 40, components: [saleComp(), leaseComp()] });
+  add("pinned long horizon",       { horizonMonths: 240, components: [saleComp(), leaseComp()] });
+  add("fund, zero promote",        { components: [saleComp(), leaseComp()], fund: Object.assign({}, fundOn, { promoteSplit: 0 }) });
+  add("fund, high pref",           { components: [saleComp(), leaseComp()], fund: Object.assign({}, fundOn, { preferredReturnPct: 0.20 }) });
+  add("fund, no fees",             { components: [saleComp(), leaseComp()], fund: Object.assign({}, fundOn, { subscriptionFeePct: 0, assetMgmtFeePctYr: 0, developmentFeePct: 0 }) });
+  add("fund on, loss making",      { components: [saleComp({ pricePerUnit: 200000, allocationPct: 1.0 })], fund: fundOn });
+  add("three components",          { components: [saleComp({ allocationPct: 0.4 }), leaseComp({ allocationPct: 0.3 }), leaseComp({ id: "l2", kind: "office", allocationPct: 0.3, rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, far: 4.0, exitCapRate: 0.08 })] });
+  add("zero soft/contingency",     { softCostsPct: 0, contingencyPct: 0, components: [saleComp(), leaseComp()] });
+  add("no selling costs",          { marketingPct: 0, salesCommissionPct: 0, govFeesPct: 0, components: [saleComp(), leaseComp()] });
+  // The configs above are largely debt-funded and call no equity, which leaves
+  // the equity/IRR/waterfall paths thinly covered. These force equity in.
+  add("low ltc (0.20) forces equity",  { ltc: 0.20, components: [saleComp(), leaseComp()] });
+  add("expensive land forces equity",  { landPricePerSqm: 12000, ltc: 0.30, components: [saleComp(), leaseComp()] });
+  add("equity funded, fund on",        { ltc: 0.20, components: [saleComp(), leaseComp()], fund: fundOn });
+  add("equity funded, lease only",     { ltc: 0.20, components: [leaseComp({ allocationPct: 1.0 })], fund: fundOn });
+
+  /* ---------- invariants ---------- */
+
+  const finite = (v) => typeof v !== "number" || Number.isFinite(v);
+  const arrFinite = (a) => !Array.isArray(a) || a.every(Number.isFinite);
+
+  const CHECKS = [
+    ["KPIs are finite", (r) => {
+      const bad = Object.keys(r.kpi).filter(k => !finite(r.kpi[k]));
+      return bad.length ? `non-finite: ${bad.join(",")}` : null;
+    }],
+    ["cashflow arrays are finite", (r) => {
+      const bad = Object.keys(r.cashflow).filter(k => !arrFinite(r.cashflow[k]));
+      return bad.length ? `non-finite: ${bad.join(",")}` : null;
+    }],
+    ["NSA never exceeds GFA", (r) => {
+      const bad = r.components.filter(c => (c.nsa || 0) > (c.gfa || 0) + TOL);
+      return bad.length ? `${bad.length} component(s)` : null;
+    }],
+    ["debt balance never negative", (r) => {
+      const b = r.cashflow.debtBalance || [];
+      const i = b.findIndex(v => v < -TOL);
+      return i >= 0 ? `month ${i} = ${b[i]}` : null;
+    }],
+    ["debt fully repaid by horizon", (r) => {
+      const b = r.cashflow.debtBalance || [];
+      const last = b.length ? b[b.length - 1] : 0;
+      return Math.abs(last) > 0.01 ? `closing balance ${last.toFixed(2)}` : null;
+    }],
+    // New DRAWS are capped at the facility; capitalised interest is not, so the
+    // balance can drift above the cap once the facility is fully drawn and the
+    // project has no cash to pay interest. That drift is tracked as a snapshot
+    // metric (maxOverFacility) rather than asserted away. What must always hold
+    // is that the excess is fully explained by capitalised interest — if a DRAW
+    // ever breached the cap, this check fails.
+    ["excess over facility is only capitalised interest", (r, input) => {
+      const cap = (r.kpi.devCostExFinance || 0) * (+input.ltc || 0);
+      const b = r.cashflow.debtBalance || [];
+      const int = r.cashflow.interest || [];
+      const paid = r.cashflow.interestPaid || [];
+      let capitalised = 0;
+      for (let m = 0; m < b.length; m++) {
+        capitalised += Math.max(0, (-(int[m] || 0)) - (-(paid[m] || 0)));
+        if (b[m] > cap + capitalised + 1) {
+          return `month ${m}: ${b[m].toFixed(0)} exceeds cap ${cap.toFixed(0)} ` +
+                 `by more than the ${capitalised.toFixed(0)} capitalised to date`;
+        }
+      }
+      return null;
+    }],
+    ["distributions never negative", (r) => {
+      const d = r.cashflow.distributions || [];
+      const i = d.findIndex(v => v < -TOL);
+      return i >= 0 ? `month ${i} = ${d[i]}` : null;
+    }],
+    ["retained cash never negative", (r) => {
+      const c = r.cashflow.cashBalance || [];
+      const i = c.findIndex(v => v < -0.01);
+      return i >= 0 ? `month ${i} = ${c[i]}` : null;
+    }],
+    ["peak debt matches balance series", (r) => {
+      const b = r.cashflow.debtBalance || [];
+      const peak = b.length ? Math.max.apply(null, b) : 0;
+      return Math.abs(peak - (r.kpi.peakDebt || 0)) > 1
+        ? `kpi ${r.kpi.peakDebt} vs series ${peak}` : null;
+    }],
+    ["GFA equals sum of components", (r) => {
+      const sum = r.components.reduce((s, c) => s + (c.gfa || 0), 0);
+      return Math.abs(sum - (r.kpi.gfa || 0)) > 0.01 ? `${sum} vs ${r.kpi.gfa}` : null;
+    }],
+  ];
+
+  /* ---------- run ---------- */
+
+  const rows = [];
+  const snapshot = {};
+  let failures = 0;
+
+  CONFIGS.forEach(cfg => {
+    let r, err = null;
+    try { r = F.runFeasibility(cfg.input); }
+    catch (e) { err = e && e.message ? e.message : String(e); }
+
+    if (err) {
+      failures++;
+      rows.push({ name: cfg.name, fails: ["threw: " + err] });
+      snapshot[cfg.name] = "THREW: " + err;
+      return;
+    }
+
+    const fails = [];
+    CHECKS.forEach(([label, fn]) => {
+      let msg = null;
+      try { msg = fn(r, cfg.input); }
+      catch (e) { msg = "check threw: " + (e && e.message); }
+      if (msg) fails.push(label + " — " + msg);
+    });
+
+    // Waterfall, when the fund is switched on.
+    if (cfg.input.fund && cfg.input.fund.enabled) {
+      try {
+        const w = F.runWaterfall(cfg.input, r);
+        if (w) {
+          const nf = Object.keys(w.buckets || {}).filter(k => !Number.isFinite(w.buckets[k]));
+          if (nf.length) fails.push("waterfall buckets non-finite: " + nf.join(","));
+          snapshot[cfg.name + " ::waterfall"] = round(w.buckets || {});
+        }
+      } catch (e) { fails.push("waterfall threw: " + (e && e.message)); }
+    }
+
+    if (fails.length) failures++;
+    rows.push({ name: cfg.name, fails });
+
+    // Derived metrics that are not invariants but must not drift silently:
+    // how far the balance ran above the stated LTC facility, via capitalised
+    // interest on a fully-drawn revolver.
+    const cap = (r.kpi.devCostExFinance || 0) * (+cfg.input.ltc || 0);
+    const bal = r.cashflow.debtBalance || [];
+    const over = bal.length ? Math.max(0, Math.max.apply(null, bal) - cap) : 0;
+    const kpi = round(r.kpi);
+    kpi.__maxOverFacility = Math.round(over * 100) / 100;
+    kpi.__maxOverFacilityPct = cap > 0 ? Math.round((over / cap) * 10000) / 100 : 0;
+    snapshot[cfg.name] = kpi;
+  });
+
+  // Round to 2dp so trivial float drift doesn't produce false regressions.
+  function round(o) {
+    const out = {};
+    Object.keys(o).sort().forEach(k => {
+      const v = o[k];
+      out[k] = (typeof v === "number" && Number.isFinite(v)) ? Math.round(v * 100) / 100 : v;
+    });
+    return out;
+  }
+
+  /* ---------- report ---------- */
+
+  const banner = document.getElementById("banner");
+  banner.className = "banner " + (failures ? "bad" : "ok");
+  banner.textContent = failures
+    ? failures + " of " + CONFIGS.length + " configurations FAILED"
+    : "all " + CONFIGS.length + " configurations passed " + CHECKS.length + " invariants";
+
+  let html = "<table><tr><th>#</th><th>configuration</th><th>result</th></tr>";
+  rows.forEach((r, i) => {
+    html += "<tr><td>" + (i + 1) + "</td><td>" + r.name + "</td>" +
+      (r.fails.length
+        ? '<td class="f">' + r.fails.join("<br>") + "</td>"
+        : '<td class="p">pass</td>') + "</tr>";
+  });
+  document.getElementById("out").innerHTML = html + "</table>";
+  document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
+
+  /* Compact fingerprints — a stable hash per configuration. Comparing these
+     against tests/baseline-fingerprints.json detects any numeric change on an
+     unchanged configuration without having to diff the whole snapshot. */
+  function hash(str) {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return ("00000000" + h.toString(16)).slice(-8);
+  }
+  const fingerprints = {};
+  Object.keys(snapshot).sort().forEach(k => {
+    fingerprints[k] = hash(JSON.stringify(snapshot[k]));
+  });
+  fingerprints.__all = hash(JSON.stringify(fingerprints));
+
+  // Read by the automated check.
+  window.HARNESS = {
+    configs: CONFIGS.length, checks: CHECKS.length,
+    failures: failures, rows: rows, snapshot: snapshot,
+    fingerprints: fingerprints,
+  };
+})();
+</script>
+</body>
+</html>

@@ -22,3 +22,6 @@
 # Source brand kit: unreferenced by the site (fonts load from assets/fonts/),
 # and contains licensed font files plus __MACOSX junk.
 /brand-assets/*                 /   301
+
+# Engine test harness — developer tooling, run locally via serve.ps1.
+/tests/*                        /   301
