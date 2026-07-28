@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — program table render check</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/results.jsx"></script>
+<script type="text/babel">
+  /* Renders the Program & revenue panel alone, so a mixed-use building's
+     per-space breakdown can be checked without the auth gate on model.html. */
+  const INPUT = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: "own",
+    predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10, fund: { enabled: false },
+    components: [
+      { id: "m", kind: "mixed", name: "Community centre", mode: "mixed", enabled: true,
+        allocationPct: 0.6, massingMode: "far", far: 3.0, siteWorkPct: 0.07,
+        subs: [
+          { id: "r", name: "Retail", enabled: true, gfaSharePct: 0.4, costPerSqmGFA: 4200, efficiency: 0.80, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, initialOccupancy: 0.3, yearsToStabilization: 1, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+          { id: "o", name: "Offices", enabled: true, gfaSharePct: 0.4, costPerSqmGFA: 3600, efficiency: 0.75, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, initialOccupancy: 0.3, yearsToStabilization: 2, operatingPeriodMonths: 60, exitCapRate: 0.08 },
+          { id: "f", name: "Flats", enabled: true, gfaSharePct: 0.2, costPerSqmGFA: 2500, efficiency: 0.78, mode: "sale", revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
+        ] },
+      { id: "v", kind: "villa", name: "Villas", mode: "sale", enabled: true, allocationPct: 0.4,
+        massingMode: "far", far: 1.6, costPerSqmGFA: 2500, siteWorkPct: 0.08, efficiency: 0.85,
+        revenueBasis: "unit", avgUnitSize: 380, pricePerUnit: 2500000, salesPeriodMonths: 48 },
+    ],
+  };
+  const RESULT = Feas.runFeasibility(INPUT);
+  window.__result = RESULT;
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <ProgramPanel result={RESULT} input={INPUT} />
+  );
+  window.__READY = true;
+</script>
+</body>
+</html>

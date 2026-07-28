@@ -141,6 +141,7 @@
     "Ground rent is an operating cost, so it does not count toward the debt facility — a lender advances against build cost, not rent. Expect a smaller facility than buying the land.":
       "إيجار الأرض مصروف تشغيلي، لذا لا يدخل ضمن أساس حساب التسهيل الائتماني — فالممول يقرض مقابل تكلفة البناء لا مقابل الإيجار. توقّع تسهيلًا أقل ممّا لو اشتريت الأرض.",
 
+    "Mixed use": "متعدد الاستخدامات",
     "Mixed-Use Building": "مبنى متعدد الاستخدامات",
     "Several uses in one building": "عدة استخدامات في مبنى واحد",
     "Sale + Lease": "بيع وتأجير",

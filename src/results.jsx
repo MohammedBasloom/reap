@@ -605,6 +605,28 @@ function ProgramPanel({ result, input }) {
   const cf = result.cashflow;
   const totalSales = cf.sales.reduce((s, v) => s + v, 0);
 
+  /* Income-producing units for the rent build-up. A Mixed-Use Building earns
+     through its spaces, not as a whole, so it contributes one entry per leased
+     space rather than a single blended bar labelled "mixed". */
+  const incomeUnits = [];
+  result.components.filter(c => c.enabled).forEach(c => {
+    if (Array.isArray(c.subs)) {
+      c.subs.forEach((s, i) => {
+        if ((s.noi || 0) > 0) {
+          incomeUnits.push({
+            key: `${c.id}-${s.id || i}`, name: `${c.name} — ${s.name}`, mode: s.mode,
+            grossIncome: s.grossIncome, opex: s.opex, noi: s.noi,
+          });
+        }
+      });
+    } else if ((c.noi || 0) > 0) {
+      incomeUnits.push({
+        key: c.id, name: c.name, mode: c.mode,
+        grossIncome: c.grossIncome, opex: c.opex, noi: c.noi,
+      });
+    }
+  });
+
   return (
     <div style={{ padding: 32 }}>
       <Eyebrow>Unit mix · sales velocity · NOI</Eyebrow>
@@ -632,38 +654,91 @@ function ProgramPanel({ result, input }) {
               </tr>
             </thead>
             <tbody>
-              {result.components.filter(c => c.enabled).map((c) => {
-                const isLease = c.mode === "lease";
-                const basis = c.revenueBasis || "sqm";
-                let priceLabel = "—";
-                if (c.mode === "sale") {
-                  if (basis === "sqm")  priceLabel = `${fn(c.pricePerSqm)} SAR/m²`;
-                  if (basis === "unit") priceLabel = `${fn(c.pricePerUnit)} SAR/unit`;
-                  if (basis === "key")  priceLabel = `${fn(c.pricePerKey)} SAR/key`;
-                } else if (isLease) {
-                  if (basis === "sqm")  priceLabel = `${fn(c.rentPerSqmYr)} SAR/m²·yr`;
-                  if (basis === "unit") priceLabel = `${fn(c.rentPerUnitYr)} SAR/unit·yr`;
-                  if (basis === "key")  priceLabel = `${fn(c.adr)} SAR ADR`;
+              {result.components.filter(c => c.enabled).flatMap((c) => {
+                /* A Mixed-Use Building has no single purpose, price or exit
+                   cap — those belong to its spaces. It therefore renders as a
+                   building row carrying the envelope (allocation, FAR, GFA,
+                   NSA, total exit value) followed by one indented row per
+                   space carrying its own terms. A plain component is a single
+                   row exactly as before. */
+                const priceOf = (u) => {
+                  const basis = u.revenueBasis || "sqm";
+                  if (u.mode === "sale") {
+                    if (basis === "sqm")  return `${fn(u.pricePerSqm)} SAR/m²`;
+                    if (basis === "unit") return `${fn(u.pricePerUnit)} SAR/unit`;
+                    if (basis === "key")  return `${fn(u.pricePerKey)} SAR/key`;
+                  } else if (u.mode === "lease") {
+                    if (basis === "sqm")  return `${fn(u.rentPerSqmYr)} SAR/m²·yr`;
+                    if (basis === "unit") return `${fn(u.rentPerUnitYr)} SAR/unit·yr`;
+                    if (basis === "key")  return `${fn(u.adr)} SAR ADR`;
+                  }
+                  return "—";
+                };
+                // Priced per m² there is no unit or key count, so say nothing
+                // rather than reporting a meaningless "0 units".
+                const unitsOf = (u) => {
+                  if (u.revenueBasis === "key") return `${fn(u.keys)} keys`;
+                  if (u.revenueBasis === "unit") return `${fn(u.units)} units`;
+                  return "—";
+                };
+                const timingOf = (u) => u.mode === "sale"
+                  ? `${u.salesPeriodMonths} mo sales`
+                  : `${u.operatingPeriodMonths} mo hold`;
+                const modeCell = (label) => (
+                  <td style={{ ...tdStyle, color: "var(--fg-3)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>{label}</td>
+                );
+
+                const subs = Array.isArray(c.subs) ? c.subs : null;
+
+                if (!subs) {
+                  return [(
+                    <tr key={c.id} style={{ borderBottom: "1px solid var(--border-2)" }}>
+                      <td style={{ ...tdStyle, fontWeight: 500 }}>{c.name}</td>
+                      {modeCell(c.mode)}
+                      <td style={tdNum(c.allocationPct)}>{fp(c.allocationPct, 1)}</td>
+                      <td style={tdNum(c.far)}>{(+c.far).toFixed(2)}</td>
+                      <td style={tdNum(c.gfa)}>{fn(c.gfa)}</td>
+                      <td style={tdNum(c.nsa)}>{fn(c.nsa)}</td>
+                      <td style={tdNum(1)}>{unitsOf(c)}</td>
+                      <td style={tdNum(1)}>{priceOf(c)}</td>
+                      <td style={tdNum(c.exitCapRate)}>{c.mode === "lease" ? fp(c.exitCapRate, 2) : "—"}</td>
+                      <td style={tdNum(c.exitValue)}>{c.exitValue ? fc(c.exitValue) : "—"}</td>
+                      <td style={{ ...tdNum(1), fontSize: 11, color: "var(--fg-3)" }}>{timingOf(c)}</td>
+                    </tr>
+                  )];
                 }
-                const unitsKeys = basis === "key" ? `${fn(c.keys)} keys` : `${fn(c.units)} units`;
-                const timing = c.mode === "sale"
-                  ? `${c.salesPeriodMonths} mo sales`
-                  : `${c.operatingPeriodMonths} mo hold`;
-                return (
-                  <tr key={c.id} style={{ borderBottom: "1px solid var(--border-2)" }}>
-                    <td style={{ ...tdStyle, fontWeight: 500 }}>{c.name}</td>
-                    <td style={{ ...tdStyle, color: "var(--fg-3)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>{c.mode}</td>
+
+                const rows = [(
+                  <tr key={c.id} style={{ borderBottom: "1px solid var(--border-2)", background: "var(--bg-2)" }}>
+                    <td style={{ ...tdStyle, fontWeight: 600 }}>{c.name}</td>
+                    {modeCell("Mixed use")}
                     <td style={tdNum(c.allocationPct)}>{fp(c.allocationPct, 1)}</td>
                     <td style={tdNum(c.far)}>{(+c.far).toFixed(2)}</td>
                     <td style={tdNum(c.gfa)}>{fn(c.gfa)}</td>
                     <td style={tdNum(c.nsa)}>{fn(c.nsa)}</td>
-                    <td style={tdNum(1)}>{unitsKeys}</td>
-                    <td style={tdNum(1)}>{priceLabel}</td>
-                    <td style={tdNum(c.exitCapRate)}>{isLease ? fp(c.exitCapRate, 2) : "—"}</td>
+                    <td style={tdNum(1)}>—</td>
+                    <td style={tdNum(1)}>—</td>
+                    <td style={tdNum(1)}>—</td>
                     <td style={tdNum(c.exitValue)}>{c.exitValue ? fc(c.exitValue) : "—"}</td>
-                    <td style={{ ...tdNum(1), fontSize: 11, color: "var(--fg-3)" }}>{timing}</td>
+                    <td style={{ ...tdNum(1), fontSize: 11, color: "var(--fg-3)" }}>—</td>
                   </tr>
-                );
+                )];
+                subs.forEach((s, i) => rows.push(
+                  <tr key={`${c.id}-${s.id || i}`} style={{ borderBottom: "1px solid var(--border-2)" }}>
+                    <td style={{ ...tdStyle, paddingInlineStart: 22, color: "var(--fg-2)" }}>↳ {s.name}</td>
+                    {modeCell(s.mode)}
+                    <td style={{ ...tdNum(s.gfaSharePct), fontSize: 11, color: "var(--fg-3)" }}>{fp(s.gfaSharePct, 1)}</td>
+                    <td style={tdNum(1)}>—</td>
+                    <td style={tdNum(s.gfa)}>{fn(s.gfa)}</td>
+                    <td style={tdNum(s.nsa)}>{fn(s.nsa)}</td>
+                    <td style={tdNum(1)}>{unitsOf(s)}</td>
+                    <td style={tdNum(1)}>{priceOf(s)}</td>
+                    <td style={tdNum(s.exitCapRate)}>{s.mode === "lease" ? fp(s.exitCapRate, 2) : "—"}</td>
+                    <td style={tdNum(s.exitValue)}>{s.exitValue ? fc(s.exitValue) : "—"}</td>
+                    <td style={{ ...tdNum(1), fontSize: 11, color: "var(--fg-3)" }}>{timingOf(s)}</td>
+                  </tr>
+                ));
+                return rows;
               })}
             </tbody>
           </table>
@@ -711,16 +786,16 @@ function ProgramPanel({ result, input }) {
         </div>
       </div>
 
-      {result.components.filter(c => c.enabled && c.noi > 0).length > 0 && (
+      {incomeUnits.length > 0 && (
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginTop: 24 }}>
           <Eyebrow>Annual rent income build-up by component</Eyebrow>
           <div style={{ marginTop: 16 }}>
-            {result.components.filter(c => c.enabled && c.noi > 0).map((c, i) => {
-              const maxGross = Math.max(...result.components.map(c2 => c2.grossIncome || 0));
+            {incomeUnits.map((c) => {
+              const maxGross = Math.max(...incomeUnits.map(u => u.grossIncome || 0));
               const ratio = (c.grossIncome || 0) / Math.max(1, maxGross);
               const noiRatio = (c.noi || 0) / Math.max(1, c.grossIncome || 1);
               return (
-                <div key={c.id} style={{ marginBottom: 14 }}>
+                <div key={c.key} style={{ marginBottom: 14 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
                     <span style={{ color: "var(--fg-2)" }}>{c.name} <span style={{ color: "var(--fg-4)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", marginLeft: 6 }}>{c.mode}</span></span>
                     <span className="tabnum" style={{ color: "var(--fg-1)" }}>

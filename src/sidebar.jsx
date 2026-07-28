@@ -1403,14 +1403,16 @@ function Sidebar({ input, setInput }) {
           })}
         </div>
 
-        {/* Purchase inputs — greyed out on a lease, where nothing is bought
-            and no transfer tax falls due. */}
-        <Row cols={2}>
-          <Field label="Land price" suffix="SAR/m²" value={input.landPricePerSqm} onChange={v => upd("landPricePerSqm", v)} step={50} disabled={isLeasehold} />
-          <Field label="Total land cost" suffix="SAR" value={isLeasehold ? 0 : Math.round(totalLandCost)} onChange={() => {}} disabled />
-          <PctField label="Transfer / gov fees" value={isLeasehold ? 0 : input.landTransferFeesPct} onChange={v => upd("landTransferFeesPct", v)} hint={isLeasehold ? "No RETT on a lease" : "On land cost"} disabled={isLeasehold} />
-          <div />
-        </Row>
+        {/* Purchase inputs — hidden entirely on a lease, where nothing is
+            bought and no transfer tax falls due. */}
+        {!isLeasehold && (
+          <Row cols={2}>
+            <Field label="Land price" suffix="SAR/m²" value={input.landPricePerSqm} onChange={v => upd("landPricePerSqm", v)} step={50} />
+            <Field label="Total land cost" suffix="SAR" value={Math.round(totalLandCost)} onChange={() => {}} disabled />
+            <PctField label="Transfer / gov fees" value={input.landTransferFeesPct} onChange={v => upd("landTransferFeesPct", v)} hint="On land cost" />
+            <div />
+          </Row>
+        )}
 
         {isLeasehold && (
           <>
