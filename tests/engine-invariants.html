@@ -64,6 +64,15 @@
     operatingPeriodMonths: 60, exitCapRate: 0.075,
   }, over || {});
 
+  /* What the sidebar's purpose and basis toggles now do: take the unit as it
+     stands and fill whatever its new purpose needs. saleComp carries no rent
+     fields and leaseComp no price fields — exactly like the presets — so these
+     are the real "user flipped the toggle" shapes. Before Feas.modeDefaults
+     existed, the toggles filled the timing and the operating assumptions but
+     never the RATE, so a flipped unit earned nothing and its OpEx, being a
+     percentage of nothing, was zero too. */
+  const flip = (comp, mode) => Object.assign({}, comp, F.modeDefaults(comp, mode));
+
   const fundOn = {
     enabled: true, lpEquityPct: 0.85, devEquityPct: 0.10, gpEquityPct: 0.05,
     subscriptionFeePct: 0.01, assetMgmtFeePctYr: 0.015, developmentFeePct: 0.03,
@@ -116,6 +125,14 @@
      the configuration that shows a trailing year carrying a single land
      payment and no income. */
   add("leasehold, zero exit cap",      { landTenure: "lease", landRentPerSqmYr: 250, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [leaseComp({ allocationPct: 1.0, exitCapRate: 0 })] });
+
+  // Purpose and basis flipped through the shared backfill — the paths that
+  // used to leave a unit with no rate, hence no revenue and no OpEx.
+  add("flipped: sale -> lease",        { components: [flip(saleComp({ allocationPct: 1.0 }), "lease")] });
+  add("flipped: lease -> sale",        { components: [flip(leaseComp({ allocationPct: 1.0 }), "sale")] });
+  add("flipped: keyed lease -> sale",  { components: [flip(leaseComp({ allocationPct: 1.0, revenueBasis: "key", keys: 220, adr: 1050, opexPct: 0.58 }), "sale")] });
+  add("flipped: basis sqm -> unit",    { components: [flip(Object.assign(leaseComp({ allocationPct: 1.0 }), { revenueBasis: "unit", avgUnitSize: 100 }), "lease")] });
+  add("flipped: on leased land",       { landTenure: "lease", landRentPerSqmYr: 250, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [flip(saleComp({ allocationPct: 1.0 }), "lease")] });
   add("expensive land forces equity",  { landPricePerSqm: 12000, ltc: 0.30, components: [saleComp(), leaseComp()] });
   add("equity funded, fund on",        { ltc: 0.20, components: [saleComp(), leaseComp()], fund: fundOn });
   add("equity funded, lease only",     { ltc: 0.20, components: [leaseComp({ allocationPct: 1.0 })], fund: fundOn });
@@ -193,6 +210,31 @@
         Math.abs((cf.noi || [])[last] || 0) > TOL ||
         Math.abs((cf.exit || [])[last] || 0) > TOL;
       return live ? null : `final month ${last} carries no sales, NOI or exit`;
+    }],
+    /* A unit that occupies floor area must earn something in its purpose.
+
+       This is what "OpEx only works on mixed-use" actually was. OpEx is a
+       percentage of gross income, so a leasable unit with no rent reports no
+       rent, no NOI, no OpEx and no exit — the asset reads as blank rather than
+       as broken, and only the OpEx column being empty gives it away. Mixed-use
+       looked fine because a space is CREATED with a rate; a plain component
+       flipped to leasable was never given one. Asserting on revenue rather
+       than on OpEx catches the sale side of the same hole, where a flipped
+       unit silently has no price. */
+    ["a unit with area earns in its purpose", (r) => {
+      const units = [];
+      (r.components || []).forEach((c) => {
+        if (!c || c.enabled === false) return;
+        (Array.isArray(c.subs) ? c.subs : [c]).forEach((u) => {
+          if (u && u.enabled !== false && (u.nsa || 0) > TOL) units.push(u);
+        });
+      });
+      const dead = units.filter((u) =>
+        u.mode === "sale"  ? !((u.salesRevenue || 0) > TOL) :
+        u.mode === "lease" ? !((u.grossIncome  || 0) > TOL) : false);
+      return dead.length
+        ? dead.map(u => `${u.name || u.id} (${u.mode}, ${u.revenueBasis || "sqm"}) earns 0 on ${Math.round(u.nsa)} m²`).join("; ")
+        : null;
     }],
     ["KPIs are finite", (r) => {
       const bad = Object.keys(r.kpi).filter(k => !finite(r.kpi[k]));

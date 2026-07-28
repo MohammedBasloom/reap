@@ -419,32 +419,20 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       name, enabled: true, mode,
       gfaSharePct: 0, efficiency: 0.78, revenueBasis: "sqm",
     };
-    const byMode = mode === "sale"
-      ? { costPerSqmGFA: 2500, pricePerSqm: 6000, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 }
-      : { costPerSqmGFA: 3600, rentPerSqmYr: 1200, occupancy: 0.85, opexPct: 0.30,
-          initialOccupancy: 0.30, yearsToStabilization: 1,
-          operatingPeriodMonths: 60, exitCapRate: 0.075 };
-    update("subs", [...subs, Object.assign(common, byMode)]);
+    // Build cost is the one figure that differs by purpose here and is not a
+    // revenue assumption, so it stays local; everything else comes from the
+    // shared list so a created space and a switched one agree.
+    const built = Object.assign(common, { costPerSqmGFA: mode === "sale" ? 2500 : 3600 });
+    if (mode === "sale") built.avgUnitSize = 150;   // so a switch to per-unit has a size to divide by
+    update("subs", [...subs, Object.assign(built, Feas.modeDefaults(built, mode))]);
   };
   const removeSub = (i) => update("subs", subs.filter((_, j) => j !== i));
 
   /* Switching a space between sale and lease must also give it the fields its
-     new purpose needs. A space added as leasable carries no sales period, so
-     flipping it to saleable left the sell-down undefined — which used to
-     collapse the project's auto horizon to construction plus three months. */
+     new purpose needs — including the RATE, without which the space earns
+     nothing. Feas.modeDefaults owns that list; see the note there. */
   const switchSubMode = (i, mode) => {
-    const s = subs[i] || {};
-    const patch = { mode };
-    if (mode === "sale") {
-      if (s.salesPeriodMonths == null) patch.salesPeriodMonths = 36;
-    } else {
-      if (s.operatingPeriodMonths == null) patch.operatingPeriodMonths = 60;
-      if (s.occupancy == null) patch.occupancy = 0.85;
-      if (s.opexPct == null) patch.opexPct = 0.30;
-      if (s.exitCapRate == null) patch.exitCapRate = 0.075;
-      if (s.initialOccupancy == null) patch.initialOccupancy = 0.30;
-      if (s.yearsToStabilization == null) patch.yearsToStabilization = 1;
-    }
+    const patch = Feas.modeDefaults(subs[i], mode);
     update("subs", subs.map((x, j) => (j === i ? Object.assign({}, x, patch) : x)));
   };
 
@@ -518,20 +506,11 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           <Segmented
             value={comp.mode}
             onChange={v => {
-              /* Presets carry only the period their own purpose needs, so
-                 flipping a leasable component to saleable (or back) would
-                 otherwise leave the new period undefined and collapse the
-                 auto horizon. */
-              const patch = { mode: v };
-              if (v === "sale") {
-                if (comp.salesPeriodMonths == null) patch.salesPeriodMonths = 36;
-              } else {
-                if (comp.operatingPeriodMonths == null) patch.operatingPeriodMonths = 60;
-                if (comp.occupancy == null) patch.occupancy = 0.85;
-                if (comp.opexPct == null) patch.opexPct = 0.30;
-                if (comp.exitCapRate == null) patch.exitCapRate = 0.075;
-              }
-              onChange(Object.assign({}, comp, patch));
+              /* Presets carry only the fields their own purpose needs, so
+                 flipping a component to the other purpose leaves the new
+                 period AND the new rate undefined. Feas.modeDefaults owns
+                 that list, shared with the mixed-use spaces. */
+              onChange(Object.assign({}, comp, Feas.modeDefaults(comp, v)));
             }}
             options={[{ value: "sale", label: "Saleable", disabled: isLeasehold, disabledHint: "Units cannot be sold on leased land" }, { value: "lease", label: "Leasable" }]}
           />
@@ -735,7 +714,10 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                 <div style={{ marginBottom: 8 }}>
                   <Segmented
                     value={sBasis}
-                    onChange={v => updateSub(i, "revenueBasis", v)}
+                    onChange={v => {
+                      const next = Object.assign({}, subs[i], { revenueBasis: v });
+                      update("subs", subs.map((x, j) => (j === i ? Object.assign(next, Feas.modeDefaults(next, next.mode)) : x)));
+                    }}
                     options={[
                       { value: "sqm",  label: "per m²" },
                       { value: "unit", label: "per unit" },
@@ -830,7 +812,14 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           <div style={{ marginBottom: 10 }}>
             <Segmented
               value={comp.revenueBasis || "sqm"}
-              onChange={v => update("revenueBasis", v)}
+              /* Changing the basis changes WHICH rate field is read, so the new
+                 one has to be filled for the same reason switching purpose
+                 does — otherwise the component keeps its per-m² rent, is asked
+                 for a per-unit one, and earns nothing. */
+              onChange={v => {
+                const next = Object.assign({}, comp, { revenueBasis: v });
+                onChange(Object.assign(next, Feas.modeDefaults(next, next.mode)));
+              }}
               options={[
                 { value: "sqm",  label: "per m²" },
                 { value: "unit", label: "per unit" },
@@ -1346,13 +1335,7 @@ function Sidebar({ input, setInput }) {
        leasing needs, so the building type stays available and only the purpose
        is constrained. */
     if (isLeasehold && newComp.mode === "sale") {
-      newComp.mode = "lease";
-      if (newComp.rentPerSqmYr == null) newComp.rentPerSqmYr = 1200;
-      if (newComp.rentPerUnitYr == null) newComp.rentPerUnitYr = 85000;
-      if (newComp.occupancy == null) newComp.occupancy = 0.85;
-      if (newComp.opexPct == null) newComp.opexPct = 0.30;
-      if (newComp.exitCapRate == null) newComp.exitCapRate = 0.075;
-      if (newComp.operatingPeriodMonths == null) newComp.operatingPeriodMonths = 60;
+      Object.assign(newComp, Feas.modeDefaults(newComp, "lease"));
     }
 
     // Mixed use: deep-copy the preset's sub-components and give each a fresh

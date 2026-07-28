@@ -178,6 +178,56 @@ function revenueUnits(c) {
 const salePeriodOf  = (u) => Math.max(1, Math.round(numOr(u.salesPeriodMonths, 36)));
 const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonths, 60)));
 
+/* ---------- The fields a unit needs to be viable in a given purpose ----------
+
+   Returns the patch that makes `u` work as `mode`, filling ONLY what is absent.
+   Every place that sets or flips a purpose must go through this, because the
+   alternative — a backfill written out longhand at each site — has already
+   drifted three ways: adding a component on leased land supplied rents,
+   creating a mixed-use space supplied a rent, and the two purpose toggles
+   supplied neither.
+
+   The rate is the field that matters and the one every toggle forgot. A
+   component flipped to leasable came out with an occupancy, an OpEx percentage
+   and a cap rate but NO rent, so gross income was zero — and OpEx, being a
+   percentage of gross income, was zero with it. The whole asset read as blank:
+   no rent, no NOI, no operating expense, no exit. It looked like OpEx worked
+   only for mixed-use buildings, because a mixed-use space is CREATED with a
+   rate and so never hits this path.
+
+   The defaults mirror the presets rather than inventing new figures: 1200
+   SAR/m²/yr and 85,000 SAR/unit/yr are what a component already gets when it
+   arrives leasable on leased land; 6000 SAR/m² and 1,000,000 SAR/unit are what
+   a saleable mixed-use space is created with. Keyed assets have no such
+   precedent, so they take the hotel preset's own ADR.
+
+   Only absent fields are filled. A deliberate 0 is a statement — a zero cap
+   rate means the asset is held, not sold — and `== null` leaves it alone. */
+function modeDefaults(u, mode) {
+  const src = u || {};
+  const basis = src.revenueBasis || "sqm";
+  const patch = { mode };
+  const need = (k, v) => { if (src[k] == null || src[k] === "") patch[k] = v; };
+
+  if (mode === "sale") {
+    need("salesPeriodMonths", 36);
+    if (basis === "sqm")  need("pricePerSqm", 6000);
+    if (basis === "unit") need("pricePerUnit", 1000000);
+    if (basis === "key")  need("pricePerKey", 900000);
+  } else {
+    need("operatingPeriodMonths", 60);
+    need("occupancy", 0.85);
+    need("opexPct", 0.30);
+    need("exitCapRate", 0.075);
+    need("initialOccupancy", 0.30);
+    need("yearsToStabilization", 1);
+    if (basis === "sqm")  need("rentPerSqmYr", 1200);
+    if (basis === "unit") need("rentPerUnitYr", 85000);
+    if (basis === "key")  need("adr", 1050);
+  }
+  return patch;
+}
+
 /* The project's LAST ACTIVE MONTH: construction, then the longest sell-down or
    hold of any revenue unit.
 
@@ -1656,7 +1706,7 @@ window.Feas = {
   sCurveCdf, sCurveMonthly, npv, irr, paybackMonths,
   sampleTri, sampleNormal, percentile,
   runFeasibility, tornado, buildScenarios, monteCarlo,
-  autoHorizonMonths,
+  autoHorizonMonths, modeDefaults,
   runWaterfall,
   formatCurrency, formatPct, formatNumber,
   computeComponent,

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — purpose / basis toggle backfill</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; } #log { font: 12px ui-monospace, monospace; white-space: pre; margin-bottom: 16px; }</style>
+</head>
+<body>
+<div id="log">running…</div>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/sidebar.jsx"></script>
+<script type="text/babel">
+  /* Mounts the real Sidebar and drives the purpose toggle the way a user does,
+     so the backfill is proved through the actual click handler rather than by
+     calling Feas.modeDefaults directly.
+
+     The failure this guards: a component flipped to leasable used to arrive
+     with an occupancy, an OpEx percentage and a cap rate but NO rent, so gross
+     income was zero and OpEx — a percentage of gross income — was zero with
+     it. The whole asset read as blank and only the empty OpEx column showed
+     it. */
+  const BASE = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: "own",
+    predesignMonths: 6, constructionMonths: 18, preSalesStartMonth: 6,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10, fund: { enabled: false },
+    components: [{
+      id: "c1", kind: "apartment", name: "Residential", enabled: true, mode: "sale",
+      allocationPct: 1.0, massingMode: "far", far: 2.4,
+      costPerSqmGFA: 2500, siteWorkPct: 0.06, efficiency: 0.78,
+      revenueBasis: "unit", avgUnitSize: 150, pricePerUnit: 1000000,
+      salesPeriodMonths: 36,
+    }],
+  };
+
+  function Harness() {
+    const [input, setInput] = React.useState(BASE);
+    window.__input = input;
+    return <Sidebar input={input} setInput={setInput} />;
+  }
+  ReactDOM.createRoot(document.getElementById("root")).render(<Harness />);
+
+  const log = (m) => { document.getElementById("log").textContent = m; };
+  const opexOf = (inp) => {
+    const r = Feas.runFeasibility(inp);
+    const u = r.components[0];
+    return { nsa: Math.round(u.nsa), gross: Math.round(u.grossIncome),
+             sales: Math.round(u.salesRevenue),
+             opex: Math.round((r.cashflow.opex || []).reduce((s, v) => s + (v || 0), 0)) };
+  };
+  window.__probe = opexOf;
+  setTimeout(() => { log("mounted — click Leasable, then run __probe(__input)"); window.__READY = true; }, 300);
+</script>
+</body>
+</html>
