@@ -106,6 +106,10 @@
   // The configs above are largely debt-funded and call no equity, which leaves
   // the equity/IRR/waterfall paths thinly covered. These force equity in.
   add("low ltc (0.20) forces equity",  { ltc: 0.20, components: [saleComp(), leaseComp()] });
+  // Leasehold land — no purchase, no RETT, ground rent until exit.
+  add("leasehold land",                { landTenure: "lease", landRentPerSqmYr: 300, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [saleComp(), leaseComp()] });
+  add("leasehold, no escalation",      { landTenure: "lease", landRentPerSqmYr: 300, landRentEscalationYears: 5, landRentEscalationPct: 0, components: [saleComp(), leaseComp()] });
+  add("leasehold, lease-only scheme",  { landTenure: "lease", landRentPerSqmYr: 250, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [leaseComp({ allocationPct: 1.0 })] });
   add("expensive land forces equity",  { landPricePerSqm: 12000, ltc: 0.30, components: [saleComp(), leaseComp()] });
   add("equity funded, fund on",        { ltc: 0.20, components: [saleComp(), leaseComp()], fund: fundOn });
   add("equity funded, lease only",     { ltc: 0.20, components: [leaseComp({ allocationPct: 1.0 })], fund: fundOn });
@@ -140,6 +144,7 @@
   add("mixed: fund on",            { components: [mixedComp([retailSub, officeSub])], fund: fundOn });
   add("mixed: disabled sub",       { components: [mixedComp([retailSub, Object.assign({}, officeSub, { enabled: false })])] });
   add("mixed: coverage massing",   { components: [mixedComp([retailSub, officeSub], { massingMode: "coverage", landCoveragePct: 0.55, upperFloorCoveragePct: 0.55, lastFloorPct: 0.8, maxFloors: 8 })] });
+  add("mixed: on leased land",     { landTenure: "lease", landRentPerSqmYr: 300, landRentEscalationYears: 5, landRentEscalationPct: 0.10, components: [mixedComp([retailSub, officeSub])] });
 
   /* ---------- invariants ---------- */
 
@@ -297,6 +302,61 @@
   });
   document.getElementById("out").innerHTML = html + "</table>";
   document.getElementById("snap").value = JSON.stringify(snapshot, null, 1);
+
+  /* ---------- Leasehold land ----------
+     Leasing pays no purchase price and no RETT, pays ground rent annually in
+     advance until exit, escalating every N years, and must NOT let that rent
+     inflate the debt facility. */
+  (function leaseholdLand() {
+    const fails = [];
+    /* A leased component is used so the project runs long enough for several
+       FULL rent years to exist. On a short sell-down scheme the later years
+       are pro-rated stubs, which would make an escalation comparison
+       meaningless. */
+    const lease = (over) => Object.assign({}, baseProject, {
+      landTenure: "lease", landRentPerSqmYr: 300,
+      landRentEscalationYears: 5, landRentEscalationPct: 0.10,
+      components: [leaseComp({ allocationPct: 1.0 })],
+    }, over || {});
+    try {
+      const L = F.runFeasibility(lease());
+      const O = F.runFeasibility(Object.assign({}, baseProject, { components: [leaseComp({ allocationPct: 1.0 })] }));
+
+      if ((L.kpi.landCost || 0) !== 0) fails.push(`leasehold still charged a land purchase of ${Math.round(L.kpi.landCost)}`);
+      if ((L.kpi.landTransferFees || 0) !== 0) fails.push(`leasehold still charged RETT of ${Math.round(L.kpi.landTransferFees)}`);
+      if (!((L.kpi.totalLandRent || 0) > 0)) fails.push("leasehold charged no ground rent");
+
+      // The facility must size on development cost only — no land, no rent.
+      if ((L.kpi.devCostExFinance || 0) >= (O.kpi.devCostExFinance || 0)) {
+        fails.push("leasehold development cost is not below freehold, so land is still in the facility base");
+      }
+      const rentInDevCost = Math.abs((L.kpi.devCostExFinance || 0) - ((O.kpi.devCostExFinance || 0) - (O.kpi.landCost || 0) - (O.kpi.landTransferFees || 0)));
+      if (rentInDevCost > 1) fails.push(`ground rent leaked into development cost by ${Math.round(rentInDevCost)}`);
+
+      // Rent must stop at exit, never run to the horizon.
+      const rf = L.cashflow.landRent || [];
+      const lastPaid = rf.reduce((last, v, i) => (v !== 0 ? i : last), -1);
+      if (lastPaid > (L.kpi.autoHorizonMonths || 0)) fails.push(`rent charged at month ${lastPaid}, past the project exit`);
+
+      // Paid annually in advance: payments land on month multiples of 12 only.
+      const offSchedule = rf.map((v, i) => (v !== 0 && i % 12 !== 0 ? i : -1)).filter(i => i >= 0);
+      if (offSchedule.length) fails.push(`rent paid off the annual schedule at month(s) ${offSchedule.slice(0, 3).join(",")}`);
+
+      // Escalation: with a 5-year review at 10%, year 5's payment is 1.1x year 0's.
+      const y0 = Math.abs(rf[0] || 0), y4 = Math.abs(rf[48] || 0), y5 = Math.abs(rf[60] || 0);
+      if (y4 && Math.abs(y4 - y0) > 1) fails.push("rent escalated before the review period elapsed");
+      if (y5 && Math.abs(y5 - y0 * 1.10) > Math.max(1, y0 * 1e-6)) {
+        fails.push(`year 5 rent ${Math.round(y5)} is not 1.10x year 0 rent ${Math.round(y0)}`);
+      }
+
+      // A zero rent must cost nothing at all.
+      const free = F.runFeasibility(lease({ landRentPerSqmYr: 0 }));
+      if ((free.kpi.totalLandRent || 0) !== 0) fails.push("a zero rent still produced a ground-rent charge");
+    } catch (e) { fails.push("threw: " + (e && e.message)); }
+
+    if (fails.length) failures++;
+    rows.push({ name: "LEASEHOLD: rent, no RETT, outside the facility base", fails });
+  })();
 
   /* ---------- A zero input must survive as zero ----------
      `+v || default` reads a user-entered 0 as "not supplied". A cap rate of 0

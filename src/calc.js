@@ -354,9 +354,22 @@ function runFeasibility(input) {
   // Land + transfer fees
   const landArea = +a.landArea || 0;
   const landPricePerSqm = +a.landPricePerSqm || 0;
-  const landCost = landArea * landPricePerSqm;
+  /* Tenure: the land is either bought or leased.
+
+     Bought  — a month-0 outlay plus RETT, sitting inside development cost and
+               therefore inside the debt facility base.
+     Leased  — no purchase price and NO RETT, because a ground lease transfers
+               no title. Instead an annual ground rent runs until the project
+               exits. That rent is an operating cost, not development capex, so
+               it is deliberately kept OUT of devCostExFinance: a construction
+               lender does not advance against rent that has not been incurred.
+               The practical effect is a much smaller facility on leasehold. */
+  const landTenure = a.landTenure === "lease" ? "lease" : "own";
+  const isLeasehold = landTenure === "lease";
+
+  const landCost = isLeasehold ? 0 : landArea * landPricePerSqm;
   const landTransferFeesPct = +a.landTransferFeesPct || 0;
-  const landTransferFees = landCost * landTransferFeesPct;
+  const landTransferFees = isLeasehold ? 0 : landCost * landTransferFeesPct;
 
   // Land condition: raw land only develops a share of the gross plot
   // (the rest goes to roads, utilities, open space). Net/serviced land
@@ -375,7 +388,8 @@ function runFeasibility(input) {
   const componentsRaw = a.components || [];
   const components = componentsRaw.map((c) => {
     if (!c.enabled) return { ...c, land: 0, gfa: 0, nsa: 0, units: 0, keys: 0, salesRevenue: 0, grossIncome: 0, opex: 0, noi: 0, exitValue: 0, builtCost: 0, siteWorkCost: 0, landCost: 0 };
-    return computeComponent(c, netDevelopableArea, landPricePerSqm);
+    // On leasehold no land is bought, so no component carries a land cost.
+    return computeComponent(c, netDevelopableArea, isLeasehold ? 0 : landPricePerSqm);
   });
 
   // Allocation validation
@@ -442,9 +456,35 @@ function runFeasibility(input) {
 
   /* ---------- Cashflow streams ---------- */
 
-  // Land + transfer fees: paid month 0
+  // Land + transfer fees: paid month 0 (zero on leasehold)
   const landFlow = arr();
   landFlow[0] = -(landCost + landTransferFees);
+
+  /* Ground rent (leasehold only) — paid annually IN ADVANCE, escalating by a
+     fixed percentage every N years (5 by default), and running until the
+     project exits rather than to the end of the horizon.
+
+     The final year is pro-rated to the exit month so the model never charges
+     rent for time the project no longer holds the land. Escalation steps on
+     completed multiples of the review period, so with a 5-year review the
+     first four years sit at the base rate and year 5 is the first uplift. */
+  const landRentFlow = arr();
+  const landRentPerSqmYr = isLeasehold ? Math.max(0, numOr(a.landRentPerSqmYr, 0)) : 0;
+  const landRentEscalationYears = Math.max(1, Math.round(numOr(a.landRentEscalationYears, 5)));
+  const landRentEscalationPct = numOr(a.landRentEscalationPct, 0);
+  let totalLandRent = 0;
+  if (landRentPerSqmYr > 0) {
+    const rentLastMonth = Math.min(horizon, Math.max(0, endMonth));
+    for (let m = 0; m <= rentLastMonth; m += 12) {
+      const yearIndex = Math.floor(m / 12);
+      const steps = Math.floor(yearIndex / landRentEscalationYears);
+      const annual = landArea * landRentPerSqmYr * Math.pow(1 + landRentEscalationPct, steps);
+      const monthsHeld = Math.min(12, rentLastMonth - m + 1);
+      const due = annual * (monthsHeld / 12);
+      landRentFlow[m] -= due;
+      totalLandRent += due;
+    }
+  }
 
   // Soft costs: spread across predesign + first half of construction
   const softFlow = arr();
@@ -573,7 +613,7 @@ function runFeasibility(input) {
   const incomeNetFlow = arr();
   const needFlow = arr();
   for (let m = 0; m <= horizon; m++) {
-    outlayFlow[m] = -(landFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] + contingencyFlow[m]);
+    outlayFlow[m] = -(landFlow[m] + landRentFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] + contingencyFlow[m]);
     incomeNetFlow[m] = salesFlow[m] + noiFlow[m] + exitFlow[m] + sellingFlow[m];
     needFlow[m] = outlayFlow[m] - incomeNetFlow[m];
   }
@@ -792,7 +832,7 @@ function runFeasibility(input) {
   const netCashflow = arr();
   for (let m = 0; m <= horizon; m++) {
     grossCashflow[m] =
-      landFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] +
+      landFlow[m] + landRentFlow[m] + softFlow[m] + constructionFlow[m] + siteWorkFlow[m] +
       contingencyFlow[m] + salesFlow[m] + sellingFlow[m] +
       rentFlow[m] + opexFlow[m] + exitFlow[m];
     netCashflow[m] = distributionFlow[m] - equityNeedCashFlow[m] - deficiencyFlow[m];
@@ -841,7 +881,7 @@ function runFeasibility(input) {
   //   total interest paid.
   const totalUsesForBalance =
     (landCost + landTransferFees + totalConstructionCost + totalSiteWorkCost +
-     softCosts + contingency) +
+     softCosts + contingency) + totalLandRent +
     (marketing + salesCommission + govFees) +
     (-interestFlow.reduce((s, v) => s + v, 0));
   // Equity required = actual CASH called from investors — only what neither
@@ -884,6 +924,10 @@ function runFeasibility(input) {
       minDSCR,
       gfa: totalGFA, nsa: totalNSA, totalUnits, totalKeys,
       landCost, landTransferFees,
+      // Leasehold: ground rent is a cost of the project but never part of
+      // devCostExFinance, so it never inflates the debt facility.
+      landTenure, totalLandRent,
+      landRentPerSqmYr, landRentEscalationYears, landRentEscalationPct,
       landType, developablePct, netDevelopableArea, landInfraCost,
       constructionCost: totalConstructionCost,
       siteWorkCost: totalSiteWorkCost,
@@ -897,7 +941,8 @@ function runFeasibility(input) {
     },
     cashflow: {
       months: Array.from({ length: horizon + 1 }, (_, i) => i),
-      land: landFlow, soft: softFlow, construction: constructionFlow,
+      land: landFlow, landRent: landRentFlow,
+      soft: softFlow, construction: constructionFlow,
       infra: siteWorkFlow, // alias for back-compat
       siteWork: siteWorkFlow,
       contingency: contingencyFlow,
