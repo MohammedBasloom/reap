@@ -127,8 +127,14 @@
     "Ground rent, no title": "إيجار أرض دون تملّك",
     "No RETT on a lease": "لا رسوم تصرّف على الإيجار",
     "Ground rent": "إيجار الأرض",
-    "at exit, annual": "سنويًا عند التخارج",
-    "NOI after rent": "صافي الدخل بعد الإيجار",
+    "Leasehold — what the project keeps": "الأرض المستأجرة — ما يتبقّى للمشروع",
+    "Stabilised NOI, all leased space": "صافي الدخل المستقر لكل المساحات المؤجَّرة",
+    "Ground rent in the exit year": "إيجار الأرض في سنة التخارج",
+    "NOI after ground rent": "صافي الدخل بعد إيجار الأرض",
+    "Exit value is capitalised from this figure, not the NOI above — a buyer inherits the ground lease and prices the income net of it.":
+      "تُحتسب قيمة التخارج برسملة هذا الرقم لا صافي الدخل أعلاه — فالمشتري يرث عقد إيجار الأرض ويُسعّر الدخل بعد خصمه.",
+    "Ground rent (whole period)": "إيجار الأرض (كامل الفترة)",
+    "capitalised after ground rent": "مرسملة بعد إيجار الأرض",
     "Land rent": "قيمة إيجار الأرض",
     "Annual ground rent": "الإيجار السنوي للأرض",
     "Annual rent per m² of plot. Paid in advance at the start of each year, and it runs until the project exits — not to the end of the horizon.":

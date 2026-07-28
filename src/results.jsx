@@ -832,27 +832,6 @@ function ProgramPanel({ result, input }) {
             {/* Ground rent is a site-level cost, not a component's own OpEx,
                 so it gets its own line rather than being folded into the bars
                 above — but the project only keeps what is left after it. */}
-            {(k.totalLandRent || 0) > 0 && (
-              <div style={{
-                marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border-2)",
-                display: "flex", justifyContent: "space-between", fontSize: 12,
-              }}>
-                <span style={{ color: "var(--fg-2)" }}>
-                  Ground rent
-                  <span style={{ color: "var(--fg-4)", fontSize: 10, marginInlineStart: 6 }}>
-                    at exit, annual
-                  </span>
-                </span>
-                <span className="tabnum" style={{ color: "var(--fg-1)" }}>
-                  <span style={{ color: "var(--ad-danger)" }}>− {fc(k.annualRentAtExit || 0)}</span>
-                  <span style={{ color: "var(--fg-3)", margin: "0 6px" }}>→</span>
-                  <span style={{ fontWeight: 600 }}>
-                    {fc(incomeUnits.reduce((s, u) => s + (u.noi || 0), 0) - (k.annualRentAtExit || 0))}
-                  </span>
-                  <span style={{ color: "var(--fg-3)", fontSize: 10, marginInlineStart: 6 }}>NOI after rent</span>
-                </span>
-              </div>
-            )}
             <div style={{ display: "flex", gap: 18, fontSize: 10, color: "var(--fg-3)", marginTop: 6, flexWrap: "wrap" }}>
               <Legend color="var(--ad-navy-800)" label="NOI (after OpEx)" />
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
@@ -865,6 +844,36 @@ function ProgramPanel({ result, input }) {
               </span>
               <span style={{ color: "var(--fg-4)" }}>Full bar = gross income</span>
             </div>
+
+            {/* Ground rent is a site cost, not a component's OpEx, so it sits
+                below the per-component bars as its own step: the bars show what
+                each space earns, this shows what the site costs to hold. */}
+            {(k.annualRentAtExit || 0) > 0 && (() => {
+              const noiSum = incomeUnits.reduce((s, u) => s + (u.noi || 0), 0);
+              const rent = k.annualRentAtExit || 0;
+              const step = (label, value, colour, strong) => (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "5px 0" }}>
+                  <span style={{ color: strong ? "var(--fg-1)" : "var(--fg-2)", fontWeight: strong ? 600 : 400 }}>{label}</span>
+                  <span className="tabnum" style={{ color: colour, fontWeight: strong ? 600 : 400 }}>{value}</span>
+                </div>
+              );
+              return (
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--border-1)" }}>
+                  <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>
+                    Leasehold — what the project keeps
+                  </div>
+                  <div style={{ fontSize: 12 }}>
+                    {step("Stabilised NOI, all leased space", fc(noiSum), "var(--fg-1)")}
+                    {step("Ground rent in the exit year", "− " + fc(rent), "var(--ad-danger)")}
+                    <div style={{ borderTop: "1px solid var(--border-2)" }} />
+                    {step("NOI after ground rent", fc(noiSum - rent), "var(--ad-navy-900)", true)}
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>
+                    Exit value is capitalised from this figure, not the NOI above — a buyer inherits the ground lease and prices the income net of it.
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -876,6 +885,9 @@ function ProgramPanel({ result, input }) {
         const totalOpexAll = -cf.opex.reduce((a, v) => a + v, 0);
         const totalNOIAll = totalRentAll - totalOpexAll;
         const totalExitAll = cf.exit.reduce((a, v) => a + v, 0);
+        // Ground rent paid across the hold — the site cost that sits between
+        // the asset's NOI and what the project actually keeps.
+        const totalGroundRent = -(cf.landRent || []).reduce((a, v) => a + v, 0);
         const grossSalesAll = cf.sales.reduce((a, v) => a + v, 0);
         const commissionAll = grossSalesAll * (+input.salesCommissionPct || 0);
         const netSalesAll = grossSalesAll - commissionAll;
@@ -903,15 +915,36 @@ function ProgramPanel({ result, input }) {
                     <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>Total NOI (whole period)</span>
                     <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>{fc(totalNOIAll)}</span>
                   </div>
+                  {/* On leasehold the site is rented for the whole hold, so
+                      the NOI above is not what the project keeps. */}
+                  {totalGroundRent > 0 && (
+                    <>
+                      <div style={rowStyle}>
+                        <span style={{ color: "var(--fg-2)" }}>Ground rent (whole period)</span>
+                        <span className="tabnum" style={{ color: "var(--ad-danger)" }}>− {fc(totalGroundRent)}</span>
+                      </div>
+                      <div style={rowStyle}>
+                        <span style={{ color: "var(--fg-1)", fontWeight: 600 }}>NOI after ground rent</span>
+                        <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>{fc(totalNOIAll - totalGroundRent)}</span>
+                      </div>
+                    </>
+                  )}
                   {totalExitAll > 0 && (
                     <div style={rowStyle}>
-                      <span style={{ color: "var(--fg-2)" }}>Net exit proceeds</span>
+                      <span style={{ color: "var(--fg-2)" }}>
+                        Net exit proceeds
+                        {totalGroundRent > 0 && (
+                          <span style={{ display: "block", color: "var(--fg-4)", fontSize: 10, marginTop: 2 }}>
+                            capitalised after ground rent
+                          </span>
+                        )}
+                      </span>
                       <span className="tabnum" style={{ color: "var(--ad-gold-600)", fontWeight: 600 }}>+ {fc(totalExitAll)}</span>
                     </div>
                   )}
                   <div style={totalRowStyle}>
                     <span>Total (NOI + exit proceeds)</span>
-                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(totalNOIAll + totalExitAll)}</span>
+                    <span className="tabnum" style={{ color: "var(--ad-navy-900)" }}>{fc(totalNOIAll - totalGroundRent + totalExitAll)}</span>
                   </div>
                 </div>
               </div>
