@@ -534,6 +534,31 @@
             fails.push(`waterfall buckets total ${Math.round(bucketTotal)} but ` +
                        `${Math.round(distributed)} was distributed (gap ${Math.round(bucketTotal - distributed)})`);
           }
+          /* The GP takes a promote ONLY if investors actually reached the
+             hurdle. The waterfall returns capital before it pays preferred
+             return, so on a hold the capital trickles back out of operating
+             cash while the preferred return waits for the exit. While
+             preferred return accrued on unreturned CAPITAL alone, that pause
+             stopped the clock: the balance sat unpaid for years earning
+             nothing, was settled at face value at exit, and emptied the
+             bucket — so "no preferred return outstanding" read as "hurdle
+             cleared" and released the promote to a fund that had returned
+             7.4% against an 8% hurdle. Testing the promote against the
+             investors' realised IRR is the check that cannot be satisfied by
+             an accounting artefact.
+
+             Skipped when nobody contributed: with no capital at risk there is
+             no preferred return to owe and no IRR to measure. */
+          const lpT = (w.totals || {}).lp || {};
+          const hurdle = +(cfg.input.fund.preferredReturnPct) || 0;
+          if ((w.buckets || {}).promoteToGP > 1 && (lpT.contributed || 0) > 1) {
+            if (lpT.irr == null) {
+              fails.push("promote paid but the investors' IRR is undefined");
+            } else if (lpT.irr < hurdle - 1e-3) {
+              fails.push(`promote of ${Math.round(w.buckets.promoteToGP)} paid at an investor IRR of ` +
+                         `${(lpT.irr * 100).toFixed(2)}% against a ${(hurdle * 100).toFixed(1)}% hurdle`);
+            }
+          }
           snapshot[cfg.name + " ::waterfall"] = round(w.buckets || {});
         }
       } catch (e) { fails.push("waterfall threw: " + (e && e.message)); }

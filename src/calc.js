@@ -1457,12 +1457,34 @@ function runWaterfall(input, result) {
       party.gp.contrib  += gpCall;  party.gp.cashflow[m]  -= gpCall;  party.gp.contribFlow[m]  -= gpCall;
     }
 
-    // ----- Preferred return accrues EVERY month on unreturned capital -----
-    // (Accruing only in distribution months understates pref through the
-    // all-negative construction period.)
-    party.lp.prefAccrued  += Math.max(0, party.lp.contrib  - party.lp.returned)  * prefMonthly;
-    party.dev.prefAccrued += Math.max(0, party.dev.contrib - party.dev.returned) * prefMonthly;
-    party.gp.prefAccrued  += Math.max(0, party.gp.contrib  - party.gp.returned)  * prefMonthly;
+    /* ----- Preferred return accrues EVERY month on the UNRETURNED BALANCE -----
+
+       The balance is unreturned capital PLUS preferred return already accrued
+       and not yet paid. Compounding only on the capital was what let the GP
+       take a promote on a fund that never reached its hurdle.
+
+       The waterfall returns capital before it pays preferred return, so on a
+       hold the capital comes back in instalments out of operating cash while
+       the preferred return waits for the exit. Accruing on capital alone stops
+       the clock as the capital is repaid, and the preferred balance then sits
+       for years earning nothing: on a lease-only scheme, 35.4M of preferred
+       return accrued by month 73 and was not paid until month 107. Paying it
+       at face value four years later emptied the bucket, so the hurdle test —
+       "is any preferred return outstanding?" — said yes, met, and released the
+       promote. The investors had in fact earned 7.4% against an 8% hurdle.
+
+       Compounding the whole unreturned balance makes it behave exactly like a
+       loan at the preferred rate: it reaches zero if and only if the investor
+       has actually achieved that rate, so emptying the bucket and clearing the
+       hurdle become the same statement. Accruing before this month's
+       distributions means a payment earns no preferred return in the month it
+       is made, which is the existing convention and the conservative one. */
+    const accruePref = (p) => {
+      p.prefAccrued += (Math.max(0, p.contrib - p.returned) + p.prefAccrued) * prefMonthly;
+    };
+    accruePref(party.lp);
+    accruePref(party.dev);
+    accruePref(party.gp);
 
     // ----- Distributions this month -----
     // Positive equity cashflow (after debt sweep) is what's available to
