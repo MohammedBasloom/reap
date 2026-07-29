@@ -64,10 +64,38 @@
        Centred: statement, then the product beneath it at full width. The
        previous two-column split gave the dashboard a third of the page at
        400px, too small to read as anything but decoration. */
+    /* Two heroes stacked, one per platform. Each carries --f, its "focus":
+       1 when it is the one being read, easing toward 0 as it leaves. The
+       scroll handler sets it; everything below just reacts to it, so the
+       handover is one number rather than a set of competing animations. */
+    .heroes { flex: 1; display: flex; flex-direction: column; }
     .hero {
-      flex: 1; position: relative; isolation: isolate;
+      position: relative; isolation: isolate;
       padding: 76px 40px 0; max-width: 1240px; margin: 0 auto; width: 100%;
       text-align: center;
+      --f: 1;
+    }
+    .hero + .hero { padding-top: 96px; }
+    /* Copy lifts and dims as its hero hands over; the shot follows a beat
+       later and slightly further, which is what makes the two feel layered
+       rather than moving as one flat card. */
+    .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta {
+      opacity: calc(0.25 + 0.75 * var(--f));
+      transform: translateY(calc((1 - var(--f)) * -16px));
+      will-change: opacity, transform;
+    }
+    .hero .heroShot {
+      opacity: calc(0.35 + 0.65 * var(--f));
+      transform: translateY(calc((1 - var(--f)) * 26px)) scale(calc(0.985 + 0.015 * var(--f)));
+      transform-origin: top center;
+      will-change: opacity, transform;
+    }
+    /* Numbered platform label. */
+    .hero .eyebrow { display: inline-flex; align-items: baseline; gap: 9px; }
+    .hero .eyebrow b {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      color: var(--ad-navy-900); background: var(--ad-gold-500);
+      padding: 3px 6px; border-radius: 2px; letter-spacing: 0.06em;
     }
     /* A single soft light behind the headline, so the dark section has a
        centre of gravity and the mockup edge does not read as a hard cut. */
@@ -172,18 +200,49 @@
     .dash .chart .cum { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: cumDraw 2200ms var(--ease-out) 500ms forwards; }
     @keyframes cumDraw { to { stroke-dashoffset: 0; } }
 
+    /* ---------- Valuation variant ----------
+       Same shell, different pane: one headline value carried on a filled card
+       (as the app draws it), then the three approaches side by side so the
+       reconciliation is legible at a glance rather than implied. */
+    .dash.val .vtop { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .dash.val .vhero {
+      background: var(--ad-navy-900); color: white; padding: 12px 14px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .dash.val .vhero span { font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .dash.val .vhero b { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-top: 3px; color: var(--ad-gold-400); }
+    .dash.val .vhero i { font-style: normal; font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 3px; }
+    .dash.val .eyeb.apr { margin-top: 14px; }
+    .dash.val .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .dash.val .col { border: 1px solid var(--border-1); padding: 9px 11px; }
+    .dash.val .col h6 {
+      margin: 0 0 6px; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-2); font-weight: 700; padding-bottom: 5px; border-bottom: 1px solid var(--border-1);
+    }
+    .dash.val .col div { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; padding: 3px 0; }
+    .dash.val .col div span { color: var(--fg-3); }
+    .dash.val .col div b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .dash.val .col div.tot { border-top: 1px solid var(--border-1); margin-top: 4px; padding-top: 5px; }
+    .dash.val .col div.tot b { color: var(--ad-navy-900); font-size: 11.5px; }
+
     @media (max-width: 1000px) {
       .hero { padding: 60px 24px 0; }
+      .hero + .hero { padding-top: 72px; }
       .heroShot { margin-top: 40px; max-height: 320px; }
       .dash .top .tk div:nth-child(n+3) { display: none; }
       .dash .cards { grid-template-columns: repeat(2, 1fr); }
       .dash .split { grid-template-columns: 1fr; }
       .dash .facts { display: none; }
+      .dash.val .vtop { grid-template-columns: 1fr 1fr; }
+      .dash.val .cols { grid-template-columns: 1fr; }
+      .dash.val .col:nth-child(n+3) { display: none; }
     }
     @media (max-width: 620px) {
       .heroShot { max-height: 240px; }
       .dash .tabs i:nth-child(n+5) { display: none; }
       .dash .top .pname { display: none; }
+      .dash.val .vtop { grid-template-columns: 1fr; }
+      .dash.val .vtop .c { display: none; }
     }
 
     /* ---------- Services ---------- */
@@ -570,6 +629,11 @@
       .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
 
+      /* Both heroes sit at full strength; the handover is not animated at all
+         and each is simply a section you scroll to. */
+      .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta, .hero .heroShot {
+        opacity: 1; transform: none; will-change: auto;
+      }
       /* The hero shot is simply present, not flown in, and the cumulative
          line is drawn complete rather than tracing itself. */
       .dash { animation: none; opacity: 1; transform: none; }
@@ -735,91 +799,170 @@
     </div>
   </div>
 
-  <!-- ============ HERO ============ -->
-  <div class="hero">
-    <div class="eyebrow" data-ar="دراسة الجدوى · التقييم · قرارات جاهزة">Feasibility · Valuation · Decision-ready</div>
-    <h1 data-ar="حلّل أي فرصة عقارية <em>باحترافية.</em>">Assess any real estate opportunity <em>like a professional.</em></h1>
-    <p class="lede" data-ar="تحوّل REAP التحليل العقاري المعقّد إلى نماذج حيّة موجَّهة. نفّذ دراسة جدوى تطويرية كاملة أو قيّم عقارًا بأساليب معتمدة عالميًا — دون الحاجة إلى خلفية مالية.">
-      REAP turns complex real-estate analysis into guided, live models. Run a full development
-      feasibility study or value a property with globally recognised methods — no financial
-      background required.
-    </p>
-    <div class="cta">
-      <button class="btn-land primary" id="btnStart" data-ar="ابدأ الآن — مجانًا">Get started — it's free</button>
-      <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
-    </div>
-    <div class="stats">
-      <div class="stat"><b>2</b><span data-ar="منصتا تحليل">Analysis platforms</span></div>
-      <div class="stat"><b>10+</b><span data-ar="لوحة نتائج حيّة">Live dashboards</span></div>
-      <div class="stat"><b>IVS</b><span data-ar="أساليب معتمدة دوليًا">Aligned methods</span></div>
-    </div>
+  <!-- ============ HEROES ============
+       Two of them, one per platform, handed over softly as the reader
+       scrolls. Each names its own product and speaks only about that product;
+       the generic counters that used to sit here (2 platforms, 10+ dashboards,
+       IVS) said nothing specific about either and are gone. -->
+  <div class="heroes">
 
-    <!-- The product itself, at full width and running off the fold. Figures are
-         the engine's own output for the worked scheme shown further down the
-         page, so the hero and the snapshots describe one project rather than
-         two. -->
-    <div class="heroShot">
-      <div class="dash" aria-hidden="true">
-        <div class="top">
-          <span class="bmark">
-            <svg width="15" height="13" viewBox="4 16 88 78" fill="#fff"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
-            <b>REAP</b><span data-ar="النمذجة المالية">Financial Modeling</span>
-          </span>
-          <span class="pname" data-ar="مشروع الواجهة — الرياض · متعدد الاستخدامات">Riyadh Frontage — mixed-use</span>
-          <span class="tk">
-            <div><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b></div>
-            <div><span data-ar="NPV">NPV</span><b>26.6M</b></div>
-            <div><span data-ar="الربح">Profit</span><b>85.7M</b></div>
-            <div><span data-ar="إجمالي التكلفة">Total cost</span><b>191.0M</b></div>
-          </span>
-        </div>
+    <!-- ---------- 01 · Financial modeling ---------- -->
+    <div class="hero" data-hero>
+      <div class="eyebrow"><b>01</b><span data-ar="النمذجة المالية">Financial Modeling</span></div>
+      <h1 data-ar="ادرس جدوى التطوير <em>قبل أن تشتري الأرض.</em>">Test a development's feasibility <em>before you buy the land.</em></h1>
+      <p class="lede" data-ar="ركّب البرنامج — فلل، شقق، تجزئة، فندق، مبنى متعدد الاستخدامات — وحدّد التكاليف والتمويل، ثم اقرأ التدفقات النقدية والعوائد والحساسية ومونت كارلو وشلال توزيعات الصندوق. محرك واحد يقود كل لوحة.">
+        Assemble the program — villas, apartments, retail, hotel, mixed-use — set costs and
+        financing, then read cashflow, returns, sensitivity, Monte Carlo and the fund waterfall.
+        One engine drives every dashboard.
+      </p>
+      <div class="cta">
+        <button class="btn-land primary" data-app="model.html" data-ar="افتح النمذجة المالية">Open Financial Modeling</button>
+        <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
+      </div>
 
-        <div class="tabs">
-          <i class="on"><u>01</u><span data-ar="الملخص">Summary</span></i>
-          <i><u>02</u><span data-ar="التكاليف">Costs</span></i>
-          <i><u>03</u><span data-ar="البرنامج والإيرادات">Program</span></i>
-          <i><u>04</u><span data-ar="التدفقات النقدية">Cashflow</span></i>
-          <i><u>05</u><span data-ar="رأس المال">Capital</span></i>
-          <i><u>06</u><span data-ar="العوائد">Returns</span></i>
-          <i><u>07</u><span data-ar="الحساسية">Sensitivity</span></i>
-          <i><u>08</u><span data-ar="السيناريوهات">Scenarios</span></i>
-          <i><u>09</u><span data-ar="مونت كارلو">Monte Carlo</span></i>
-          <i><u>10</u><span data-ar="المخاطر">Risk</span></i>
-        </div>
-
-        <div class="pane">
-          <div class="eyeb" data-ar="لجنة الاستثمار · الملخص">Investment committee · summary</div>
-          <div class="verdict" data-ar="المشروع يتجاوز العائد المستهدف">The project clears its target return</div>
-
-          <div class="cards">
-            <div class="c up"><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b><i data-ar="المستهدف 10.0%">target 10.0%</i></div>
-            <div class="c"><span data-ar="NPV الملكية">Equity NPV</span><b data-ar="26.6M ر.س">SAR 26.6M</b><i data-ar="بخصم 10.0%">at 10.0%</i></div>
-            <div class="c"><span data-ar="مضاعف الملكية">Equity multiple</span><b>2.90×</b><i data-ar="العائد 190.2%">ROI 190.2%</i></div>
-            <div class="c"><span data-ar="الربح (بعد التمويل)">Profit (levered)</span><b data-ar="85.7M ر.س">SAR 85.7M</b><i data-ar="تغطية الفوائد 3.36×">cover 3.36×</i></div>
+      <div class="heroShot">
+        <div class="dash" aria-hidden="true">
+          <div class="top">
+            <span class="bmark">
+              <svg width="15" height="13" viewBox="4 16 88 78" fill="#fff"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
+              <b>REAP</b><span data-ar="النمذجة المالية">Financial Modeling</span>
+            </span>
+            <span class="pname" data-ar="مشروع الواجهة — الرياض · متعدد الاستخدامات">Riyadh Frontage — mixed-use</span>
+            <span class="tk">
+              <div><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b></div>
+              <div><span data-ar="NPV">NPV</span><b>26.6M</b></div>
+              <div><span data-ar="الربح">Profit</span><b>85.7M</b></div>
+              <div><span data-ar="إجمالي التكلفة">Total cost</span><b>191.0M</b></div>
+            </span>
           </div>
 
-          <div class="split">
-            <div class="facts">
-              <div><span data-ar="مساحة الأرض">Land area</span><b>12,000 m²</b></div>
-              <div><span data-ar="إجمالي مسطحات البناء GFA">GFA</span><b>32,760 m²</b></div>
-              <div><span data-ar="المساحة الصافية NSA">Net saleable</span><b>25,553 m²</b></div>
-              <div><span data-ar="إجمالي الوحدات">Units</span><b>67</b></div>
-              <div><span data-ar="ذروة الدين">Peak debt</span><b>89.2M</b></div>
-              <div><span data-ar="الأفق الزمني">Horizon</span><b data-ar="7.3 سنة">7.3 yrs</b></div>
+          <div class="tabs">
+            <i class="on"><u>01</u><span data-ar="الملخص">Summary</span></i>
+            <i><u>02</u><span data-ar="التكاليف">Costs</span></i>
+            <i><u>03</u><span data-ar="البرنامج والإيرادات">Program</span></i>
+            <i><u>04</u><span data-ar="التدفقات النقدية">Cashflow</span></i>
+            <i><u>05</u><span data-ar="رأس المال">Capital</span></i>
+            <i><u>06</u><span data-ar="العوائد">Returns</span></i>
+            <i><u>07</u><span data-ar="الحساسية">Sensitivity</span></i>
+            <i><u>08</u><span data-ar="السيناريوهات">Scenarios</span></i>
+            <i><u>09</u><span data-ar="مونت كارلو">Monte Carlo</span></i>
+            <i><u>10</u><span data-ar="المخاطر">Risk</span></i>
+          </div>
+
+          <div class="pane">
+            <div class="eyeb" data-ar="لجنة الاستثمار · الملخص">Investment committee · summary</div>
+            <div class="verdict" data-ar="المشروع يتجاوز العائد المستهدف">The project clears its target return</div>
+
+            <div class="cards">
+              <div class="c up"><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b><i data-ar="المستهدف 10.0%">target 10.0%</i></div>
+              <div class="c"><span data-ar="NPV الملكية">Equity NPV</span><b data-ar="26.6M ر.س">SAR 26.6M</b><i data-ar="بخصم 10.0%">at 10.0%</i></div>
+              <div class="c"><span data-ar="مضاعف الملكية">Equity multiple</span><b>2.90×</b><i data-ar="العائد 190.2%">ROI 190.2%</i></div>
+              <div class="c"><span data-ar="الربح (بعد التمويل)">Profit (levered)</span><b data-ar="85.7M ر.س">SAR 85.7M</b><i data-ar="تغطية الفوائد 3.36×">cover 3.36×</i></div>
             </div>
-            <div class="chart">
-              <svg viewBox="0 0 620 150" preserveAspectRatio="none">
-                <line x1="0" y1="96" x2="620" y2="96" stroke="#E5E2D8" stroke-width="1"/>
-                <!-- Costs below the line, revenue above — the shape the Summary tab draws. -->
-                <path d="M0,96 L0,120 C90,132 150,140 220,138 C300,136 380,128 470,116 C540,107 590,101 620,99 L620,96 Z" fill="#B0392B" opacity="0.82"/>
-                <path d="M0,96 L0,96 C90,96 150,94 220,88 C300,81 380,60 470,34 C540,17 590,10 620,8 L620,96 Z" fill="#2E7D5B" opacity="0.86"/>
-                <path class="cum" d="M0,120 C90,124 150,122 220,112 C300,100 380,74 470,46 C540,27 590,18 620,15" fill="none" stroke="#0F1E38" stroke-width="2.5" stroke-linecap="round"/>
-              </svg>
+
+            <div class="split">
+              <div class="facts">
+                <div><span data-ar="مساحة الأرض">Land area</span><b>12,000 m²</b></div>
+                <div><span data-ar="إجمالي مسطحات البناء GFA">GFA</span><b>32,760 m²</b></div>
+                <div><span data-ar="المساحة الصافية NSA">Net saleable</span><b>25,553 m²</b></div>
+                <div><span data-ar="إجمالي الوحدات">Units</span><b>67</b></div>
+                <div><span data-ar="ذروة الدين">Peak debt</span><b>89.2M</b></div>
+                <div><span data-ar="الأفق الزمني">Horizon</span><b data-ar="7.3 سنة">7.3 yrs</b></div>
+              </div>
+              <div class="chart">
+                <svg viewBox="0 0 620 200" preserveAspectRatio="none">
+                  <line x1="0" y1="128" x2="620" y2="128" stroke="#E5E2D8" stroke-width="1"/>
+                  <path d="M0,128 L0,160 C90,176 150,187 220,184 C300,181 380,171 470,155 C540,143 590,135 620,132 L620,128 Z" fill="#B0392B" opacity="0.82"/>
+                  <path d="M0,128 L0,128 C90,128 150,125 220,117 C300,108 380,80 470,45 C540,23 590,13 620,10 L620,128 Z" fill="#2E7D5B" opacity="0.86"/>
+                  <path class="cum" d="M0,160 C90,165 150,163 220,149 C300,133 380,99 470,61 C540,36 590,24 620,20" fill="none" stroke="#0F1E38" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- ---------- 02 · Valuation ---------- -->
+    <div class="hero" data-hero>
+      <div class="eyebrow"><b>02</b><span data-ar="التقييم العقاري">Real Estate Valuation</span></div>
+      <h1 data-ar="اعرف ما يساويه العقار <em>بثلاثة أساليب، لا برأي واحد.</em>">Know what a property is worth <em>by three methods, not one opinion.</em></h1>
+      <p class="lede" data-ar="معالج موجّه بلغة مبسطة يقودك عبر المقارنات السوقية ورسملة الدخل وأسلوب التكلفة، ثم يرجّحها في قيمة واحدة مع نطاق ثقة — وفحوصات جودة تنبّهك إذا تباعدت الأساليب.">
+        A guided, plain-language wizard walks you through sales comparison, income capitalisation
+        and the cost approach, then reconciles them into one figure with a confidence range —
+        and quality checks that warn you when the methods disagree.
+      </p>
+      <div class="cta">
+        <button class="btn-land primary" data-app="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</button>
+      </div>
+
+      <div class="heroShot">
+        <div class="dash val" aria-hidden="true">
+          <div class="top">
+            <span class="bmark">
+              <svg width="15" height="13" viewBox="4 16 88 78" fill="#fff"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
+              <b>REAP</b><span data-ar="التقييم العقاري">Valuation</span>
+            </span>
+            <span class="pname" data-ar="فيلا الملقا · الرياض · فيلا">Al Malqa villa · Riyadh</span>
+            <span class="tk">
+              <div><span data-ar="القيمة السوقية">Market value</span><b data-ar="3.4M ر.س">SAR 3.4M</b></div>
+              <div><span data-ar="النطاق">Range</span><b>3.0M – 3.7M</b></div>
+            </span>
+          </div>
+
+          <div class="tabs">
+            <i class="on"><u>01</u><span data-ar="ملخص التقييم">Summary</span></i>
+            <i><u>02</u><span data-ar="المبيعات المقارنة">Comparables</span></i>
+            <i><u>03</u><span data-ar="الدخل الإيجاري">Rental income</span></i>
+            <i><u>04</u><span data-ar="أسلوب التكلفة">Cost approach</span></i>
+            <i><u>05</u><span data-ar="الترجيح">Reconciliation</span></i>
+            <i><u>06</u><span data-ar="فحوصات الجودة">Quality checks</span></i>
+          </div>
+
+          <div class="pane">
+            <div class="eyeb" data-ar="ملخص التقييم · فيلا · الرياض">Valuation summary · villa · Riyadh</div>
+            <div class="verdict" data-ar="القيمة السوقية الاستدلالية">Indicative market value</div>
+
+            <div class="vtop">
+              <div class="vhero">
+                <span data-ar="القيمة السوقية النهائية">Final market value</span>
+                <b data-ar="3.4M ر.س">SAR 3.4M</b>
+                <i data-ar="النطاق المرجّح 3.0M – 3.7M ر.س (±11%)">Weighted range SAR 3.0M – 3.7M (±11%)</i>
+              </div>
+              <div class="c"><span data-ar="القيمة لكل م² (بناء)">Value per m² (built)</span><b data-ar="11,986 ر.س">SAR 11,986</b><i data-ar="280 م² أساس القياس">280 m² basis</i></div>
+              <div class="c"><span data-ar="الأساليب المستخدمة">Approaches used</span><b>3</b><i data-ar="تباين 10%">10% spread</i></div>
+            </div>
+
+            <div class="eyeb apr" data-ar="تفصيل الأساليب الثلاثة">The three approaches, line by line</div>
+            <div class="cols">
+              <div class="col">
+                <h6 data-ar="المقارنات السوقية">Sales comparison</h6>
+                <div><span data-ar="عقار مقارن 1">Comparable 1</span><b>12,143</b></div>
+                <div><span data-ar="الوسيط بعد التسوية">Adjusted median</span><b data-ar="12,143 ر.س/م²">12,143 /m²</b></div>
+                <div class="tot"><span data-ar="× 280 م²">× 280 m²</span><b data-ar="3.4M ر.س">SAR 3.4M</b></div>
+              </div>
+              <div class="col">
+                <h6 data-ar="رسملة الدخل">Income capitalisation</h6>
+                <div><span data-ar="الإيجار الإجمالي الممكن">Gross potential rent</span><b>260K</b></div>
+                <div><span data-ar="− الشواغر (6%)">− vacancy (6%)</span><b>−16K</b></div>
+                <div><span data-ar="− مصاريف التشغيل (5%)">− opex (5%)</span><b>−12K</b></div>
+                <div><span data-ar="صافي الدخل التشغيلي">Net operating income</span><b>232K</b></div>
+                <div class="tot"><span data-ar="÷ معدل الرسملة 6.5%">÷ cap rate 6.5%</span><b data-ar="3.6M ر.س">SAR 3.6M</b></div>
+              </div>
+              <div class="col">
+                <h6 data-ar="أسلوب التكلفة">Cost approach</h6>
+                <div><span data-ar="قيمة الأرض">Land value</span><b>2.1M</b></div>
+                <div><span data-ar="تكلفة الإحلال (جديد)">Replacement cost (new)</span><b>1.3M</b></div>
+                <div><span data-ar="− الإهلاك (8% · 5 سنوات)">− depreciation (8% · 5 yrs)</span><b>−105K</b></div>
+                <div><span data-ar="قيمة المبنى بعد الإهلاك">Depreciated building</span><b>1.2M</b></div>
+                <div class="tot"><span data-ar="الأرض + المبنى">Land + building</span><b data-ar="3.2M ر.س">SAR 3.2M</b></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ============ TRUST STRIP ============ -->
@@ -1251,7 +1394,12 @@
     $("btnSignup").style.display = signedIn ? "none" : "";
     if (signedIn) {
       $("userEmail").textContent = user.email;
-      $("btnStart").textContent = L("Continue to your workspace", "تابع إلى مساحة عملك");
+      /* Each hero now opens its own platform directly, so there is no single
+         "get started" button left to relabel. Guarded rather than deleted:
+         the element is gone, and reading .textContent off null would take the
+         whole signed-in branch — avatar, name, menu — down with it. */
+      const start = $("btnStart");
+      if (start) start.textContent = L("Continue to your workspace", "تابع إلى مساحة عملك");
       // Avatar initial + full name from the profile (same as the platform pages)
       let name = "";
       try {
@@ -1283,7 +1431,8 @@
   $("btnSignup").onclick = () => openAuth("signup");
   // Both hero CTAs lead the user to CHOOSE a platform (the two service cards),
   // rather than forcing Financial Modeling.
-  $("btnStart").onclick = () => { reapAuth.clearGuest(); toServices(); };
+  const btnStart = $("btnStart");
+  if (btnStart) btnStart.onclick = () => { reapAuth.clearGuest(); toServices(); };
   $("btnExplore").onclick = () => { reapAuth.enterGuest(); toServices(); };
   $("btnLogout").onclick = () => reapAuth.signOut();
   $("authClose").onclick = closeAuth;
@@ -1401,6 +1550,50 @@
     }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
     reveals.forEach((el) => io.observe(el));
   }
+
+  /* ---------- Soft handover between the two heroes ----------
+     Each hero gets --f, how much of the reader's attention it holds: 1 while
+     its own shot sits in the middle of the viewport, easing to 0 as it leaves.
+     The CSS above turns that single number into the fade and the lift, so the
+     two never fight each other — one rises exactly as the other settles.
+
+     Measured off the SHOT rather than the section, because the sections are
+     tall and their midpoints pass the viewport long after the thing you are
+     actually looking at has gone. rAF-throttled, passive, and skipped
+     entirely under reduced motion, where the CSS pins everything at full
+     strength. */
+  (function heroHandover() {
+    const heroes = Array.prototype.slice.call(document.querySelectorAll("[data-hero]"));
+    if (heroes.length < 2) return;
+    const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (still && still.matches) return;
+
+    let queued = false;
+    const paint = function () {
+      queued = false;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      for (let i = 0; i < heroes.length; i++) {
+        const hero = heroes[i];
+        const shot = hero.querySelector(".heroShot") || hero;
+        const r = shot.getBoundingClientRect();
+        const mid = r.top + r.height / 2;
+        /* Full focus while the shot's middle is anywhere in the central band
+           of the viewport, tapering over a viewport-height on either side. */
+        const off = Math.abs(mid - vh * 0.5) / vh;
+        const f = Math.max(0, Math.min(1, 1.35 - off * 1.6));
+        hero.style.setProperty("--f", f.toFixed(3));
+      }
+    };
+    const onScroll = function () {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(paint);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("load", onScroll);
+    paint();
+  })();
 
   /* The weighting bars grow once, when the snapshots first come into view. */
   const shotGrid = $("shotGrid");
