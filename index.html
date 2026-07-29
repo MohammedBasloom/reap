@@ -74,14 +74,25 @@
        is spent. Height is what buys the dwell: roughly a third of a screen
        holding the first, a third crossing over, the rest holding the second. */
     .heroes { position: relative; height: 260vh; }
+    /* Two rows: the heroes share the first and are centred in it, the trust
+       strip holds the floor. The strip is part of the hero screen rather than
+       a band that appears once the pin lets go — it describes the platform, so
+       it belongs to both heroes and stays put while they swap. */
+    /* Height is the viewport MINUS the top bar, not the whole viewport. At rest
+       the pin starts below the bar, so a full 100vh box hangs its last 80px —
+       exactly the trust strip — under the fold, and the strip only appeared
+       once the reader had scrolled past the bar. Once stuck the bar has gone
+       and those 80px become breathing room under the strip instead.
+       --tb is measured from the bar itself, since it is shorter on phones. */
     .heroPin {
-      position: sticky; top: 0; height: 100vh; overflow: hidden;
-      display: grid; align-content: center;
+      position: sticky; top: 0; height: calc(100vh - var(--tb, 80px)); overflow: hidden;
+      display: grid; grid-template-rows: 1fr auto;
     }
+    .heroPin > .trust { grid-row: 2; grid-column: 1; align-self: end; }
     .hero {
       /* Stacked in one grid cell rather than absolutely placed, so both keep a
          normal flow height and stay vertically centred at any viewport. */
-      grid-area: 1 / 1;
+      grid-row: 1; grid-column: 1; align-self: center;
       position: relative; isolation: isolate;
       padding: 0 40px; max-width: 1240px; margin: 0 auto; width: 100%;
       text-align: center;
@@ -166,7 +177,10 @@
       /* Sized against the viewport, not a fixed pixel height: the hero now has
          to fit inside the pinned screen alongside its copy, and a 400px shot
          pushed the buttons off the bottom on a laptop. */
-      max-height: min(360px, 34vh); overflow: hidden;
+      /* Measured against the PIN, not the raw viewport: the pin is a top bar
+         shorter than the screen and the trust strip takes another 50px off it,
+         so 34vh left the English hero — the tallest case — with 5px to spare. */
+      max-height: min(340px, calc((100vh - var(--tb, 80px)) * 0.30)); overflow: hidden;
       /* The fade sits in the last fifth only. Starting it higher dimmed the
          chart itself, which reads as a rendering fault rather than a fold. */
       -webkit-mask-image: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0.5) 94%, rgba(0,0,0,0) 100%);
@@ -260,12 +274,17 @@
        screen, and anything past it is unreachable because the pin does not
        scroll. The paragraph is the first thing to give — the headline, the
        buttons and the product all say more than it does. */
-    @media (max-height: 780px) and (min-width: 1001px) {
+    @media (max-height: 860px) and (min-width: 1001px) {
       .hero p.lede { font-size: 14.5px; margin-top: 11px; max-width: 560px; }
       .hero .cta { margin-top: 17px; }
       .hero h1 { font-size: clamp(28px, 3.6vw, 42px); }
     }
-    @media (max-height: 620px) and (min-width: 1001px) {
+    /* Below this the paragraph has to go. Once the top bar and the trust strip
+       are subtracted a 700px screen leaves 570px for the hero, and the English
+       one — the tallest — wants 583px with the paragraph in. The headline, the
+       buttons and the product shot all say more than it does, and anything
+       that does not fit is unreachable inside a pin that does not scroll. */
+    @media (max-height: 760px) and (min-width: 1001px) {
       .hero p.lede { display: none; }
     }
 
@@ -680,7 +699,8 @@
          print on top of each other. */
       .heroes { height: auto; }
       .heroPin { position: static; height: auto; display: block; overflow: visible; }
-      .hero { grid-area: auto; pointer-events: auto; padding-block: 60px; }
+      .hero { grid-row: auto; grid-column: auto; pointer-events: auto; padding-block: 60px; }
+      .heroPin > .trust { grid-row: auto; grid-column: auto; }
       .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta, .hero .heroShot {
         opacity: 1; transform: none; will-change: auto;
       }
@@ -1015,17 +1035,19 @@
       </div>
     </div>
 
-   </div>
-  </div>
-
-  <!-- ============ TRUST STRIP ============ -->
-  <div class="trust">
-    <div class="inner">
-      <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
-      <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
-      <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
-      <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
+    <!-- Inside the pin, on the floor of the hero screen. It belongs to both
+         platforms rather than to either, so it sits below whichever hero is
+         showing and does not fade with them. -->
+    <div class="trust">
+      <div class="inner">
+        <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
+        <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
+        <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
+        <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
+      </div>
     </div>
+
+   </div>
   </div>
 
   <!-- ============ SERVICES ============ -->
@@ -1615,6 +1637,20 @@
      actually looking at has gone. rAF-throttled, passive, and skipped
      entirely under reduced motion, where the CSS pins everything at full
      strength. */
+  /* Publish the top bar's real height so the pinned hero screen can subtract
+     it. Hard-coding 80px would be wrong on phones, where the bar is shorter. */
+  (function publishTopbarHeight() {
+    const bar = document.querySelector(".topbar");
+    if (!bar) return;
+    const set = function () {
+      const h = Math.round(bar.getBoundingClientRect().height);
+      if (h > 0) document.documentElement.style.setProperty("--tb", h + "px");
+    };
+    set();
+    window.addEventListener("resize", set, { passive: true });
+    window.addEventListener("load", set);
+  })();
+
   (function heroHandover() {
     const stage = $("heroStage");
     const heroes = stage ? Array.prototype.slice.call(stage.querySelectorAll("[data-hero]")) : [];
