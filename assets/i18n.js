@@ -251,7 +251,6 @@
     "Lease-up period": "فترة التأجير",
     "Long-term run-rate": "المعدل المستقر طويل الأجل",
     "% of gross income": "٪ من الدخل الإجمالي",
-    "0 = held, not sold": "0 = يُحتفظ به دون بيع",
     "months → exit": "أشهر → التخارج", "Hold until exit": "الاحتفاظ حتى التخارج",
     /* Allocation alarm + program header */
     "Land fully allocated": "الأرض موزّعة بالكامل",

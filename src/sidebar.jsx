@@ -766,7 +766,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
                     <Row cols={2}>
                       <PctField label="OpEx" value={s.opexPct} onChange={v => updateSub(i, "opexPct", v)} hint="% of gross income" tip="Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI." />
-                      <PctField label="Exit cap rate" value={s.exitCapRate} onChange={v => updateSub(i, "exitCapRate", v)} hint="0 = held, not sold" step={0.25} tip="The yield a buyer would accept for this space at exit. Stabilised NOI divided by the cap rate gives the exit value. Enter 0 if the space is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone." />
+                      <PctField label="Exit cap rate" value={s.exitCapRate} onChange={v => updateSub(i, "exitCapRate", v)} step={0.25} tip="The yield a buyer would accept for this space at exit. Stabilised NOI divided by the cap rate gives the exit value. Enter 0 if the space is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone." />
                     </Row>
                     <Row cols={2}>
                       <Field label="Operating period" suffix="months" value={s.operatingPeriodMonths} onChange={v => updateSub(i, "operatingPeriodMonths", v)} step={1} hint="Held before exit" />
@@ -898,7 +898,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 
           <Row cols={2}>
             <PctField label="OpEx" value={comp.opexPct} onChange={v => update("opexPct", v)} hint="% of gross income" tip="Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI." />
-            <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} hint="0 = held, not sold" tip="Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price. Enter 0 if the asset is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone." />
+            <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} tip="Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price. Enter 0 if the asset is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone." />
           </Row>
         </>
       )}
