@@ -163,6 +163,77 @@
       color: rgba(255,255,255,0.66); max-width: 600px;
     }
     .hero .cta { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    /* ---------- Flow button ----------
+       The shadcn/Tailwind FlowButton, rebuilt in plain CSS because this page
+       ships no React, no npm and no Tailwind. Same behaviour: a pill that
+       squares off on hover while a dot expands to flood it, the label slides
+       across, and a pair of arrows hand over — one entering as the other
+       leaves.
+
+       Palette is REAP's, not the original's #111 on white: gold flood with
+       navy type for the primary, white flood with navy type for the guest
+       button, both reading against the navy hero.
+
+       Direction-aware. The original hard-codes left and right, which points
+       both arrows the wrong way in Arabic — the default language here — so the
+       offsets are logical and the glyphs mirror under RTL. */
+    .btn-flow {
+      position: relative; display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px; overflow: hidden; isolation: isolate;
+      border-radius: 100px; border: 1.5px solid rgba(255,255,255,0.34);
+      background: transparent; color: white; cursor: pointer;
+      font-family: var(--font-body); font-size: 12.5px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 13px 30px;
+      transition: border-color 600ms cubic-bezier(0.23,1,0.32,1),
+                  border-radius 600ms cubic-bezier(0.23,1,0.32,1),
+                  color 600ms cubic-bezier(0.23,1,0.32,1),
+                  transform 140ms var(--ease-out);
+    }
+    .btn-flow:hover { border-color: transparent; border-radius: 12px; }
+    .btn-flow:active { transform: scale(0.95); }
+    .btn-flow:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
+
+    .btn-flow .lbl {
+      position: relative; z-index: 2; display: inline-block;
+      transform: translateX(-12px);
+      transition: transform 800ms var(--ease-out);
+    }
+    html[dir="rtl"] .btn-flow .lbl { transform: translateX(12px); }
+    .btn-flow:hover .lbl { transform: translateX(12px); }
+    html[dir="rtl"] .btn-flow:hover .lbl { transform: translateX(-12px); }
+
+    /* The flood. Sized past the button's diagonal so it covers the corners. */
+    .btn-flow .circ {
+      position: absolute; top: 50%; left: 50%; z-index: 0;
+      width: 16px; height: 16px; border-radius: 50%;
+      transform: translate(-50%, -50%); opacity: 0;
+      background: white;
+      transition: width 800ms cubic-bezier(0.19,1,0.22,1),
+                  height 800ms cubic-bezier(0.19,1,0.22,1),
+                  opacity 800ms cubic-bezier(0.19,1,0.22,1);
+    }
+    .btn-flow:hover .circ { width: 320px; height: 320px; opacity: 1; }
+    .btn-flow:hover { color: var(--ad-navy-900); }
+
+    /* Arrows: the trailing one leaves, the leading one arrives. */
+    .btn-flow .fa {
+      position: absolute; z-index: 2; width: 15px; height: 15px;
+      stroke: currentColor; fill: none;
+      transition: inset-inline-start 800ms cubic-bezier(0.34,1.56,0.64,1),
+                  inset-inline-end 800ms cubic-bezier(0.34,1.56,0.64,1);
+    }
+    html[dir="rtl"] .btn-flow .fa { transform: scaleX(-1); }
+    .btn-flow .fa-lead  { inset-inline-start: -25%; }
+    .btn-flow .fa-trail { inset-inline-end: 16px; }
+    .btn-flow:hover .fa-lead  { inset-inline-start: 16px; }
+    .btn-flow:hover .fa-trail { inset-inline-end: -25%; }
+
+    /* Primary — the brand gold floods in and the type turns navy. */
+    .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-400); }
+    .btn-flow.primary .circ { background: var(--ad-gold-500); }
+    .btn-flow.primary:hover { color: var(--ad-navy-900); }
     .hero .btn-land { padding: 13px 26px; font-size: 12.5px; }
     .hero .stats { margin-top: 34px; display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
     .hero .stat b { display: block; font-family: var(--font-display); font-size: 22px; color: white; font-weight: 600; }
@@ -721,6 +792,14 @@
         opacity: 1; transform: none; will-change: auto;
       }
       .heroShot { max-height: none; -webkit-mask-image: none; mask-image: none; }
+      /* The flow button keeps its hover state but stops travelling: the flood
+         and the arrow hand-over are the motion, so they resolve instantly. */
+      .btn-flow, .btn-flow .lbl, .btn-flow .circ, .btn-flow .fa { transition: none; }
+      .btn-flow .lbl, html[dir="rtl"] .btn-flow .lbl,
+      .btn-flow:hover .lbl, html[dir="rtl"] .btn-flow:hover .lbl { transform: none; }
+      .btn-flow .fa { display: none; }
+      .btn-flow:active { transform: none; }
+
       /* The hero shot is simply present, not flown in, and the cumulative
          line is drawn complete rather than tracing itself. */
       .dash { animation: none; opacity: 1; transform: none; }
@@ -906,8 +985,21 @@
       <!-- Same pair on both heroes: sign up, or look around first. Wired by
            class rather than id, since there are now two of each. -->
       <div class="cta">
-        <button class="btn-land primary heroSignup" data-ar="سجّل مجانًا">Sign up free</button>
-        <button class="btn-land heroGuest" data-ar="استكشف كضيف">Explore as guest</button>
+        <!-- data-ar sits on the LABEL, not the button: the i18n layer swaps
+             innerHTML, which on the button would delete the arrows and the
+             flood span along with the English text. -->
+        <button class="btn-flow primary heroSignup" type="button">
+          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+          <span class="circ" aria-hidden="true"></span>
+          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+        <button class="btn-flow heroGuest" type="button">
+          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
+          <span class="circ" aria-hidden="true"></span>
+          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
       </div>
 
       <div class="heroShot">
@@ -982,8 +1074,21 @@
         and quality checks that warn you when the methods disagree.
       </p>
       <div class="cta">
-        <button class="btn-land primary heroSignup" data-ar="سجّل مجانًا">Sign up free</button>
-        <button class="btn-land heroGuest" data-ar="استكشف كضيف">Explore as guest</button>
+        <!-- data-ar sits on the LABEL, not the button: the i18n layer swaps
+             innerHTML, which on the button would delete the arrows and the
+             flood span along with the English text. -->
+        <button class="btn-flow primary heroSignup" type="button">
+          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+          <span class="circ" aria-hidden="true"></span>
+          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+        <button class="btn-flow heroGuest" type="button">
+          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
+          <span class="circ" aria-hidden="true"></span>
+          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
       </div>
 
       <div class="heroShot">
