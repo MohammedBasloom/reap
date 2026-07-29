@@ -185,7 +185,9 @@
       background: transparent; color: white; cursor: pointer;
       font-family: var(--font-body); font-size: 12.5px; font-weight: 600;
       letter-spacing: 0.08em; text-transform: uppercase;
-      padding: 13px 30px;
+      /* 34px, not 30: the label travels 12px and the arrows sit 16px in, so a
+         30px gutter left them a pixel apart even once the sides were right. */
+      padding: 13px 34px;
       transition: border-color 600ms cubic-bezier(0.23,1,0.32,1),
                   border-radius 600ms cubic-bezier(0.23,1,0.32,1),
                   color 600ms cubic-bezier(0.23,1,0.32,1),
@@ -217,18 +219,29 @@
     .btn-flow:hover .circ { width: 320px; height: 320px; opacity: 1; }
     .btn-flow:hover { color: var(--ad-navy-900); }
 
-    /* Arrows: the trailing one leaves, the leading one arrives. */
+    /* Arrows: the trailing one leaves, the leading one arrives.
+
+       Physical left/right with an explicit RTL mirror, NOT inset-inline-*.
+       An <svg> computes direction: ltr even inside an rtl button, so the
+       logical properties resolved against LTR and put the trailing arrow on
+       the right in Arabic — on top of the label, overlapping it by 13px. */
     .btn-flow .fa {
       position: absolute; z-index: 2; width: 15px; height: 15px;
       stroke: currentColor; fill: none;
-      transition: inset-inline-start 800ms cubic-bezier(0.34,1.56,0.64,1),
-                  inset-inline-end 800ms cubic-bezier(0.34,1.56,0.64,1);
+      transition: left 800ms cubic-bezier(0.34,1.56,0.64,1),
+                  right 800ms cubic-bezier(0.34,1.56,0.64,1);
     }
     html[dir="rtl"] .btn-flow .fa { transform: scaleX(-1); }
-    .btn-flow .fa-lead  { inset-inline-start: -25%; }
-    .btn-flow .fa-trail { inset-inline-end: 16px; }
-    .btn-flow:hover .fa-lead  { inset-inline-start: 16px; }
-    .btn-flow:hover .fa-trail { inset-inline-end: -25%; }
+
+    .btn-flow .fa-lead  { left: -25%; right: auto; }
+    .btn-flow .fa-trail { right: 16px; left: auto; }
+    .btn-flow:hover .fa-lead  { left: 16px; }
+    .btn-flow:hover .fa-trail { right: -25%; }
+
+    html[dir="rtl"] .btn-flow .fa-lead  { right: -25%; left: auto; }
+    html[dir="rtl"] .btn-flow .fa-trail { left: 16px; right: auto; }
+    html[dir="rtl"] .btn-flow:hover .fa-lead  { right: 16px; left: auto; }
+    html[dir="rtl"] .btn-flow:hover .fa-trail { left: -25%; right: auto; }
 
     /* Primary — the brand gold floods in and the type turns navy. */
     .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-400); }
