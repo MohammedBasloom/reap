@@ -178,13 +178,18 @@
          to fit inside the pinned screen alongside its copy, and a 400px shot
          pushed the buttons off the bottom on a laptop. */
       /* Measured against the PIN, not the raw viewport: the pin is a top bar
-         shorter than the screen and the trust strip takes another 50px off it,
-         so 34vh left the English hero — the tallest case — with 5px to spare. */
-      max-height: min(340px, calc((100vh - var(--tb, 80px)) * 0.30)); overflow: hidden;
-      /* The fade sits in the last fifth only. Starting it higher dimmed the
-         chart itself, which reads as a rendering fault rather than a fold. */
-      -webkit-mask-image: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0.5) 94%, rgba(0,0,0,0) 100%);
-      mask-image: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0.5) 94%, rgba(0,0,0,0) 100%);
+         shorter than the screen and the trust strip takes another 50px off it.
+
+         The share matters more than it looks. At 0.30 the window came out at
+         247px, the KPI cards ended at 241px, and the fade — then starting at
+         80% — was already washing their values out. On a 760px screen the
+         window was 204px and the numbers were cut off entirely: the shot
+         showed a top bar, a tab strip and a heading, and not one figure. */
+      max-height: min(300px, calc((100vh - var(--tb, 80px)) * 0.32)); overflow: hidden;
+      /* Confined to the last tenth, so it reads as a fold rather than as the
+         figures fading out. */
+      -webkit-mask-image: linear-gradient(to bottom, #000 90%, rgba(0,0,0,0.45) 97%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to bottom, #000 90%, rgba(0,0,0,0.45) 97%, rgba(0,0,0,0) 100%);
     }
     .dash {
       transform-origin: top center;
@@ -223,14 +228,17 @@
     .dash .tabs i u { text-decoration: none; font-family: var(--font-mono); font-size: 8px; color: var(--fg-4); }
     .dash .tabs i.on { color: var(--ad-navy-900); font-weight: 600; border-bottom: 2px solid var(--ad-gold-500); padding-bottom: 5px; margin-bottom: -9px; }
 
-    .dash .pane { padding: 14px 16px 0; }
-    .dash .verdict { font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    /* Tight, because only the top of this is ever on screen. The window is a
+       third of a pinned screen and the figures have to clear it — every row of
+       chrome above them pushes a number under the fold. */
+    .dash .pane { padding: 10px 16px 0; }
+    .dash .verdict { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
     .dash .eyeb { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
 
-    .dash .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
-    .dash .c { border: 1px solid var(--border-1); background: var(--bg-1); padding: 10px 12px; }
+    .dash .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 9px; }
+    .dash .c { border: 1px solid var(--border-1); background: var(--bg-1); padding: 8px 11px; }
     .dash .c span { display: block; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
-    .dash .c b { display: block; font-family: var(--font-display); font-size: 21px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; }
+    .dash .c b { display: block; font-family: var(--font-display); font-size: 19px; font-weight: 600; margin-top: 3px; letter-spacing: -0.02em; }
     .dash .c i { font-style: normal; font-size: 9px; color: var(--fg-3); }
     .dash .c.up b { color: var(--ad-success); }
 
@@ -284,8 +292,13 @@
        one — the tallest — wants 583px with the paragraph in. The headline, the
        buttons and the product shot all say more than it does, and anything
        that does not fit is unreachable inside a pin that does not scroll. */
-    @media (max-height: 760px) and (min-width: 1001px) {
+    /* English is the binding case: it wraps to more lines than the Arabic, so
+       its hero runs ~46px taller and it is the one that decides these limits.
+       Below this height the paragraph goes and the shot gives back a little,
+       because the figures inside the shot matter more than either. */
+    @media (max-height: 820px) and (min-width: 1001px) {
       .hero p.lede { display: none; }
+      .heroShot { max-height: calc((100vh - var(--tb, 80px)) * 0.34); }
     }
 
     @media (max-width: 1000px) {
@@ -922,7 +935,6 @@
           </div>
 
           <div class="pane">
-            <div class="eyeb" data-ar="لجنة الاستثمار · الملخص">Investment committee · summary</div>
             <div class="verdict" data-ar="المشروع يتجاوز العائد المستهدف">The project clears its target return</div>
 
             <div class="cards">
@@ -992,7 +1004,6 @@
           </div>
 
           <div class="pane">
-            <div class="eyeb" data-ar="ملخص التقييم · فيلا · الرياض">Valuation summary · villa · Riyadh</div>
             <div class="verdict" data-ar="القيمة السوقية الاستدلالية">Indicative market value</div>
 
             <div class="vtop">
