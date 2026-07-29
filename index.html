@@ -76,7 +76,7 @@
     /* 210vh, not 260: at 260 the second hero sat finished and unchanging for
        another 600px before the pin let go, which is a long time to scroll
        through a screen that is not doing anything. */
-    .heroes { position: relative; height: 210vh; }
+    .heroes { position: relative; height: 210vh; height: 210dvh; }
     /* Two rows: the heroes share the first and are centred in it, the trust
        strip holds the floor. The strip is part of the hero screen rather than
        a band that appears once the pin lets go — it describes the platform, so
@@ -88,10 +88,22 @@
        and those 80px become breathing room under the strip instead.
        --tb is measured from the bar itself, since it is shorter on phones. */
     .heroPin {
-      position: sticky; top: 0; height: calc(100vh - var(--tb, 80px)); overflow: hidden;
+      position: sticky; top: 0; overflow: hidden;
+      /* dvh, with vh as the fallback for browsers without it. On a phone 100vh
+         is the LARGE viewport — the height with the URL bar retracted — so the
+         pin came out 20px taller than the screen actually showing, and its
+         floor sat below the fold even after the chrome above was measured
+         correctly. */
+      height: calc(100vh - var(--tb, 80px));
+      height: calc(100dvh - var(--tb, 80px));
       display: grid; grid-template-rows: 1fr auto;
     }
     .heroPin > .trust { grid-row: 2; grid-column: 1; align-self: end; }
+    /* Grid items default to min-width:auto, so they refuse to shrink below
+       their content. The dashboard mockup has a wide intrinsic minimum, which
+       pushed the hero — and through it the whole page — 14px past a 375px
+       screen and left the document scrolling sideways. */
+    .heroPin > * { min-width: 0; }
     .hero {
       /* Stacked in one grid cell rather than absolutely placed, so both keep a
          normal flow height and stay vertically centred at any viewport. */
@@ -292,8 +304,12 @@
     }
 
     /* Top bar — REAP's signature: the headline figures live up here. */
+    /* Every row inside the shot must be allowed to shrink and clip; the shot
+       is a picture of an app, not a layout that has to stay usable. */
+    .dash, .dash .top, .dash .tabs, .dash .pane, .dash .split, .dash .cards { min-width: 0; }
+    .dash .top > * { min-width: 0; }
     .dash .top {
-      display: flex; align-items: center; gap: 14px; flex-wrap: nowrap;
+      display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; overflow: hidden;
       padding: 9px 14px; background: var(--ad-navy-900); border-bottom: 1px solid rgba(255,255,255,0.08);
     }
     .dash .top .bmark { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
@@ -406,6 +422,7 @@
       .dash .top .pname { display: none; }
       .dash.val .vtop { grid-template-columns: 1fr; }
       .dash.val .vtop .c { display: none; }
+
     }
 
     /* ---------- Services ---------- */
@@ -915,6 +932,19 @@
       .cards { grid-template-columns: 1fr; }
       .topbar { padding: 14px 20px; }
 
+      /* The top bar was the whole page's horizontal overflow: brand 235 plus
+         actions 210 plus 40 of padding needs 485px on a 375px screen, so the
+         document scrolled sideways by 90px on EVERY section, not just here.
+         The strapline is 135px of that and the wordmark already says it, so it
+         goes; the buttons give back the rest.
+
+         Declared in this block rather than the 620px one above it: that block
+         comes earlier in the sheet, so this rule's own `.topbar { padding }`
+         was overriding it at equal specificity. */
+      .brand .tag { display: none; }
+      .topbar .actions { gap: 8px; }
+      .topbar .btn-land { padding: 9px 13px; letter-spacing: 0.06em; }
+
       /* Roadmap turns vertical: rail runs down the node column. */
       .road { margin-top: 38px; }
       .road-steps { grid-template-columns: 1fr; gap: 30px; }
@@ -942,6 +972,44 @@
       .bento { grid-template-columns: 1fr; }
       .tile.wide { grid-column: span 1; }
       .trust .inner { padding: 14px 24px; justify-content: flex-start; }
+    }
+
+    /* Phone. Placed after the 860px block so its own .topbar padding wins at
+       equal specificity rather than by luck of source order. */
+    @media (max-width: 700px) {
+      .topbar { padding: 12px 16px; }
+
+      /* The hero has to fit the pinned screen on a phone too, and nothing that
+         overflows it can ever be scrolled to. English is the binding case
+         again — it wraps to more lines than the Arabic and ran 215px past the
+         pin, with the buttons and the product shot both off the bottom.
+
+         The height rules further up are gated on min-width:1001px, so they
+         never reached a phone; these are their mobile equivalent. */
+      .hero p.lede { display: none; }
+      .heroShot { margin-top: 18px; }
+
+      /* The strip was 138px — four items, each claiming a full row. Two
+         columns keeps all four and gives back about 80px of that. */
+      .trust .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; padding: 10px 16px; }
+      .trust .t { font-size: 9.5px; letter-spacing: 0.07em; }
+    }
+
+    /* Small phones give up the pin entirely. On a 320x640 screen the hero
+       still ran 110px past a pinned viewport even after the paragraph went,
+       and a hero that does not fit its pin has parts that cannot be reached at
+       all. Stacked, they simply scroll — the same fallback reduced motion
+       gets, and a far better trade at this size than a cross-fade nobody has
+       room to see. */
+    @media (max-width: 700px) and (max-height: 740px) {
+      .heroes { height: auto; }
+      .heroPin { position: static; height: auto; display: block; overflow: visible; }
+      .hero { grid-row: auto; grid-column: auto; pointer-events: auto; padding-block: 44px; }
+      .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta, .hero .heroShot {
+        opacity: 1; transform: none;
+      }
+      .heroShot { max-height: none; -webkit-mask-image: none; mask-image: none; }
+      .heroPin > .trust { grid-row: auto; grid-column: auto; }
     }
   </style>
 </head>
@@ -1783,18 +1851,30 @@
      actually looking at has gone. rAF-throttled, passive, and skipped
      entirely under reduced motion, where the CSS pins everything at full
      strength. */
-  /* Publish the top bar's real height so the pinned hero screen can subtract
-     it. Hard-coding 80px would be wrong on phones, where the bar is shorter. */
-  (function publishTopbarHeight() {
-    const bar = document.querySelector(".topbar");
-    if (!bar) return;
+  /* Publish how much chrome sits ABOVE the pinned hero screen, so the pin can
+     be exactly the space that is left.
+
+     Measured from the stage's own offset rather than from the top bar. The bar
+     is not the only thing up there: on phones a dismissable notice sits above
+     it, and measuring only the bar left the pin 76px too tall — its floor, and
+     with it the trust strip, hung below the fold. Reading the stage's position
+     counts whatever happens to be there.
+
+     Recomputed when that notice is removed, since dismissing it changes the
+     offset without firing resize. */
+  (function publishChromeHeight() {
+    const stage = $("heroStage");
+    if (!stage) return;
     const set = function () {
-      const h = Math.round(bar.getBoundingClientRect().height);
-      if (h > 0) document.documentElement.style.setProperty("--tb", h + "px");
+      const above = Math.round(stage.getBoundingClientRect().top + window.pageYOffset);
+      document.documentElement.style.setProperty("--tb", Math.max(0, above) + "px");
     };
     set();
     window.addEventListener("resize", set, { passive: true });
     window.addEventListener("load", set);
+    if (window.MutationObserver) {
+      new MutationObserver(set).observe(document.body, { childList: true });
+    }
   })();
 
   (function heroHandover() {
