@@ -903,9 +903,11 @@
         financing, then read cashflow, returns, sensitivity, Monte Carlo and the fund waterfall.
         One engine drives every dashboard.
       </p>
+      <!-- Same pair on both heroes: sign up, or look around first. Wired by
+           class rather than id, since there are now two of each. -->
       <div class="cta">
-        <button class="btn-land primary" data-app="model.html" data-ar="افتح النمذجة المالية">Open Financial Modeling</button>
-        <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
+        <button class="btn-land primary heroSignup" data-ar="سجّل مجانًا">Sign up free</button>
+        <button class="btn-land heroGuest" data-ar="استكشف كضيف">Explore as guest</button>
       </div>
 
       <div class="heroShot">
@@ -980,7 +982,8 @@
         and quality checks that warn you when the methods disagree.
       </p>
       <div class="cta">
-        <button class="btn-land primary" data-app="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</button>
+        <button class="btn-land primary heroSignup" data-ar="سجّل مجانًا">Sign up free</button>
+        <button class="btn-land heroGuest" data-ar="استكشف كضيف">Explore as guest</button>
       </div>
 
       <div class="heroShot">
@@ -1518,11 +1521,22 @@
   // Wire up
   $("btnLogin").onclick = () => openAuth("login");
   $("btnSignup").onclick = () => openAuth("signup");
-  // Both hero CTAs lead the user to CHOOSE a platform (the two service cards),
-  // rather than forcing Financial Modeling.
+  /* Both heroes carry the same pair, so these are wired by class — an id
+     would only reach the first of them.
+
+     Sign up opens the registration overlay, exactly as the top bar's button
+     does. Explore as guest takes the visitor to the two service cards to
+     choose a platform, rather than picking one for them: the heroes each
+     describe a single product, but the guest route should still let them
+     decide which to open. */
+  document.querySelectorAll(".heroSignup").forEach((b) => {
+    b.onclick = () => openAuth("signup");
+  });
+  document.querySelectorAll(".heroGuest").forEach((b) => {
+    b.onclick = () => { reapAuth.enterGuest(); toServices(); };
+  });
   const btnStart = $("btnStart");
   if (btnStart) btnStart.onclick = () => { reapAuth.clearGuest(); toServices(); };
-  $("btnExplore").onclick = () => { reapAuth.enterGuest(); toServices(); };
   $("btnLogout").onclick = () => reapAuth.signOut();
   $("authClose").onclick = closeAuth;
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAuth(); });
