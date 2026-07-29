@@ -1404,9 +1404,12 @@ function runWaterfall(input, result) {
   const projectNeedTotal = equityCF
     .slice(0, horizon)
     .reduce((s, v) => s + Math.max(0, -(v || 0)), 0);
-  // AM accrues on paid-in capital from the month AFTER the call lands (the
-  // fee is computed before the call inside the loop), hence horizon − 1.
-  const amLoad = mgmtMonthly * Math.max(0, horizon - 1);
+  /* The call lands before the fee is charged, so asset management accrues in
+     EVERY month of fund life — horizon of them, not horizon − 1. This has to
+     track the loop below exactly: the call is sized to cover the fees it will
+     itself be charged, so under-counting a month here leaves the fund short by
+     that month's fee and the identity behind equityAtClose stops holding. */
+  const amLoad = mgmtMonthly * Math.max(0, horizon);
   const loadDenom = 1 - subFeePct - amLoad;
   const equityAtClose = loadDenom > 0.01
     ? (projectNeedTotal + devFeeTotal) / loadDenom
@@ -1414,6 +1417,34 @@ function runWaterfall(input, result) {
   const subFeeAtClose = equityAtClose * subFeePct;
 
   for (let m = 0; m < horizon; m++) {
+    /* ----- Capital call — the whole commitment, once, at establishment -----
+       The fund holds the cash and disburses it to the project as costs fall
+       due, so later months need no further calls.
+
+       This runs BEFORE the fees below, because the asset-management fee is
+       charged on capital the fund is already holding. With the fee computed
+       first, month 0 saw paid-in capital of zero and charged nothing, so the
+       first year billed eleven months instead of twelve — 91K against 100K a
+       year thereafter. Investors are called in full at establishment and the
+       manager is managing that money from day one. */
+    const totalCall = m === 0 ? equityAtClose : 0;
+    // Subscription fee — charged once, on the equity collected at close.
+    const subFeeM = m === 0 ? subFeeAtClose : 0;
+    if (subFeeM > 0) {
+      fees.subscription += subFeeM;
+      feeFlows.subscription[m] += subFeeM;
+      party.gp.cashflow[m] += subFeeM;
+      party.gp.feeFlow[m]  += subFeeM;
+    }
+    if (totalCall > 0) {
+      const lpCall  = totalCall * lp;
+      const devCall = totalCall * dev;
+      const gpCall  = totalCall * gp;
+      party.lp.contrib  += lpCall;  party.lp.cashflow[m]  -= lpCall;  party.lp.contribFlow[m]  -= lpCall;
+      party.dev.contrib += devCall; party.dev.cashflow[m] -= devCall; party.dev.contribFlow[m] -= devCall;
+      party.gp.contrib  += gpCall;  party.gp.cashflow[m]  -= gpCall;  party.gp.contribFlow[m]  -= gpCall;
+    }
+
     // === Fees this month — paid as incurred (standard treatment) ===
     let devFeeM = 0;
     if (m >= conStart && m < conEnd) {
@@ -1435,27 +1466,6 @@ function runWaterfall(input, result) {
     party.gp.feeFlow[m]   += mgmtFeeM;
     party.dev.cashflow[m] += devFeeM;
     party.dev.feeFlow[m]  += devFeeM;
-
-    // ----- Capital call — the whole commitment, once, at establishment -----
-    // The fund holds the cash and disburses it to the project as costs fall
-    // due, so later months need no further calls.
-    const totalCall = m === 0 ? equityAtClose : 0;
-    // Subscription fee — charged once, on the equity collected at close.
-    const subFeeM = m === 0 ? subFeeAtClose : 0;
-    if (subFeeM > 0) {
-      fees.subscription += subFeeM;
-      feeFlows.subscription[m] += subFeeM;
-      party.gp.cashflow[m] += subFeeM;
-      party.gp.feeFlow[m]  += subFeeM;
-    }
-    if (totalCall > 0) {
-      const lpCall  = totalCall * lp;
-      const devCall = totalCall * dev;
-      const gpCall  = totalCall * gp;
-      party.lp.contrib  += lpCall;  party.lp.cashflow[m]  -= lpCall;  party.lp.contribFlow[m]  -= lpCall;
-      party.dev.contrib += devCall; party.dev.cashflow[m] -= devCall; party.dev.contribFlow[m] -= devCall;
-      party.gp.contrib  += gpCall;  party.gp.cashflow[m]  -= gpCall;  party.gp.contribFlow[m]  -= gpCall;
-    }
 
     /* ----- Preferred return accrues EVERY month on the UNRETURNED BALANCE -----
 

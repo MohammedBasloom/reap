@@ -549,6 +549,25 @@
 
              Skipped when nobody contributed: with no capital at risk there is
              no preferred return to owe and no IRR to measure. */
+          /* Asset management is charged on the full paid-in capital in EVERY
+             month of fund life. Equity is called once, in full, at
+             establishment, so the total is an exact product — no proration, no
+             ramp. The first year once billed eleven months rather than twelve
+             (91K against 100K a year thereafter) because the fee was computed
+             at the top of the month while the capital call landed at the
+             bottom, so month 0 saw nothing paid in. Asserting the product
+             catches a missing month at either end of the life. */
+          const mgmtYr = +(cfg.input.fund.assetMgmtFeePctYr) || 0;
+          if (mgmtYr > 0) {
+            const expected = (w.config.equityAtClose || 0) * (mgmtYr / 12) * (w.fundLifeMonths || 0);
+            const actual = (w.fees || {}).assetMgmt || 0;
+            if (Math.abs(expected - actual) > Math.max(1, expected * 1e-9)) {
+              const months = (mgmtYr / 12) > 0 && (w.config.equityAtClose || 0) > 0
+                ? actual / ((w.config.equityAtClose) * (mgmtYr / 12)) : 0;
+              fails.push(`asset-mgmt fee ${Math.round(actual)} implies ${months.toFixed(2)} months ` +
+                         `but fund life is ${w.fundLifeMonths} (expected ${Math.round(expected)})`);
+            }
+          }
           const lpT = (w.totals || {}).lp || {};
           const hurdle = +(cfg.input.fund.preferredReturnPct) || 0;
           if ((w.buckets || {}).promoteToGP > 1 && (lpT.contributed || 0) > 1) {
