@@ -422,6 +422,9 @@
     "Development fee": "رسوم التطوير", "Preferred return": "العائد الممتاز",
     "Performance fee": "رسوم الأداء", "Catch-up %": "نسبة التعويض",
     "Reset": "إعادة تعيين", "Export": "تصدير", "Print": "طباعة", "Export PDF": "تصدير PDF",
+    /* Collapse control on the input panels. */
+    "Collapse the panel": "طيّ اللوحة", "Expand the panel": "فتح اللوحة",
+    "Assumptions": "الفرضيات", "Inputs": "المدخلات",
     "Click to rename": "انقر لتغيير الاسم",
     "Name this opportunity…": "سمِّ هذه الفرصة…",
     "Used for NPV and the IRR hurdle check": "يُستخدم لحساب NPV ولمقارنة IRR بالعائد المستهدف",

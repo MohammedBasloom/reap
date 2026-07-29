@@ -245,7 +245,7 @@ function Segmented({ value, onChange, options }) {
               background: value === o.value ? "var(--ad-navy-800)" : "transparent",
               color: value === o.value ? "white" : (off ? "var(--fg-4)" : "var(--fg-2)"),
               border: "none",
-              borderLeft: i > 0 ? "1px solid var(--border-1)" : "none",
+              borderInlineStart: i > 0 ? "1px solid var(--border-1)" : "none",
               cursor: off ? "not-allowed" : "pointer",
               opacity: off ? 0.45 : 1,
               fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase",
@@ -357,7 +357,7 @@ function FloorBreakdown({ comp, land }) {
               <div style={{ position: "relative", height: 10, background: "var(--bg-1)", border: "1px solid var(--border-1)" }}>
                 <div style={{ position: "absolute", inset: 0, width: `${pct}%`, background: tone, opacity: 0.85 }} />
               </div>
-              <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500, textAlign: "right" }}>
+              <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 500, textAlign: "end" }}>
                 {Feas.formatNumber(r.area)} m²
               </span>
             </div>
@@ -984,7 +984,7 @@ function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
               display: "flex", flexDirection: "column", alignItems: "flex-start",
               gap: 4, padding: "10px 10px 9px",
               border: "1px solid var(--border-1)", background: "var(--bg-1)",
-              cursor: "pointer", textAlign: "left",
+              cursor: "pointer", textAlign: "start",
               transition: "background 120ms var(--ease-out), border-color 120ms var(--ease-out)",
             }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--ad-navy-50)"; e.currentTarget.style.borderColor = "var(--ad-navy-400)"; }}
@@ -1109,7 +1109,7 @@ function AllocationAlarm({ totalPct, totalLand, hasComponents, isRawLand }) {
       padding: "12px 14px",
       background: isOver ? "rgba(176,50,28,0.08)" : isUnder ? "rgba(184,118,30,0.07)" : "rgba(46,125,91,0.06)",
       border: `1px solid ${isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)"}`,
-      borderLeft: `3px solid ${isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)"}`,
+      borderInlineStart: `3px solid ${isOver ? "var(--ad-danger)" : isUnder ? "var(--ad-warning)" : "var(--ad-success)"}`,
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
         <span style={{
@@ -1134,10 +1134,10 @@ function AllocationAlarm({ totalPct, totalLand, hasComponents, isRawLand }) {
         }} />
         {isOver && (
           <div style={{
-            position: "absolute", top: 0, left: "100%", height: "100%",
+            position: "absolute", top: 0, insetInlineStart: "100%", height: "100%",
             background: "var(--ad-danger)", opacity: 0.5,
             width: `${Math.min(50, (totalPct - 1) * 100)}%`,
-            marginLeft: "-1px",
+            marginInlineStart: "-1px",
           }} />
         )}
       </div>
@@ -1265,9 +1265,9 @@ function EquitySplitBar({ lp, dev, gp }) {
         display: "flex", justifyContent: "space-between", marginTop: 4,
         fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)",
       }}>
-        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-navy-700)", marginRight: 4 }} />LP {(lpW).toFixed(0)}%</span>
-        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-sand-700)", marginRight: 4 }} />Dev {(devW).toFixed(0)}%</span>
-        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-gold-600)", marginRight: 4 }} />GP {(gpW).toFixed(0)}%</span>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-navy-700)", marginInlineEnd: 4 }} />LP {(lpW).toFixed(0)}%</span>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-sand-700)", marginInlineEnd: 4 }} />Dev {(devW).toFixed(0)}%</span>
+        <span><span style={{ display: "inline-block", width: 8, height: 8, background: "var(--ad-gold-600)", marginInlineEnd: 4 }} />GP {(gpW).toFixed(0)}%</span>
       </div>
       {Math.abs(total - 1) > 0.005 && (
         <div style={{ fontSize: 10, color: "var(--ad-danger)", marginTop: 4 }}>
@@ -1280,7 +1280,38 @@ function EquitySplitBar({ lp, dev, gp }) {
 
 /* ---------- Sidebar ---------- */
 
-function Sidebar({ input, setInput }) {
+/* Collapse control, shared by the rail and the expanded header.
+
+   The chevron points the way the panel will move, which is direction-aware:
+   collapsing sends it toward the inline-start edge, which is LEFT in English
+   and RIGHT in Arabic. A fixed "«" would be backwards in one of them, so the
+   glyph is drawn from a rotation the stylesheet mirrors under RTL. */
+function SideToggle({ open, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="sideToggle"
+      title={open ? "Collapse the panel" : "Expand the panel"}
+      aria-label={open ? "Collapse the panel" : "Expand the panel"}
+      aria-expanded={open ? "true" : "false"}
+      style={{
+        width: 26, height: 26, flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        border: "1px solid var(--border-1)", background: "var(--bg-1)",
+        color: "var(--fg-2)", cursor: "pointer", borderRadius: 2, padding: 0,
+      }}
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+           style={{ transform: open ? "none" : "rotate(180deg)" }} aria-hidden="true">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+  );
+}
+
+function Sidebar({ input, setInput, open = true, onToggle }) {
   // Declared first: addComp below closes over it, and several land figures
   // depend on it.
   const isLeasehold = (input.landTenure || "own") === "lease";
@@ -1412,10 +1443,35 @@ function Sidebar({ input, setInput }) {
   const netDevelopableArea = (input.landArea || 0) * developablePct;
   const landInfraCost = (input.landArea || 0) * (input.landInfraCostPerSqm || 0);
 
+  /* Collapsed, the panel is a rail carrying only the toggle. The fields are
+     unmounted rather than hidden, so a 46px column cannot be scrolled sideways
+     to reach half-rendered inputs. */
+  if (!open) {
+    return (
+      <aside style={{
+        gridArea: "side",
+        borderInlineEnd: "1px solid var(--border-1)",
+        background: "var(--bg-1)",
+        overflow: "hidden",
+        minWidth: 0,
+        display: "flex", flexDirection: "column", alignItems: "center",
+        paddingTop: 14, gap: 14,
+      }}>
+        <SideToggle open={false} onToggle={onToggle} />
+        {/* Vertical label, so a collapsed rail still says what it is. */}
+        <span style={{
+          writingMode: "vertical-rl", transform: "rotate(180deg)",
+          fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+          color: "var(--fg-3)", fontWeight: 600, whiteSpace: "nowrap",
+        }}>Assumptions</span>
+      </aside>
+    );
+  }
+
   return (
     <aside style={{
       gridArea: "side",
-      borderRight: "1px solid var(--border-1)",
+      borderInlineEnd: "1px solid var(--border-1)",
       background: "var(--bg-1)",
       overflowY: "auto",
       minWidth: 0,
@@ -1434,19 +1490,24 @@ function Sidebar({ input, setInput }) {
               color: "var(--fg-1)",
             }}>Project</span>
           </span>
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}
-            style={{
-              display: "flex", alignItems: "center", gap: 5,
-              background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
-              color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
-              padding: "4px 9px", fontFamily: "inherit",
-            }}
-          >
-            <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
-            Reset
-          </button>
+          {/* Grouped, so space-between still puts "Project" at one end and the
+              controls at the other rather than spreading three items evenly. */}
+          <span style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "none", border: "1px solid var(--border-1)", cursor: "pointer",
+                color: "var(--fg-3)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase",
+                padding: "4px 9px", fontFamily: "inherit",
+              }}
+            >
+              <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
+              Reset
+            </button>
+            {onToggle && <SideToggle open={true} onToggle={onToggle} />}
+          </span>
         </div>
         <div className="editable-name-wrap" style={{ marginTop: 8, marginBottom: 14 }} title="Click to rename">
           <input
@@ -1483,10 +1544,10 @@ function Sidebar({ input, setInput }) {
             const active = (input.landTenure || "own") === opt.key;
             return (
               <button key={opt.key} onClick={() => upd("landTenure", opt.key)} style={{
-                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "left",
+                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "start",
                 background: active ? "var(--ad-navy-900)" : "var(--bg-1)",
                 color: active ? "white" : "var(--fg-2)",
-                border: "none", borderRight: opt.key === "own" ? "1px solid var(--border-1)" : "none",
+                border: "none", borderInlineEnd: opt.key === "own" ? "1px solid var(--border-1)" : "none",
                 fontFamily: "inherit",
               }}>
                 <div style={{ fontSize: 11, fontWeight: 600 }}>{opt.label}</div>
@@ -1535,10 +1596,10 @@ function Sidebar({ input, setInput }) {
             const active = (input.landType || "net") === opt.key;
             return (
               <button key={opt.key} onClick={() => upd("landType", opt.key)} style={{
-                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "left",
+                flex: 1, padding: "8px 10px", cursor: "pointer", textAlign: "start",
                 background: active ? "var(--ad-navy-900)" : "var(--bg-1)",
                 color: active ? "white" : "var(--fg-2)",
-                border: "none", borderRight: opt.key === "net" ? "1px solid var(--border-1)" : "none",
+                border: "none", borderInlineEnd: opt.key === "net" ? "1px solid var(--border-1)" : "none",
                 fontFamily: "inherit",
               }}>
                 <div style={{ fontSize: 11, fontWeight: 600 }}>{opt.label}</div>
@@ -1672,7 +1733,7 @@ function Sidebar({ input, setInput }) {
         <div style={{
           padding: "10px 14px", background: "var(--bg-2)",
           fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5,
-          borderLeft: "3px solid var(--ad-navy-700)",
+          borderInlineStart: "3px solid var(--ad-navy-700)",
         }}>
           <strong style={{ color: "var(--fg-1)" }}>Funding order:</strong>{" "}
           each month's income (e.g. off-plan sales) covers that month's costs first; any shortfall is drawn from the facility (interest capitalises only when no cash can pay it), and equity covers the remainder. Surplus cash pays interest and sweeps the loan at any time — repaid amounts can be redrawn — and equity takes distributions only when no further contributions are needed.

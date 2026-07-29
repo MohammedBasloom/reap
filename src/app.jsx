@@ -63,7 +63,22 @@ const SAMPLE_INPUT = {
 // empty program — no components selected until the user picks from the tiles.
 const STORAGE_KEY = "ad_feas_v5";
 
+/* Whether the input panel is expanded. Remembered, because it is a working
+   preference rather than a per-session one: someone who collapses it to read
+   the dashboards wants it collapsed next time too. */
+const SIDE_KEY = "reap_side_open";
+function useSideOpen() {
+  const [open, setOpen] = useState(() => {
+    try { return localStorage.getItem(SIDE_KEY) !== "0"; } catch (e) { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SIDE_KEY, open ? "1" : "0"); } catch (e) {}
+  }, [open]);
+  return [open, setOpen];
+}
+
 function App() {
+  const [sideOpen, setSideOpen] = useSideOpen();
   const [input, setInput] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -166,7 +181,17 @@ function App() {
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "minmax(380px, 460px) 1fr",
+      /* Collapsed, the panel keeps a narrow rail so the toggle stays reachable
+         — it does not disappear. The column is what animates; the sidebar
+         itself just stops rendering its fields.
+
+         NOT transitioned. Animating grid-template-columns held the OLD width
+         indefinitely: the rail rendered correctly inside a column still 460px
+         wide, so the panel looked collapsed but took the same room. It is not
+         an interpolation the browser will run between these track values —
+         minmax() and clamp() both failed the same way — and the width snapping
+         is a fair price for the collapse actually working. */
+      gridTemplateColumns: sideOpen ? "minmax(380px, 460px) 1fr" : "46px 1fr",
       gridTemplateRows: "auto 1fr auto",
       gridTemplateAreas: `
         "header header"
@@ -193,7 +218,7 @@ function App() {
           <BrandMark platform="Financial Modeling" />
         </div>
 
-        <div style={{ textAlign: "left", paddingLeft: 40, minWidth: 0 }}>
+        <div style={{ textAlign: "start", paddingInlineStart: 40, minWidth: 0 }}>
           <div style={{
             fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase",
             color: "rgba(255,255,255,0.5)",
@@ -242,7 +267,7 @@ function App() {
         </div>
       </header>
 
-      <Sidebar input={input} setInput={setInput} />
+      <Sidebar input={input} setInput={setInput} open={sideOpen} onToggle={() => setSideOpen(v => !v)} />
 
       <main style={{
         gridArea: "main",
@@ -260,7 +285,7 @@ function App() {
               </div>
               <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-3)", marginTop: 4 }}>Feasibility Study Report</div>
             </div>
-            <div style={{ textAlign: "right", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
+            <div style={{ textAlign: "end", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
               <div style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)" }}>{input.projectName}</div>
               <div>{[input.location, input.projectType].filter(Boolean).join(" · ") || "—"}</div>
               <div>{new Date().toLocaleDateString(
@@ -294,7 +319,7 @@ function App() {
             onClick={() => setTab(t.id)}
             style={{
               padding: "16px 0",
-              marginRight: 28,
+              marginInlineEnd: 28,
               background: "none", border: "none",
               cursor: "pointer",
               position: "relative",
@@ -645,7 +670,7 @@ function HeaderStat({ label, value, tone }) {
     bad: "#e7a99c"
   };
   return (
-    <div style={{ textAlign: "right", minWidth: 0 }}>
+    <div style={{ textAlign: "end", minWidth: 0 }}>
       <div style={{
         fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase",
         color: "rgba(255,255,255,0.5)", whiteSpace: "nowrap"

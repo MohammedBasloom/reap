@@ -139,7 +139,45 @@ function PctInput({ value, onChange }) {
 }
 
 /* ---------- App ---------- */
+/* Shared with the modeling app via the same key, so collapsing the panel in
+   one and switching to the other keeps the working width the user chose. */
+const SIDE_KEY = "reap_side_open";
+
+/* Collapse control. The chevron points the way the panel travels, which is
+   toward the inline-start edge — LEFT in English, RIGHT in Arabic — so the
+   glyph is mirrored under RTL by .sideToggle in tokens.css. */
+function SideToggle({ open, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="sideToggle"
+      title={open ? "Collapse the panel" : "Expand the panel"}
+      aria-label={open ? "Collapse the panel" : "Expand the panel"}
+      aria-expanded={open ? "true" : "false"}
+      style={{
+        width: 26, height: 26, flexShrink: 0,
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        border: "1px solid var(--border-1)", background: "var(--bg-1)",
+        color: "var(--fg-2)", cursor: "pointer", borderRadius: 2, padding: 0,
+      }}
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+           style={{ transform: open ? "none" : "rotate(180deg)" }} aria-hidden="true">
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    </button>
+  );
+}
+
 function ValApp() {
+  const [sideOpen, setSideOpen] = useState(() => {
+    try { return localStorage.getItem(SIDE_KEY) !== "0"; } catch (e) { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(SIDE_KEY, sideOpen ? "1" : "0"); } catch (e) {}
+  }, [sideOpen]);
   const [input, setInput] = useState(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch (e) {}
     return defaultInput();
@@ -211,7 +249,9 @@ function ValApp() {
   return (
     <div style={{
       display: "grid",
-      gridTemplateColumns: "minmax(380px, 460px) 1fr",
+      /* Not transitioned — animating this track held the old width and the
+         panel never actually shrank. See the note in app.jsx. */
+      gridTemplateColumns: sideOpen ? "minmax(380px, 460px) 1fr" : "46px 1fr",
       gridTemplateRows: "auto 1fr auto",
       gridTemplateAreas: `"header header" "side main" "footer footer"`,
       height: "100vh", background: "var(--bg-2)", fontFamily: "var(--font-body)",
@@ -223,7 +263,7 @@ function ValApp() {
         borderBottom: "1px solid var(--ad-navy-700)", gap: 24,
       }}>
         <BrandMark platform="Valuation" />
-        <div style={{ paddingLeft: 40, minWidth: 0 }}>
+        <div style={{ paddingInlineStart: 40, minWidth: 0 }}>
           <div style={{ fontSize: 9, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", display: "flex", gap: 12 }}>
             <span>{input.property.city || "—"}</span><span style={{ opacity: 0.4 }}>·</span><span>{typeDef.label}</span>
           </div>
@@ -240,14 +280,14 @@ function ValApp() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 18, justifyContent: "flex-end" }}>
-          <div style={{ textAlign: "right" }}>
+          <div style={{ textAlign: "end" }}>
             <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>Market value</div>
             <div className="tabnum" style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 600, marginTop: 2, color: "#c9d8f0" }}>
               {r.finalValue > 0 ? fc(r.finalValue) : "—"}
             </div>
           </div>
           <span style={{ height: 28, width: 1, background: "rgba(255,255,255,0.14)" }} />
-          <div style={{ textAlign: "right" }}>
+          <div style={{ textAlign: "end" }}>
             <div style={{ fontSize: 9, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)" }}>Range</div>
             <div className="tabnum" style={{ fontSize: 12, marginTop: 4, color: "rgba(255,255,255,0.8)" }}>
               {r.finalValue > 0 ? <span style={ISO}>{fc(r.low)} – {fc(r.high)}</span> : "—"}
@@ -266,7 +306,26 @@ function ValApp() {
       </header>
 
       {/* ===== SIDEBAR (wizard) ===== */}
-      <aside style={{ gridArea: "side", borderRight: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}>
+      {!sideOpen && (
+        /* Collapsed: a rail carrying the toggle and a vertical label. The
+           fields are unmounted, not hidden — a 46px column cannot usefully
+           hold half-rendered inputs. */
+        <aside style={{
+          gridArea: "side", borderInlineEnd: "1px solid var(--border-1)",
+          background: "var(--bg-1)", overflow: "hidden", minWidth: 0,
+          display: "flex", flexDirection: "column", alignItems: "center",
+          paddingTop: 14, gap: 14,
+        }}>
+          <SideToggle open={false} onToggle={() => setSideOpen(true)} />
+          <span style={{
+            writingMode: "vertical-rl", transform: "rotate(180deg)",
+            fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+            color: "var(--fg-3)", fontWeight: 600, whiteSpace: "nowrap",
+          }}>Inputs</span>
+        </aside>
+      )}
+      {sideOpen && (
+      <aside style={{ gridArea: "side", borderInlineEnd: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}>
         {/* Section 01 isn't collapsible, but wears the same band as 02+ */}
         <div style={{ ...BAND_STYLE, borderInlineStart: "3px solid var(--ad-gold-500)" }}>
           <BandLabel n="01" title="Property" />
@@ -283,6 +342,7 @@ function ValApp() {
             <span style={{ fontSize: 12, lineHeight: 1 }}>↺</span>
             Reset
           </button>
+          <SideToggle open={true} onToggle={() => setSideOpen(false)} />
         </div>
         <div style={{ padding: "18px 24px 14px" }}>
           <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
@@ -445,7 +505,7 @@ function ValApp() {
                   <div style={{ fontSize: 10, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--fg-3)", fontWeight: 600 }}>My saved valuations</div>
                   {saved.map((s) => (
                     <button key={s.id} onClick={() => loadSavedItem(s.id)} style={{
-                      display: "block", width: "100%", textAlign: "left", padding: "8px 10px", marginTop: 6,
+                      display: "block", width: "100%", textAlign: "start", padding: "8px 10px", marginTop: 6,
                       border: "1px solid var(--border-1)", background: "var(--bg-2)", cursor: "pointer", fontSize: 12,
                     }}>
                       <span style={{ fontWeight: 500 }}>{s.name}</span>
@@ -464,6 +524,7 @@ function ValApp() {
           )}
         </div>
       </aside>
+      )}
 
       {/* ===== MAIN (results) ===== */}
       <main style={{ gridArea: "main", overflowY: "auto", background: "var(--bg-2)" }}>
@@ -496,7 +557,7 @@ function ValResults({ result, sens, input }) {
             </div>
             <div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-3)", marginTop: 4 }}>Real Estate Valuation Report</div>
           </div>
-          <div style={{ textAlign: "right", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
+          <div style={{ textAlign: "end", fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
             <div style={{ fontWeight: 600, fontSize: 13, color: "var(--fg-1)" }}>{input.name}</div>
             <div>{typeDef.label}{input.property.city ? ` · ${input.property.city}` : ""}{input.property.district ? ` · ${input.property.district}` : ""}</div>
             <div>{new Date().toLocaleDateString(
@@ -733,10 +794,10 @@ function LedgerRow({ label, value, note, tone, muted, strong, final }) {
   );
 }
 
-const th = { padding: "8px 10px", textAlign: "left", fontWeight: 500, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" };
-const thR = { ...th, textAlign: "right" };
+const th = { padding: "8px 10px", textAlign: "start", fontWeight: 500, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)" };
+const thR = { ...th, textAlign: "end" };
 const td = { padding: "9px 10px" };
-const tdR = { ...td, textAlign: "right" };
+const tdR = { ...td, textAlign: "end" };
 
 function ValFooter() {
   return (

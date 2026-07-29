@@ -312,3 +312,13 @@ html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
     font-family: var(--font-body);
   }
 }
+
+/* ---------- Collapse control for the input panels ----------
+   The chevron points the way the panel will travel. Collapsing sends it to the
+   inline-start edge — LEFT in English, RIGHT in Arabic — so the glyph is
+   mirrored under RTL rather than drawn twice. The inline `transform` on the
+   <svg> handles the open/closed flip; this handles the direction. */
+.sideToggle { transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out); }
+.sideToggle:hover { border-color: var(--ad-gold-500); color: var(--ad-gold-600); }
+.sideToggle:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 2px; }
+html[dir="rtl"] .sideToggle svg { scale: -1 1; }
