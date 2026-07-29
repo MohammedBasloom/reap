@@ -251,7 +251,7 @@
     "Lease-up period": "فترة التأجير",
     "Long-term run-rate": "المعدل المستقر طويل الأجل",
     "% of gross income": "٪ من الدخل الإجمالي",
-    "Terminal cap": "معدل الرسملة النهائي",
+    "0 = held, not sold": "0 = يُحتفظ به دون بيع",
     "months → exit": "أشهر → التخارج", "Hold until exit": "الاحتفاظ حتى التخارج",
     /* Allocation alarm + program header */
     "Land fully allocated": "الأرض موزّعة بالكامل",
@@ -377,8 +377,10 @@
       "نسبة الإشغال التي يستقر عليها الأصل بعد اكتمال فترة التأجير — أي المتوسط على المدى الطويل، لا إشغال اليوم الأول.",
     "Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI.":
       "المصاريف التشغيلية — التكلفة السنوية لتشغيل الأصل: الإدارة والصيانة والمرافق والتأمين ورسوم الخدمات. وتُخصم من الدخل الإجمالي للوصول إلى صافي الدخل التشغيلي (NOI).",
-    "Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price.":
-      "معدل الرسملة عند البيع — العائد الذي يقبله المشتري. قيمة التخارج = صافي الدخل التشغيلي المستقر ÷ معدل الرسملة، أي أن انخفاض المعدل يعني سعر بيع أعلى.",
+    "Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price. Enter 0 if the asset is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone.":
+      "معدل الرسملة عند البيع — العائد الذي يقبله المشتري. قيمة التخارج = صافي الدخل التشغيلي المستقر ÷ معدل الرسملة، أي أن انخفاض المعدل يعني سعر بيع أعلى. وأدخل 0 إذا لم يكن هناك بيع في نهاية المدة — عندها لا يُظهر النموذج أي حصيلة تخارج ويأتي العائد من الدخل الإيجاري وحده.",
+    "The yield a buyer would accept for this space at exit. Stabilised NOI divided by the cap rate gives the exit value. Enter 0 if the space is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone.":
+      "العائد الذي يقبله المشتري لهذه المساحة عند التخارج. وقسمة صافي الدخل التشغيلي المستقر على معدل الرسملة تعطي قيمة التخارج. وأدخل 0 إذا لم تُبَع المساحة في نهاية المدة — عندها لا يُظهر النموذج أي حصيلة تخارج ويأتي العائد من الدخل الإيجاري وحده.",
     "A one-off fee charged on the capital investors commit, paid to the fund manager (GP) when the fund is established.":
       "رسوم تُحتسب مرة واحدة على رأس المال الذي يلتزم به المستثمرون، وتُدفع لمدير الصندوق (GP) عند تأسيس الصندوق.",
     "Annual management fee paid to the fund manager (GP) for running the fund, charged on paid-in capital.":
