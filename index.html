@@ -418,32 +418,6 @@
     .cf-done h3 { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin: 18px 0 0; color: white; }
     .cf-done p { font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,0.6); margin: 9px 0 0; }
 
-    /* ---------- Scroll-lit statement ----------
-       The words light one after another as the section travels through the
-       viewport. Driven by a rAF-throttled scroll handler rather than a
-       library: the whole effect is a single class toggle per word, and the
-       page already ships no third-party JS. Reduced motion lights them all at
-       once — see the media query near the end of this sheet. */
-    .statement { background: var(--ad-navy-900); padding: 96px 40px 104px; border-top: 1px solid rgba(255,255,255,0.07); }
-    .statement .inner { max-width: 1080px; margin: 0 auto; }
-    .statement .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ad-gold-500); font-weight: 600; }
-    .statement .line {
-      font-family: var(--font-display); font-weight: 600;
-      font-size: clamp(26px, 4.4vw, 52px); line-height: 1.28; letter-spacing: -0.02em;
-      margin-top: 22px;
-    }
-    /* NOT .sw — that is already the legend swatch in the hero mockup. */
-    .statement .wd {
-      color: rgba(255,255,255,0.17);
-      transition: color 420ms var(--ease-out);
-    }
-    .statement .wd.lit { color: white; }
-    .statement .wd.accent.lit { color: var(--ad-gold-400); }
-    .statement .foot {
-      margin-top: 30px; font-size: 14px; line-height: 1.75; max-width: 620px;
-      color: rgba(255,255,255,0.5);
-    }
-
     /* ---------- Product snapshots ----------
        Built in HTML rather than captured as images, because the page is
        bilingual and Arabic is the default: a screenshot bakes in one language,
@@ -496,7 +470,6 @@
     .shot .note { margin-top: 14px; font-size: 10.5px; line-height: 1.6; color: var(--fg-3); }
 
     @media (max-width: 900px) {
-      .statement { padding: 66px 24px 72px; }
       .shots { padding: 4px 24px 64px; }
       .shots .grid { grid-template-columns: 1fr; }
       .shot .kpis { grid-template-columns: repeat(2, 1fr); }
@@ -525,10 +498,7 @@
       .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
 
-      /* The statement reads at full contrast immediately, and the weighting
-         bars are drawn already full rather than growing. */
-      .statement .wd { color: white; transition: none; }
-      .statement .wd.accent { color: var(--ad-gold-400); }
+      /* The weighting bars are drawn already full rather than growing. */
       .shot .ap .fill { width: var(--w); transition: none; }
       .shot { transition: none; }
       .shot:hover { transform: none; }
@@ -763,20 +733,6 @@
       <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
       <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
       <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
-    </div>
-  </div>
-
-  <!-- ============ SCROLL-LIT STATEMENT ============
-       Each word is its own span so the scroll handler can light them in
-       sequence. The Arabic is a separate, complete sentence on the wrapper —
-       the i18n layer swaps the whole line, and the script re-splits it into
-       words afterwards, so the effect works identically in both languages. -->
-  <div class="statement" id="statement">
-    <div class="inner">
-      <div class="eyebrow" data-ar="لماذا يهم هذا">Why this matters</div>
-      <p class="line" id="statementLine"
-         data-ar="الفرصة العقارية لا تُقاس بالحدس. تُقاس بالأرقام — التكلفة، والتمويل، والعائد، والمخاطر — <em class='accent'>محسوبة بدقة، ومعروضة بوضوح.</em>">A real estate opportunity is not judged by instinct. It is judged by numbers — cost, financing, return and risk — <em class="accent">calculated precisely, and shown plainly.</em></p>
-      <p class="foot" data-ar="تتولّى REAP الحساب: محرك واحد يقود كل لوحة، فلا تختلف الأرقام من شاشة إلى أخرى.">REAP does the calculating: one engine drives every dashboard, so the numbers never disagree from one screen to the next.</p>
     </div>
   </div>
 
@@ -1366,80 +1322,6 @@
       gio.observe(shotGrid);
     }
   }
-
-  /* ---------- Scroll-lit statement ----------
-     Split the line into words and light them in turn as the section crosses
-     the viewport. The split happens HERE, after the i18n layer has already
-     swapped in the Arabic, so the words are whatever language is on screen —
-     splitting in the markup would have hard-coded the English word count.
-
-     <em class="accent"> survives the split: its words are re-wrapped
-     individually and keep the accent colour.
-
-     A rAF-throttled scroll listener rather than a plugin. Reduced motion is
-     handled in CSS, which paints every word lit, so the class toggling below
-     is simply invisible rather than needing a second code path. */
-  (function scrollLitStatement() {
-    const line = $("statementLine");
-    const section = $("statement");
-    if (!line || !section) return;
-
-    const wrapWords = (node, accent) => {
-      const out = [];
-      node.childNodes.forEach((child) => {
-        if (child.nodeType === 3) {
-          child.textContent.split(/(\s+)/).forEach((tok) => {
-            if (!tok) return;
-            if (/^\s+$/.test(tok)) { out.push(document.createTextNode(tok)); return; }
-            const s = document.createElement("span");
-            s.className = "wd" + (accent ? " accent" : "");
-            s.textContent = tok;
-            out.push(s);
-          });
-        } else if (child.nodeType === 1) {
-          // <em class="accent"> and anything else nested: recurse, keep the flag.
-          wrapWords(child, accent || child.classList.contains("accent")).forEach((n) => out.push(n));
-        }
-      });
-      return out;
-    };
-
-    const nodes = wrapWords(line, false);
-    line.textContent = "";
-    nodes.forEach((n) => line.appendChild(n));
-    const words = Array.from(line.querySelectorAll(".wd"));
-    if (!words.length) return;
-
-    let queued = false;
-    const paint = () => {
-      queued = false;
-      const r = section.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      /* 0 when the section's top reaches the bottom of the viewport, 1 by the
-         time it has scrolled to roughly the upper third — so the sentence
-         finishes lighting while it is still comfortably on screen. */
-      const span = r.height + vh * 0.55;
-      const p = Math.max(0, Math.min(1, (vh - r.top) / Math.max(1, span)));
-      const lit = Math.round(p * words.length);
-      for (let i = 0; i < words.length; i++) {
-        words[i].classList.toggle("lit", i < lit);
-      }
-    };
-    const onScroll = () => {
-      if (queued) return;
-      queued = true;
-      window.requestAnimationFrame(paint);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    paint();
-    /* Again once the webfonts and the rest of the page have settled: the first
-       pass runs at script time, when the line has not been laid out at its
-       final height, and lights the wrong number of words for anyone who lands
-       with the statement already partly in view and never scrolls. */
-    window.addEventListener("load", onScroll);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(paint).catch(() => {});
-  })();
 
   const form = $("cfForm");
   if (!form) return;
