@@ -418,6 +418,90 @@
     .cf-done h3 { font-family: var(--font-display); font-size: 21px; font-weight: 600; margin: 18px 0 0; color: white; }
     .cf-done p { font-size: 13.5px; line-height: 1.7; color: rgba(255,255,255,0.6); margin: 9px 0 0; }
 
+    /* ---------- Scroll-lit statement ----------
+       The words light one after another as the section travels through the
+       viewport. Driven by a rAF-throttled scroll handler rather than a
+       library: the whole effect is a single class toggle per word, and the
+       page already ships no third-party JS. Reduced motion lights them all at
+       once — see the media query near the end of this sheet. */
+    .statement { background: var(--ad-navy-900); padding: 96px 40px 104px; border-top: 1px solid rgba(255,255,255,0.07); }
+    .statement .inner { max-width: 1080px; margin: 0 auto; }
+    .statement .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ad-gold-500); font-weight: 600; }
+    .statement .line {
+      font-family: var(--font-display); font-weight: 600;
+      font-size: clamp(26px, 4.4vw, 52px); line-height: 1.28; letter-spacing: -0.02em;
+      margin-top: 22px;
+    }
+    /* NOT .sw — that is already the legend swatch in the hero mockup. */
+    .statement .wd {
+      color: rgba(255,255,255,0.17);
+      transition: color 420ms var(--ease-out);
+    }
+    .statement .wd.lit { color: white; }
+    .statement .wd.accent.lit { color: var(--ad-gold-400); }
+    .statement .foot {
+      margin-top: 30px; font-size: 14px; line-height: 1.75; max-width: 620px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ---------- Product snapshots ----------
+       Built in HTML rather than captured as images, because the page is
+       bilingual and Arabic is the default: a screenshot bakes in one language,
+       and every figure below is a real number taken from the engine. */
+    .shots { background: var(--bg-2); color: var(--fg-1); padding: 8px 40px 88px; }
+    .shots .inner { max-width: 1180px; margin: 0 auto; }
+    .shots .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .shot {
+      background: white; border: 1px solid var(--border-1); box-shadow: var(--shadow-md);
+      overflow: hidden; display: flex; flex-direction: column;
+      transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out);
+    }
+    .shot:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .shot .bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 12px; background: var(--ad-navy-900); border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .shot .bar i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.22); flex-shrink: 0; }
+    .shot .bar span {
+      margin-inline-start: 8px; font-family: var(--font-mono); font-size: 10.5px;
+      color: rgba(255,255,255,0.5); letter-spacing: 0.04em;
+    }
+    .shot .body { padding: 16px 18px 18px; flex: 1; }
+    .shot .ttl { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+    .shot .sub { font-size: 11.5px; color: var(--fg-3); margin-top: 3px; }
+
+    .shot .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 14px; }
+    .shot .kpi { border-top: 2px solid var(--ad-navy-700); padding-top: 7px; }
+    .shot .kpi span { display: block; font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
+    .shot .kpi b { display: block; font-family: var(--font-display); font-size: 17px; font-weight: 600; margin-top: 3px; }
+    .shot .kpi.up b { color: var(--ad-success); }
+
+    .shot .facts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 18px; margin-top: 15px; }
+    .shot .fact { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; padding: 5px 0; border-bottom: 1px dashed var(--border-1); }
+    .shot .fact span { color: var(--fg-3); }
+    .shot .fact b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* Valuation: the three approaches and how they are weighted. */
+    .shot .big { margin-top: 14px; }
+    .shot .big b { font-family: var(--font-display); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; display: block; }
+    .shot .big span { font-size: 11.5px; color: var(--fg-3); }
+    .shot .appr { margin-top: 16px; }
+    .shot .ap { margin-bottom: 11px; }
+    .shot .ap .top { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; }
+    .shot .ap .top b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .shot .ap .track { height: 6px; background: var(--bg-3); margin-top: 5px; overflow: hidden; }
+    .shot .ap .fill { height: 100%; background: var(--ad-navy-700); width: 0; transition: width 900ms var(--ease-out); }
+    .shot .ap.g .fill { background: var(--ad-gold-500); }
+    .shots .grid.in .ap .fill { width: var(--w); }
+    .shot .note { margin-top: 14px; font-size: 10.5px; line-height: 1.6; color: var(--fg-3); }
+
+    @media (max-width: 900px) {
+      .statement { padding: 66px 24px 72px; }
+      .shots { padding: 4px 24px 64px; }
+      .shots .grid { grid-template-columns: 1fr; }
+      .shot .kpis { grid-template-columns: repeat(2, 1fr); }
+    }
+
     /* Scroll-reveal — staggered by --i */
     .reveal { opacity: 0; transform: translateY(18px); }
     .reveal.in {
@@ -440,6 +524,14 @@
       .road.in .rstep .node::after { animation: none; }
       .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
+
+      /* The statement reads at full contrast immediately, and the weighting
+         bars are drawn already full rather than growing. */
+      .statement .wd { color: white; transition: none; }
+      .statement .wd.accent { color: var(--ad-gold-400); }
+      .shot .ap .fill { width: var(--w); transition: none; }
+      .shot { transition: none; }
+      .shot:hover { transform: none; }
 
       .reveal, .reveal.in { opacity: 1; transform: none; transition: none; }
       .cf-done .ring, .cf-done .tick { animation: none; stroke-dashoffset: 0; }
@@ -674,6 +766,20 @@
     </div>
   </div>
 
+  <!-- ============ SCROLL-LIT STATEMENT ============
+       Each word is its own span so the scroll handler can light them in
+       sequence. The Arabic is a separate, complete sentence on the wrapper —
+       the i18n layer swaps the whole line, and the script re-splits it into
+       words afterwards, so the effect works identically in both languages. -->
+  <div class="statement" id="statement">
+    <div class="inner">
+      <div class="eyebrow" data-ar="لماذا يهم هذا">Why this matters</div>
+      <p class="line" id="statementLine"
+         data-ar="الفرصة العقارية لا تُقاس بالحدس. تُقاس بالأرقام — التكلفة، والتمويل، والعائد، والمخاطر — <em class='accent'>محسوبة بدقة، ومعروضة بوضوح.</em>">A real estate opportunity is not judged by instinct. It is judged by numbers — cost, financing, return and risk — <em class="accent">calculated precisely, and shown plainly.</em></p>
+      <p class="foot" data-ar="تتولّى REAP الحساب: محرك واحد يقود كل لوحة، فلا تختلف الأرقام من شاشة إلى أخرى.">REAP does the calculating: one engine drives every dashboard, so the numbers never disagree from one screen to the next.</p>
+    </div>
+  </div>
+
   <!-- ============ SERVICES ============ -->
   <div class="services">
     <div class="inner">
@@ -712,6 +818,78 @@
           </ul>
           <button class="go" data-app="valuation.html" data-ar="افتح التقييم العقاري">Open Valuation</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PRODUCT SNAPSHOTS ============
+       Every figure here is a real output of the engine on a worked scheme —
+       12,000 m² in Riyadh, a residential building alongside a mixed-use
+       building — not decorative filler. Built in markup rather than captured
+       as screenshots so it reads correctly in both languages and stays sharp
+       on any display. -->
+  <div class="shots">
+    <div class="inner">
+      <div class="grid" id="shotGrid">
+
+        <!-- Financial modeling -->
+        <div class="shot reveal" style="--i:0">
+          <div class="bar"><i></i><i></i><i></i><span>reapinsights.com/model</span></div>
+          <div class="body">
+            <div class="ttl" data-ar="النمذجة المالية — الملخص">Financial Modeling — Summary</div>
+            <div class="sub" data-ar="أرض 12,000 م² · الرياض · عمارة سكنية + مبنى متعدد الاستخدامات">12,000 m² site · Riyadh · residential building + mixed-use building</div>
+
+            <div class="kpis">
+              <div class="kpi up"><span data-ar="عائد الملكية">Equity IRR</span><b class="tabnum">20.5%</b></div>
+              <div class="kpi"><span data-ar="صافي القيمة">NPV</span><b class="tabnum" data-ar="26.6M ر.س">SAR 26.6M</b></div>
+              <div class="kpi"><span data-ar="الربح">Profit</span><b class="tabnum" data-ar="85.7M ر.س">SAR 85.7M</b></div>
+              <div class="kpi"><span data-ar="إجمالي التكلفة">Total cost</span><b class="tabnum" data-ar="191.0M ر.س">SAR 191.0M</b></div>
+            </div>
+
+            <div class="facts">
+              <div class="fact"><span data-ar="إجمالي المسطحات">GFA</span><b>32,760 m²</b></div>
+              <div class="fact"><span data-ar="المساحة الصافية">Net saleable</span><b>25,553 m²</b></div>
+              <div class="fact"><span data-ar="عدد الوحدات">Units</span><b>67</b></div>
+              <div class="fact"><span data-ar="ذروة الدين">Peak debt</span><b class="tabnum" data-ar="89.2M ر.س">SAR 89.2M</b></div>
+              <div class="fact"><span data-ar="تغطية الفوائد">Interest cover</span><b>3.36×</b></div>
+              <div class="fact"><span data-ar="الأفق الزمني">Horizon</span><b data-ar="7.3 سنة">7.3 yrs</b></div>
+            </div>
+
+            <div class="note" data-ar="التدفقات النقدية والحساسية ومونت كارلو وشلال توزيعات الصندوق — كلها من المحرك نفسه.">Cashflow, sensitivity, Monte Carlo and the fund waterfall all come from the same engine.</div>
+          </div>
+        </div>
+
+        <!-- Valuation -->
+        <div class="shot reveal" style="--i:1">
+          <div class="bar"><i></i><i></i><i></i><span>reapinsights.com/valuation</span></div>
+          <div class="body">
+            <div class="ttl" data-ar="التقييم العقاري — الترجيح">Real Estate Valuation — Reconciliation</div>
+            <div class="sub" data-ar="فيلا · حي الملقا، الرياض · 520 م² مبنية على أرض 600 م²">Villa · Al Malqa, Riyadh · 520 m² built on a 600 m² plot</div>
+
+            <div class="big">
+              <b class="tabnum" data-ar="3.5M ر.س">SAR 3.5M</b>
+              <span data-ar="النطاق 2.8M – 4.2M ر.س">Range SAR 2.8M – 4.2M</span>
+            </div>
+
+            <div class="appr">
+              <div class="ap g" style="--w:55%">
+                <div class="top"><span data-ar="المقارنات السوقية">Sales comparison</span><b class="tabnum" data-ar="4.3M ر.س · 55%">SAR 4.3M · 55%</b></div>
+                <div class="track"><div class="fill"></div></div>
+              </div>
+              <div class="ap" style="--w:30%">
+                <div class="top"><span data-ar="رسملة الدخل">Income capitalisation</span><b class="tabnum" data-ar="1.9M ر.س · 30%">SAR 1.9M · 30%</b></div>
+                <div class="track"><div class="fill"></div></div>
+              </div>
+              <div class="ap" style="--w:15%">
+                <div class="top"><span data-ar="أسلوب التكلفة">Cost approach</span><b class="tabnum" data-ar="3.7M ر.س · 15%">SAR 3.7M · 15%</b></div>
+                <div class="track"><div class="fill"></div></div>
+              </div>
+            </div>
+
+            <div class="note" data-ar="ثلاثة أساليب مستقلة، مرجّحة في رقم واحد — مع فحوصات جودة تنبّه إذا تباعدت النتائج.">Three independent approaches, weighted into one figure — with quality checks that flag it when they disagree.</div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1171,6 +1349,97 @@
     }, { threshold: 0.15, rootMargin: "0px 0px -40px 0px" });
     reveals.forEach((el) => io.observe(el));
   }
+
+  /* The weighting bars grow once, when the snapshots first come into view. */
+  const shotGrid = $("shotGrid");
+  if (shotGrid) {
+    if (!("IntersectionObserver" in window)) {
+      shotGrid.classList.add("in");
+    } else {
+      const gio = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("in");
+          gio.unobserve(e.target);
+        });
+      }, { threshold: 0.25 });
+      gio.observe(shotGrid);
+    }
+  }
+
+  /* ---------- Scroll-lit statement ----------
+     Split the line into words and light them in turn as the section crosses
+     the viewport. The split happens HERE, after the i18n layer has already
+     swapped in the Arabic, so the words are whatever language is on screen —
+     splitting in the markup would have hard-coded the English word count.
+
+     <em class="accent"> survives the split: its words are re-wrapped
+     individually and keep the accent colour.
+
+     A rAF-throttled scroll listener rather than a plugin. Reduced motion is
+     handled in CSS, which paints every word lit, so the class toggling below
+     is simply invisible rather than needing a second code path. */
+  (function scrollLitStatement() {
+    const line = $("statementLine");
+    const section = $("statement");
+    if (!line || !section) return;
+
+    const wrapWords = (node, accent) => {
+      const out = [];
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === 3) {
+          child.textContent.split(/(\s+)/).forEach((tok) => {
+            if (!tok) return;
+            if (/^\s+$/.test(tok)) { out.push(document.createTextNode(tok)); return; }
+            const s = document.createElement("span");
+            s.className = "wd" + (accent ? " accent" : "");
+            s.textContent = tok;
+            out.push(s);
+          });
+        } else if (child.nodeType === 1) {
+          // <em class="accent"> and anything else nested: recurse, keep the flag.
+          wrapWords(child, accent || child.classList.contains("accent")).forEach((n) => out.push(n));
+        }
+      });
+      return out;
+    };
+
+    const nodes = wrapWords(line, false);
+    line.textContent = "";
+    nodes.forEach((n) => line.appendChild(n));
+    const words = Array.from(line.querySelectorAll(".wd"));
+    if (!words.length) return;
+
+    let queued = false;
+    const paint = () => {
+      queued = false;
+      const r = section.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      /* 0 when the section's top reaches the bottom of the viewport, 1 by the
+         time it has scrolled to roughly the upper third — so the sentence
+         finishes lighting while it is still comfortably on screen. */
+      const span = r.height + vh * 0.55;
+      const p = Math.max(0, Math.min(1, (vh - r.top) / Math.max(1, span)));
+      const lit = Math.round(p * words.length);
+      for (let i = 0; i < words.length; i++) {
+        words[i].classList.toggle("lit", i < lit);
+      }
+    };
+    const onScroll = () => {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(paint);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+    paint();
+    /* Again once the webfonts and the rest of the page have settled: the first
+       pass runs at script time, when the line has not been laid out at its
+       final height, and lights the wrong number of words for anyone who lands
+       with the statement already partly in view and never scrolls. */
+    window.addEventListener("load", onScroll);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(paint).catch(() => {});
+  })();
 
   const form = $("cfForm");
   if (!form) return;
