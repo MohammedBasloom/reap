@@ -178,6 +178,66 @@ function revenueUnits(c) {
 const salePeriodOf  = (u) => Math.max(1, Math.round(numOr(u.salesPeriodMonths, 36)));
 const leasePeriodOf = (u) => Math.max(1, Math.round(numOr(u.operatingPeriodMonths, 60)));
 
+/* ---------- Fit a set of shares to a total ----------
+
+   Scales `values` so they sum to `target`, keeping their RELATIVE proportions.
+   Used for the land split across components and the GFA split across the
+   spaces of a mixed-use building — both must come to 100%, and both are
+   rebalanced when something is added or removed.
+
+   Proportional, not equal: a user who has deliberately set 30/70 and then adds
+   a third component should keep that 30:70 relationship between the original
+   two, not have it flattened. An equal split is only the fallback for when the
+   existing shares sum to nothing, which is the case that matters most — the
+   first component added takes the whole 100%.
+
+   The rounding is the point of the last few lines. Three equal shares are
+   0.3333 each once rounded to the 0.01% the input displays, and those add to
+   99.99%, which trips the "doesn't come to 100%" warning the moment the split
+   is applied. The residue goes on the largest share, so what is on screen adds
+   up exactly. */
+function fitShares(values, target) {
+  const list = values || [];
+  const n = list.length;
+  if (!n) return [];
+  const t = (target === undefined || target === null) ? 1 : target;
+  const nums = list.map((v) => Math.max(0, +v || 0));
+  const sum = nums.reduce((s, v) => s + v, 0);
+  const raw = sum > 1e-9 ? nums.map((v) => v * t / sum) : nums.map(() => t / n);
+
+  const R = 10000;                                   // 0.01% granularity
+  const out = raw.map((v) => Math.round(v * R) / R);
+  const drift = t - out.reduce((s, v) => s + v, 0);
+  if (Math.abs(drift) > 1e-12) {
+    let k = 0;
+    for (let i = 1; i < out.length; i++) if (out[i] > out[k]) k = i;
+    out[k] = Math.max(0, Math.round((out[k] + drift) * R) / R);
+  }
+  return out;
+}
+
+/* The shares after ADDING one more member: the newcomer ends on an equal share
+   of the new total and the existing ones scale down in proportion. Returns the
+   whole new list, newcomer last.
+
+   One fit over the combined list, not a fit of the old ones plus a separately
+   computed newcomer — rounding twice leaves the total off. Scaling two halves
+   to make room for an unrounded third gave 33.34 + 33.33 + 33.3333, which is
+   100.0033% and trips the very warning this is meant to silence.
+
+   The newcomer's weight is sum/n, which is exactly the weight that normalises
+   to 1/(n+1). When the existing shares are all zero there is no proportion to
+   preserve, so everyone weighs the same and the split comes out even. */
+function fitSharesAdding(values) {
+  const cur = (values || []).map((v) => Math.max(0, +v || 0));
+  if (!cur.length) return [1];
+  const sum = cur.reduce((s, v) => s + v, 0);
+  const weights = sum > 1e-9
+    ? cur.concat([sum / cur.length])
+    : cur.map(() => 1).concat([1]);
+  return fitShares(weights, 1);
+}
+
 /* ---------- The fields a unit needs to be viable in a given purpose ----------
 
    Returns the patch that makes `u` work as `mode`, filling ONLY what is absent.
@@ -1784,7 +1844,7 @@ window.Feas = {
   sCurveCdf, sCurveMonthly, npv, irr, paybackMonths,
   sampleTri, sampleNormal, percentile,
   runFeasibility, tornado, buildScenarios, monteCarlo,
-  autoHorizonMonths, modeDefaults,
+  autoHorizonMonths, modeDefaults, fitShares, fitSharesAdding,
   runWaterfall,
   formatCurrency, formatPct, formatNumber,
   computeComponent,

@@ -414,19 +414,31 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
     const localised = window.I18N ? I18N.t(baseLabel) : baseLabel;
     const sameMode = subs.filter(s => s.mode === mode).length;
     const name = sameMode === 0 ? localised : `${localised} ${sameMode + 1}`;
+    /* The GFA refits itself to 100%, exactly as the land split does one level
+       up: the new space takes an equal share and the existing ones scale down
+       in proportion. A space used to arrive at 0% of the building, so a new
+       one contributed nothing until the user noticed and typed a number. */
+    const fitted = Feas.fitSharesAdding(subs.map(s => +s.gfaSharePct || 0));
     const common = {
       id: Math.random().toString(36).slice(2, 9),
       name, enabled: true, mode,
-      gfaSharePct: 0, efficiency: 0.78, revenueBasis: "sqm",
+      gfaSharePct: fitted[fitted.length - 1], efficiency: 0.78, revenueBasis: "sqm",
     };
     // Build cost is the one figure that differs by purpose here and is not a
     // revenue assumption, so it stays local; everything else comes from the
     // shared list so a created space and a switched one agree.
     const built = Object.assign(common, { costPerSqmGFA: mode === "sale" ? 2500 : 3600 });
     if (mode === "sale") built.avgUnitSize = 150;   // so a switch to per-unit has a size to divide by
-    update("subs", [...subs, Object.assign(built, Feas.modeDefaults(built, mode))]);
+    update("subs", [
+      ...subs.map((s, j) => Object.assign({}, s, { gfaSharePct: fitted[j] })),
+      Object.assign(built, Feas.modeDefaults(built, mode)),
+    ]);
   };
-  const removeSub = (i) => update("subs", subs.filter((_, j) => j !== i));
+  const removeSub = (i) => {
+    const next = subs.filter((_, j) => j !== i);
+    const scaled = Feas.fitShares(next.map(s => +s.gfaSharePct || 0), 1);
+    update("subs", next.map((s, j) => Object.assign({}, s, { gfaSharePct: scaled[j] })));
+  };
 
   /* Switching a space between sale and lease must also give it the fields its
      new purpose needs — including the RATE, without which the space earns
@@ -1278,10 +1290,13 @@ function Sidebar({ input, setInput }) {
     arr[idx] = c;
     upd("components", arr);
   };
+  /* Removing a component hands its land back to the others in proportion, so
+     the split still comes to 100% without the user having to go and repair it. */
   const removeComp = (idx) => {
     const arr = input.components.slice();
     arr.splice(idx, 1);
-    upd("components", arr);
+    const share = Feas.fitShares(arr.map(c => +c.allocationPct || 0), 1);
+    upd("components", arr.map((c, i) => Object.assign({}, c, { allocationPct: share[i] })));
   };
   const addComp = (kind) => {
     const preset = COMPONENT_PRESETS[kind];
@@ -1297,7 +1312,7 @@ function Sidebar({ input, setInput }) {
       name,
       mode: preset.mode,
       enabled: true,
-      allocationPct: 0.10,
+      // allocationPct is set below, once the split across all components is known.
       // Massing — default to FAR methodology for back-compat
       massingMode: "far",
       far: preset.far,
@@ -1348,7 +1363,20 @@ function Sidebar({ input, setInput }) {
         name: (window.I18N ? I18N.t(s.name) : s.name),
       }));
     }
-    upd("components", [...input.components, newComp]);
+    /* The land refits itself to 100%. The newcomer takes an equal share of the
+       new total and the existing components scale down to make room, keeping
+       whatever ratio the user had set between them — so one component is 100%,
+       a second makes it 50/50, and a deliberate 30/70 becomes 20/46.7 plus
+       33.3 rather than being flattened to equal thirds. Every share stays
+       editable afterwards; nothing refits again until a component is added or
+       removed. */
+    const existing = input.components;
+    const fitted = Feas.fitSharesAdding(existing.map(c => +c.allocationPct || 0));
+    newComp.allocationPct = fitted[fitted.length - 1];
+    upd("components", [
+      ...existing.map((c, i) => Object.assign({}, c, { allocationPct: fitted[i] })),
+      newComp,
+    ]);
   };
 
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);

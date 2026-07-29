@@ -811,6 +811,59 @@
     rows.push({ name: "ZEROS: a deliberate 0 is not replaced by a default", fails });
   })();
 
+  /* ---------- Land and GFA shares refit to exactly 100% ----------
+     The sidebar rebalances the land split across components, and the GFA split
+     across the spaces of a mixed-use building, whenever one is added or
+     removed. Both must land on 100% EXACTLY: the panels warn when a split is
+     off by more than 0.1%, so an auto-fit that lands on 99.99% would raise the
+     very warning it exists to prevent. It nearly did — scaling the existing
+     shares and appending an unrounded newcomer rounds twice and gives
+     33.34 + 33.33 + 33.3333.
+
+     Proportions are preserved rather than equalised, so a user who has set
+     30/70 and then adds a third keeps 30:70 between the original two. */
+  (function sharesFitToOneHundred() {
+    const fails = [];
+    try {
+      const sum = (a) => a.reduce((s, v) => s + v, 0);
+      const off = (a) => Math.abs(sum(a) - 1);
+
+      // Adding repeatedly, from nothing, must always total 1 exactly.
+      let cur = [];
+      for (let n = 1; n <= 40; n++) {
+        cur = F.fitSharesAdding(cur);
+        if (cur.length !== n) fails.push(`adding gave ${cur.length} shares, expected ${n}`);
+        if (off(cur) > 1e-9) fails.push(`${n} components total ${(sum(cur) * 100).toFixed(4)}%`);
+        if (cur.some((v) => v < 0)) fails.push(`${n} components produced a negative share`);
+      }
+
+      // The first one takes everything; the second halves it.
+      if (Math.abs(F.fitSharesAdding([])[0] - 1) > 1e-9) fails.push("a single component is not 100%");
+      const two = F.fitSharesAdding([1]);
+      if (Math.abs(two[0] - 0.5) > 1e-9 || Math.abs(two[1] - 0.5) > 1e-9) fails.push(`two components split ${two.join("/")} rather than 50/50`);
+
+      // A manual split keeps its ratio when a third arrives.
+      const three = F.fitSharesAdding([0.30, 0.70]);
+      if (Math.abs(three[1] / three[0] - 7 / 3) > 0.01) fails.push(`30:70 became ${three[0].toFixed(4)}:${three[1].toFixed(4)}`);
+      if (off(three) > 1e-9) fails.push("adding to a manual split does not total 100%");
+
+      // Removing refills to 100% from whatever is left.
+      [[0.3334, 0.3333], [0.2, 0.4667], [0.42], [0, 0, 0]].forEach((rest) => {
+        const r = F.fitShares(rest, 1);
+        if (off(r) > 1e-9) fails.push(`removing left ${(sum(r) * 100).toFixed(4)}%`);
+      });
+      if (F.fitShares([], 1).length !== 0) fails.push("removing the last share did not give an empty split");
+
+      // Every share must survive the input's own 0.01% display rounding, or the
+      // number on screen will not be the number stored.
+      const shown = F.fitSharesAdding([1, 1]).map((v) => +(v * 100).toFixed(4));
+      if (Math.abs(sum(shown) - 100) > 1e-9) fails.push(`as displayed, thirds total ${sum(shown)}%`);
+    } catch (e) { fails.push("threw: " + (e && e.message)); }
+
+    if (fails.length) failures++;
+    rows.push({ name: "SHARES: land and GFA splits refit to exactly 100%", fails });
+  })();
+
   /* ---------- Sensitivity must actually reach mixed-use spaces ----------
      Price, rent and build cost live on the spaces of a Mixed-Use Building. A
      shock that stopped at the component would leave profit identical across
