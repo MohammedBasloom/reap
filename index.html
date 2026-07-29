@@ -93,17 +93,27 @@
     /* Copy lifts and dims as its hero hands over; the shot follows a beat
        later and slightly further, which is what makes the two feel layered
        rather than moving as one flat card. */
+    /* Opacity must reach ZERO, not a floor. These carried 0.25 and 0.35 floors
+       from when the heroes were separate stacked sections, where a dimmed one
+       further down the page read as depth. Superimposed in a single cell that
+       floor is not depth, it is both heroes printed on top of each other —
+       two headlines, two dashboards, permanently. */
     .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta {
-      opacity: calc(0.25 + 0.75 * var(--f));
+      opacity: var(--f);
       transform: translateY(calc((1 - var(--f)) * -16px));
       will-change: opacity, transform;
     }
     .hero .heroShot {
-      opacity: calc(0.35 + 0.65 * var(--f));
+      opacity: var(--f);
       transform: translateY(calc((1 - var(--f)) * 26px)) scale(calc(0.985 + 0.015 * var(--f)));
       transform-origin: top center;
       will-change: opacity, transform;
     }
+    /* The safe default, for the moment before the scroll handler first paints
+       and for the case where it never does: the first hero is visible and the
+       rest are not. --f:1 on every hero meant a scripting failure showed them
+       all at once, stacked. */
+    .heroPin .hero:not(:first-child) { --f: 0; }
     /* Numbered platform label. */
     .hero .eyebrow { display: inline-flex; align-items: baseline; gap: 9px; }
     .hero .eyebrow b {
@@ -1620,7 +1630,20 @@
        The first third holds hero 1, the crossover runs from HOLD to HOLD+FADE,
        and the rest holds hero 2 — so the second one is fully settled well
        before the page starts moving again. */
-    const HOLD = 0.32, FADE = 0.23;
+    /* The outgoing hero clears before the incoming one arrives, rather than the
+       two dissolving through each other. A straight crossfade put both at
+       roughly half opacity mid-swap, and half of a dense dashboard on top of
+       half of another dense dashboard is not a transition — it is two
+       headlines and two tables printed over one another.
+
+       OUT runs [HOLD, HOLD + 0.6·FADE], IN runs [HOLD + 0.45·FADE, HOLD +
+       FADE]. The 15% they share is small enough that neither exceeds about a
+       fifth of full strength while the other is on screen, which reads as a
+       handover instead of a double exposure. */
+    const HOLD = 0.30, FADE = 0.30;
+    const OUT_END = HOLD + FADE * 0.60;
+    const IN_START = HOLD + FADE * 0.45;
+    const clamp01 = function (v) { return v < 0 ? 0 : (v > 1 ? 1 : v); };
     let queued = false;
     const paint = function () {
       queued = false;
@@ -1628,8 +1651,9 @@
       const r = stage.getBoundingClientRect();
       const travel = Math.max(1, r.height - vh);
       const p = Math.max(0, Math.min(1, -r.top / travel));
-      const f2 = Math.max(0, Math.min(1, (p - HOLD) / FADE));
-      const fs = [1 - f2, f2];
+      const f1 = 1 - clamp01((p - HOLD) / (OUT_END - HOLD));
+      const f2 = clamp01((p - IN_START) / (HOLD + FADE - IN_START));
+      const fs = [f1, f2];
       for (let i = 0; i < heroes.length; i++) {
         heroes[i].style.setProperty("--f", fs[i].toFixed(3));
         // Only the one in front takes clicks; the other is faded past use.
