@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>REAP — fund sources &amp; uses</title>
+<link rel="stylesheet" href="../assets/tokens.css" />
+<script src="../assets/i18n.js"></script>
+<style>body { margin: 20px; } #tie { font: 12px ui-monospace, monospace; white-space: pre; margin-bottom: 16px; padding: 10px; border: 1px solid #ccc; }</style>
+</head>
+<body>
+<div id="tie">checking…</div>
+<div id="root"></div>
+<script src="../vendor/react.development.js"></script>
+<script src="../vendor/react-dom.development.js"></script>
+<script src="../src/calc.js"></script>
+<script src="../vendor/babel.min.js"></script>
+<script>I18N.patchReact();</script>
+<script type="text/babel" src="../src/charts.jsx"></script>
+<script type="text/babel" src="../src/results.jsx"></script>
+<script type="text/babel" src="../src/fund.jsx"></script>
+<script type="text/babel">
+  /* The fund tab's Sources & Uses, on a LEASEHOLD mixed-use scheme with the
+     fund switched on — the shape that exercised both faults in this table.
+
+     It builds its own list of uses rather than reading the engine's, and had
+     drifted from it twice over: every project row printed "Contractors" as the
+     recipient, including financing interest, which is paid to the lender; and
+     ground rent and operating expenses were missing entirely, so Total uses
+     came in below the headline Total cost with nothing on screen to say why. */
+  const INPUT = {
+    landArea: 10000, landPricePerSqm: 3000, landTransferFeesPct: 0.05, landType: "net",
+    landTenure: "lease", landRentPerSqmYr: 300,
+    landRentEscalationYears: 5, landRentEscalationPct: 0.05,
+    predesignMonths: 6, constructionMonths: 18, preSalesStartMonth: 6,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+    ltc: 0.55, interestRate: 0.075, discountRate: 0.10,
+    fund: { enabled: true, lpEquityPct: 0.85, devEquityPct: 0.10, gpEquityPct: 0.05,
+            subscriptionFeePct: 0.01, assetMgmtFeePctYr: 0.015, developmentFeePct: 0.03,
+            preferredReturnPct: 0.08, promoteSplit: 0.20 },
+    components: [{
+      id: "m1", kind: "mixed", name: "Mixed-Use Building", enabled: true, mode: "mixed",
+      allocationPct: 1.0, massingMode: "far", far: 3.0, siteWorkPct: 0.07,
+      subs: [
+        { id: "r", name: "Retail", enabled: true, mode: "lease", gfaSharePct: 0.4,
+          costPerSqmGFA: 3600, efficiency: 0.75, revenueBasis: "sqm", rentPerSqmYr: 1450,
+          occupancy: 0.88, opexPct: 0.28, initialOccupancy: 0.30, yearsToStabilization: 1,
+          operatingPeriodMonths: 60, exitCapRate: 0.075 },
+        { id: "o", name: "Offices", enabled: true, mode: "lease", gfaSharePct: 0.6,
+          costPerSqmGFA: 3200, efficiency: 0.80, revenueBasis: "sqm", rentPerSqmYr: 1150,
+          occupancy: 0.85, opexPct: 0.32, initialOccupancy: 0.30, yearsToStabilization: 2,
+          operatingPeriodMonths: 60, exitCapRate: 0.08 },
+      ],
+    }],
+  };
+  const result = Feas.runFeasibility(INPUT);
+  const w = Feas.runWaterfall(INPUT, result);
+  window.__result = result; window.__w = w; window.__input = INPUT;
+
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <SourcesUsesTable w={w} result={result} fund={INPUT.fund} />
+  );
+
+  /* Uses must tie to the engine: project cost + interest + the fund's own fees. */
+  const k = result.kpi;
+  const opex = (result.cashflow.usesByCat.opex || []).reduce((s, v) => s + (v || 0), 0);
+  const shown =
+    (k.landCost + k.landTransferFees) + (k.totalLandRent || 0) + k.constructionCost +
+    (k.landInfraCost || 0) + (k.siteWorkCost - (k.landInfraCost || 0)) + k.softCosts +
+    k.contingency + ((k.marketing||0)+(k.salesCommission||0)+(k.govFees||0)) + opex + k.totalInterest;
+  const engine = k.totalCost + k.totalInterest;
+  const fmt = (v) => Math.round(v).toLocaleString();
+  document.getElementById("tie").textContent =
+    `project uses shown : ${fmt(shown)}\n` +
+    `engine cost+interest: ${fmt(engine)}\n` +
+    `gap                 : ${fmt(shown - engine)}   ${Math.abs(shown - engine) < 1 ? "TIE OK" : "MISMATCH"}\n` +
+    `fund fees           : ${fmt(w.fees.subscription + w.fees.assetMgmt + w.fees.development)}`;
+  window.__READY = true;
+</script>
+</body>
+</html>

@@ -438,6 +438,9 @@ function BucketBars({ w, fund }) {
 function SourcesUsesTable({ w, result, fund }) {
   const k = result.kpi;
   const debtDrawn = k.debtDrawnTotal || 0;
+  // Operating expenses across the whole hold, from the engine's uses category.
+  const opexWholeHold = ((result.cashflow && result.cashflow.usesByCat && result.cashflow.usesByCat.opex) || [])
+    .reduce((s, v) => s + (v || 0), 0);
   const sources = [
     { label: "LP commitment",           sub: "Cash investors (limited partners)", who: "LP",        value: w.contributions.lp,  color: FUND_COLORS.lp,   pct: w.splits.lp },
     { label: "Developer commitment",    sub: "Co-invest from the developer",      who: "Developer", value: w.contributions.dev, color: FUND_COLORS.dev,  pct: w.splits.dev },
@@ -447,15 +450,31 @@ function SourcesUsesTable({ w, result, fund }) {
   const totalEquity = w.contributions.total;
 
   // Uses — project costs split out, then fund fees.
+  /* Each line names WHO is actually paid. The column used to print
+     "Contractors" against every row, which is true only of the build lines —
+     interest goes to the lender, land to its owner, transfer fees and
+     government charges to the state, and contingency is not paid to anyone
+     unless it is spent. */
   const projectUses = [
-    { label: "Land + transfer fees",  value: k.landCost + k.landTransferFees, color: "var(--ad-navy-900)" },
-    { label: "Construction",          value: k.constructionCost,              color: "var(--ad-navy-700)" },
-    { label: "Land infrastructure",   value: k.landInfraCost || 0,            color: "var(--ad-navy-600)" },
-    { label: "Site work",             value: k.siteWorkCost - (k.landInfraCost || 0), color: "var(--ad-navy-500)" },
-    { label: "Soft costs",            value: k.softCosts,                     color: "var(--ad-navy-300)" },
-    { label: "Contingency",           value: k.contingency,                   color: "var(--ad-sand-500)" },
-    { label: "Marketing + selling",   value: (k.marketing||0) + (k.salesCommission||0) + (k.govFees||0), color: "var(--ad-sand-700)" },
-    { label: "Financing interest",    value: k.totalInterest,                 color: "var(--ad-gold-500)" },
+    { label: "Land + transfer fees",  value: k.landCost + k.landTransferFees, recipient: "Landowner + state", color: "var(--ad-navy-900)" },
+    /* Ground rent and operating expenses were absent entirely, so this table's
+       Total uses came in below the headline Total cost — by 36.0M on a mixed-use
+       scheme, with nothing on screen to explain it. Both are real uses met out
+       of the project's own receipts; the Capital tab already counts them. Land
+       here is the purchase price, which is zero on a leasehold, so the rent row
+       cannot double-count it. */
+    { label: "Ground rent",           value: k.totalLandRent || 0,            recipient: "Landowner",         color: "var(--ad-navy-800)" },
+    { label: "Construction",          value: k.constructionCost,              recipient: "Contractors",       color: "var(--ad-navy-700)" },
+    { label: "Land infrastructure",   value: k.landInfraCost || 0,            recipient: "Contractors",       color: "var(--ad-navy-600)" },
+    { label: "Site work",             value: k.siteWorkCost - (k.landInfraCost || 0), recipient: "Contractors", color: "var(--ad-navy-500)" },
+    { label: "Soft costs",            value: k.softCosts,                     recipient: "Consultants + authorities", color: "var(--ad-navy-300)" },
+    // Held against overruns; it only reaches a contractor if it is drawn on.
+    { label: "Contingency",           value: k.contingency,                   recipient: "Unallocated",       color: "var(--ad-sand-500)" },
+    { label: "Marketing + selling",   value: (k.marketing||0) + (k.salesCommission||0) + (k.govFees||0), recipient: "Agents + state", color: "var(--ad-sand-700)" },
+    // Whole-hold total from the engine's own category — NOT k.totalOpex, which
+    // is the stabilised ANNUAL figure and would understate this many times over.
+    { label: "Operating expenses",    value: opexWholeHold,                   recipient: "Operators + suppliers", color: "var(--ad-sand-900)" },
+    { label: "Financing interest",    value: k.totalInterest,                 recipient: "Lender",            color: "var(--ad-gold-500)" },
   ].filter(u => u.value > 0.5);
   const projectTotal = projectUses.reduce((s, u) => s + u.value, 0);
 
@@ -559,7 +578,7 @@ function SourcesUsesTable({ w, result, fund }) {
                     <span>{u.label}</span>
                   </div>
                 </td>
-                <td style={{ ...cellL, fontSize: 11, color: "var(--fg-3)" }}>Contractors</td>
+                <td style={{ ...cellL, fontSize: 11, color: "var(--fg-3)" }}>{u.recipient}</td>
                 <td style={cellR}><span className="tabnum">{fcF(u.value)}</span></td>
                 <td style={cellR}><span className="tabnum" style={{ color: "var(--fg-3)" }}>{fpF(u.value / Math.max(1, totalUses), 1)}</span></td>
               </tr>
