@@ -1286,7 +1286,7 @@ function EquitySplitBar({ lp, dev, gp }) {
    collapsing sends it toward the inline-start edge, which is LEFT in English
    and RIGHT in Arabic. A fixed "«" would be backwards in one of them, so the
    glyph is drawn from a rotation the stylesheet mirrors under RTL. */
-function SideToggle({ open, onToggle }) {
+function SideToggle({ open, onToggle, floating }) {
   return (
     <button
       type="button"
@@ -1300,6 +1300,9 @@ function SideToggle({ open, onToggle }) {
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         border: "1px solid var(--border-1)", background: "var(--bg-1)",
         color: "var(--fg-2)", cursor: "pointer", borderRadius: 2, padding: 0,
+        /* Floating, it sits over the fields rather than beside them, so it
+           needs to lift off the page to stay legible. */
+        ...(floating ? { boxShadow: "0 2px 10px -2px rgba(10,26,54,0.35)" } : null),
       }}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -1312,6 +1315,9 @@ function SideToggle({ open, onToggle }) {
 }
 
 function Sidebar({ input, setInput, open = true, onToggle }) {
+  // Whether the panel has been scrolled far enough that the header — and with
+  // it the collapse control — has left the view.
+  const [scrolledDeep, setScrolledDeep] = useStateS(false);
   // Declared first: addComp below closes over it, and several land figures
   // depend on it.
   const isLeasehold = (input.landTenure || "own") === "lease";
@@ -1469,13 +1475,39 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
   }
 
   return (
-    <aside style={{
-      gridArea: "side",
-      borderInlineEnd: "1px solid var(--border-1)",
-      background: "var(--bg-1)",
-      overflowY: "auto",
-      minWidth: 0,
-    }}>
+    <aside
+      onScroll={e => {
+        const deep = e.currentTarget.scrollTop > 120;
+        if (deep !== scrolledDeep) setScrolledDeep(deep);
+      }}
+      style={{
+        gridArea: "side",
+        borderInlineEnd: "1px solid var(--border-1)",
+        background: "var(--bg-1)",
+        overflowY: "auto",
+        minWidth: 0,
+      }}
+    >
+      {/* Once the header has scrolled away, the collapse control follows the
+          reader down the panel. Without it, collapsing from deep in the
+          assumptions meant scrolling all the way back to the top first — the
+          panel is long, and that is a lot of travel to reach one button.
+
+          Zero-height and sticky, so it costs no layout and simply rides at the
+          top of the scroll box. flex-end is logical: the inner edge of the
+          panel in both directions. It appears only after 120px of scroll, so
+          at rest it cannot sit on top of the Reset button beside it. */}
+      {onToggle && scrolledDeep && (
+        <div style={{
+          position: "sticky", top: 0, zIndex: 5, height: 0,
+          display: "flex", justifyContent: "flex-end", pointerEvents: "none",
+        }}>
+          <div style={{ padding: "10px 12px", pointerEvents: "auto" }}>
+            <SideToggle open={true} onToggle={onToggle} floating />
+          </div>
+        </div>
+      )}
+
       {/* Project header — styled to match the collapsible section bands */}
       <div style={{ padding: "14px 24px 18px", borderBottom: "1px solid var(--border-1)", borderInlineStart: "3px solid var(--ad-gold-500)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginInlineStart: -3 }}>

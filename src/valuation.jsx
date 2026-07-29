@@ -146,7 +146,7 @@ const SIDE_KEY = "reap_side_open";
 /* Collapse control. The chevron points the way the panel travels, which is
    toward the inline-start edge — LEFT in English, RIGHT in Arabic — so the
    glyph is mirrored under RTL by .sideToggle in tokens.css. */
-function SideToggle({ open, onToggle }) {
+function SideToggle({ open, onToggle, floating }) {
   return (
     <button
       type="button"
@@ -160,6 +160,8 @@ function SideToggle({ open, onToggle }) {
         display: "inline-flex", alignItems: "center", justifyContent: "center",
         border: "1px solid var(--border-1)", background: "var(--bg-1)",
         color: "var(--fg-2)", cursor: "pointer", borderRadius: 2, padding: 0,
+        /* Floating over the fields, it needs to lift off the page. */
+        ...(floating ? { boxShadow: "0 2px 10px -2px rgba(10,26,54,0.35)" } : null),
       }}
     >
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
@@ -172,6 +174,9 @@ function SideToggle({ open, onToggle }) {
 }
 
 function ValApp() {
+  // Whether the panel has been scrolled far enough that its header — and with
+  // it the collapse control — has left the view.
+  const [scrolledDeep, setScrolledDeep] = useState(false);
   const [sideOpen, setSideOpen] = useState(() => {
     try { return localStorage.getItem(SIDE_KEY) !== "0"; } catch (e) { return true; }
   });
@@ -325,7 +330,29 @@ function ValApp() {
         </aside>
       )}
       {sideOpen && (
-      <aside style={{ gridArea: "side", borderInlineEnd: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}>
+      <aside
+        onScroll={e => {
+          const deep = e.currentTarget.scrollTop > 120;
+          if (deep !== scrolledDeep) setScrolledDeep(deep);
+        }}
+        style={{ gridArea: "side", borderInlineEnd: "1px solid var(--border-1)", background: "var(--bg-1)", overflowY: "auto", minWidth: 0 }}
+      >
+        {/* Once the header has scrolled away the collapse control follows the
+            reader down, so collapsing from deep in the inputs does not mean
+            scrolling all the way back up to reach one button. Zero-height and
+            sticky, so it costs no layout; flex-end is the panel's inner edge in
+            both directions; and it only appears after 120px so that at rest it
+            cannot cover the Reset button beside it. */}
+        {scrolledDeep && (
+          <div style={{
+            position: "sticky", top: 0, zIndex: 5, height: 0,
+            display: "flex", justifyContent: "flex-end", pointerEvents: "none",
+          }}>
+            <div style={{ padding: "10px 12px", pointerEvents: "auto" }}>
+              <SideToggle open={true} onToggle={() => setSideOpen(false)} floating />
+            </div>
+          </div>
+        )}
         {/* Section 01 isn't collapsible, but wears the same band as 02+ */}
         <div style={{ ...BAND_STYLE, borderInlineStart: "3px solid var(--ad-gold-500)" }}>
           <BandLabel n="01" title="Property" />
