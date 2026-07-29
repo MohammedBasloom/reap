@@ -60,24 +60,131 @@
     .btn-land.icon { padding: 0; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
     /* ---------- Hero ---------- */
+    /* ---------- Hero ----------
+       Centred: statement, then the product beneath it at full width. The
+       previous two-column split gave the dashboard a third of the page at
+       400px, too small to read as anything but decoration. */
     .hero {
-      flex: 1; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px;
-      align-items: center; padding: 72px 40px 64px; max-width: 1180px; margin: 0 auto; width: 100%;
+      flex: 1; position: relative; isolation: isolate;
+      padding: 76px 40px 0; max-width: 1240px; margin: 0 auto; width: 100%;
+      text-align: center;
+    }
+    /* A single soft light behind the headline, so the dark section has a
+       centre of gravity and the mockup edge does not read as a hard cut. */
+    /* Spans the hero exactly — no width overhang and no centring transform.
+       An earlier version used inset-inline-start:50% with translateX(-50%),
+       which centres in LTR but resolves to right:50% under RTL and threw the
+       page 780px wide. The gradient does the centring instead. */
+    .hero::before {
+      content: ""; position: absolute; z-index: -1; pointer-events: none;
+      inset-inline: 0; top: -70px; height: 620px;
+      background: radial-gradient(58% 50% at 50% 42%, rgba(184,146,96,0.16), rgba(184,146,96,0) 70%);
     }
     .hero .eyebrow { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ad-gold-400); font-weight: 600; }
     .hero h1 {
-      font-family: var(--font-display); font-size: clamp(34px, 4.6vw, 58px); font-weight: 700;
-      line-height: 1.08; letter-spacing: -0.02em; color: white; margin-top: 16px;
+      font-family: var(--font-display); font-size: clamp(32px, 5.4vw, 64px); font-weight: 700;
+      line-height: 1.07; letter-spacing: -0.025em; color: white; margin: 16px auto 0;
+      max-width: 15ch;
     }
+    html[dir="rtl"] .hero h1 { max-width: 20ch; }
     .hero h1 em { font-style: normal; color: var(--ad-gold-400); }
-    .hero p.lede { margin-top: 18px; font-size: 17px; line-height: 1.65; color: rgba(255,255,255,0.68); max-width: 540px; }
-    .hero .cta { margin-top: 32px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .hero .stats { margin-top: 44px; display: flex; gap: 36px; flex-wrap: wrap; }
+    .hero p.lede {
+      margin: 20px auto 0; font-size: 17px; line-height: 1.7;
+      color: rgba(255,255,255,0.66); max-width: 620px;
+    }
+    .hero .cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .hero .btn-land { padding: 13px 26px; font-size: 12.5px; }
+    .hero .stats { margin-top: 34px; display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
     .hero .stat b { display: block; font-family: var(--font-display); font-size: 22px; color: white; font-weight: 600; }
     .hero .stat span { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
 
-    .arch-art { display: flex; align-items: center; justify-content: center; }
-    .mockhead svg { width: 15px; height: 13px; flex-shrink: 0; }
+    /* ---------- Hero product shot ----------
+       Tilted back a few degrees and rising into place, then settling flat —
+       enough motion to read as live software without turning the headline
+       into a carnival. It deliberately runs off the bottom of the section:
+       the page continues into it rather than the shot sitting in a box. */
+    .heroShot {
+      margin: 52px auto 0; max-width: 1180px; perspective: 1800px;
+      /* Cropped, not shrunk — the dashboard keeps its real proportions and
+         the fold cuts it, which is what makes it read as a screen. */
+      max-height: 400px; overflow: hidden;
+      /* The fade sits in the last fifth only. Starting it higher dimmed the
+         chart itself, which reads as a rendering fault rather than a fold. */
+      -webkit-mask-image: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0.5) 94%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0.5) 94%, rgba(0,0,0,0) 100%);
+    }
+    .dash {
+      transform-origin: top center;
+      animation: dashRise 1100ms var(--ease-out) both;
+      border-radius: 8px 8px 0 0; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.16); border-bottom: none;
+      background: var(--bg-1); color: var(--fg-1); text-align: start;
+      box-shadow: 0 -2px 0 rgba(255,255,255,0.05) inset, 0 40px 90px -26px rgba(0,0,0,0.75);
+    }
+    @keyframes dashRise {
+      from { opacity: 0; transform: translateY(56px) rotateX(12deg) scale(0.965); }
+      to   { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
+    }
+
+    /* Top bar — REAP's signature: the headline figures live up here. */
+    .dash .top {
+      display: flex; align-items: center; gap: 14px; flex-wrap: nowrap;
+      padding: 9px 14px; background: var(--ad-navy-900); border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .dash .top .bmark { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .dash .top .bmark b { font-size: 12px; letter-spacing: 0.15em; font-weight: 600; color: white; }
+    .dash .top .bmark span { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .dash .top .pname { font-size: 10.5px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+    .dash .top .tk { margin-inline-start: auto; display: flex; gap: 16px; flex-shrink: 0; }
+    .dash .top .tk div { text-align: end; }
+    .dash .top .tk span { display: block; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .dash .top .tk b { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: white; margin-top: 2px; }
+    .dash .top .tk div:first-child b { color: var(--ad-gold-400); }
+
+    /* Tab strip */
+    .dash .tabs { display: flex; gap: 18px; padding: 8px 14px; border-bottom: 1px solid var(--border-1); overflow: hidden; }
+    .dash .tabs i {
+      font-style: normal; font-size: 9.5px; letter-spacing: 0.04em; color: var(--fg-3);
+      white-space: nowrap; display: flex; gap: 4px; align-items: baseline;
+    }
+    .dash .tabs i u { text-decoration: none; font-family: var(--font-mono); font-size: 8px; color: var(--fg-4); }
+    .dash .tabs i.on { color: var(--ad-navy-900); font-weight: 600; border-bottom: 2px solid var(--ad-gold-500); padding-bottom: 5px; margin-bottom: -9px; }
+
+    .dash .pane { padding: 14px 16px 0; }
+    .dash .verdict { font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .dash .eyeb { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+
+    .dash .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+    .dash .c { border: 1px solid var(--border-1); background: var(--bg-1); padding: 10px 12px; }
+    .dash .c span { display: block; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+    .dash .c b { display: block; font-family: var(--font-display); font-size: 21px; font-weight: 600; margin-top: 4px; letter-spacing: -0.02em; }
+    .dash .c i { font-style: normal; font-size: 9px; color: var(--fg-3); }
+    .dash .c.up b { color: var(--ad-success); }
+
+    .dash .split { display: grid; grid-template-columns: 0.9fr 2fr; gap: 12px; margin-top: 12px; }
+    .dash .facts { border: 1px solid var(--border-1); padding: 10px 12px; }
+    .dash .facts div { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; padding: 4px 0; border-bottom: 1px dashed var(--border-1); }
+    .dash .facts div:last-child { border-bottom: none; }
+    .dash .facts span { color: var(--fg-3); }
+    .dash .facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .dash .chart { border: 1px solid var(--border-1); padding: 10px 12px 8px; }
+    .dash .chart svg { display: block; width: 100%; height: 200px; }
+    .dash .chart .cum { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: cumDraw 2200ms var(--ease-out) 500ms forwards; }
+    @keyframes cumDraw { to { stroke-dashoffset: 0; } }
+
+    @media (max-width: 1000px) {
+      .hero { padding: 60px 24px 0; }
+      .heroShot { margin-top: 40px; max-height: 320px; }
+      .dash .top .tk div:nth-child(n+3) { display: none; }
+      .dash .cards { grid-template-columns: repeat(2, 1fr); }
+      .dash .split { grid-template-columns: 1fr; }
+      .dash .facts { display: none; }
+    }
+    @media (max-width: 620px) {
+      .heroShot { max-height: 240px; }
+      .dash .tabs i:nth-child(n+5) { display: none; }
+      .dash .top .pname { display: none; }
+    }
 
     /* ---------- Services ---------- */
     .services { background: var(--bg-2); color: var(--fg-1); padding: 72px 40px 84px; }
@@ -192,41 +299,6 @@
       transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
       transition-delay: calc(var(--i) * 520ms + 420ms);
     }
-
-    /* ---------- Hero product mockup ---------- */
-    .mockwrap { position: relative; }
-    .mockup {
-      position: relative; width: min(400px, 34vw);
-      background: var(--bg-1); color: var(--fg-1);
-      border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; overflow: hidden;
-      box-shadow: 0 30px 60px -18px rgba(0,0,0,0.55), 0 8px 20px -8px rgba(0,0,0,0.4);
-    }
-    .chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: var(--ad-navy-800); }
-    .mdot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.25); }
-    .maddr { margin-inline-start: 8px; font-size: 10px; letter-spacing: 0.06em; color: rgba(255,255,255,0.5); font-family: var(--font-mono); }
-    .mockhead { display: flex; align-items: center; gap: 8px; padding: 11px 16px; border-bottom: 1px solid var(--border-1); }
-    .mockhead b { font-size: 12px; letter-spacing: 0.14em; font-weight: 600; color: var(--ad-navy-900); }
-    .mtag { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
-    .mchip {
-      margin-inline-start: auto; font-size: 9px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--ad-success); border: 1px solid color-mix(in oklab, var(--ad-success) 40%, white);
-      background: color-mix(in oklab, var(--ad-success) 8%, white); padding: 3px 8px; border-radius: 2px;
-    }
-    .mkpis { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border-1); }
-    .mkpi { padding: 11px 14px; border-inline-end: 1px solid var(--border-1); }
-    .mkpi:last-child { border-inline-end: none; }
-    .mkpi span { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; display: block; }
-    .mkpi b { font-family: var(--font-mono); font-size: 14.5px; font-weight: 600; color: var(--ad-navy-900); margin-top: 4px; display: block; }
-    .mkpi:first-child b { color: var(--ad-gold-600); }
-    .mchartwrap { padding: 12px 14px 2px; }
-    .mchartwrap svg { display: block; width: 100%; height: 86px; }
-    .mfoot {
-      display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
-      padding: 6px 14px 12px; font-size: 9px; color: var(--fg-3); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600;
-    }
-    .mfoot .sw { display: inline-block; width: 8px; height: 8px; margin-inline-end: 5px; vertical-align: -1px; }
-    .mfoot .sw.navy { background: var(--ad-navy-500); }
-    .mfoot .sw.gold { background: var(--ad-gold-500); }
 
     /* ---------- Trust strip ---------- */
     .trust { border-top: 1px solid rgba(255,255,255,0.08); }
@@ -498,6 +570,11 @@
       .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
 
+      /* The hero shot is simply present, not flown in, and the cumulative
+         line is drawn complete rather than tracing itself. */
+      .dash { animation: none; opacity: 1; transform: none; }
+      .dash .chart .cum { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+
       /* The weighting bars are drawn already full rather than growing. */
       .shot .ap .fill { width: var(--w); transition: none; }
       .shot { transition: none; }
@@ -589,8 +666,9 @@
     .avatar-menu .mbtn.primary { background: var(--ad-navy-800); color: white; }
 
     @media (max-width: 860px) {
-      .hero { grid-template-columns: 1fr; padding: 48px 24px; }
-      .arch-art { display: none; }
+      /* The hero is a single centred column now; its own breakpoints above
+         handle the shot, so only the padding is set here. */
+      .hero { padding: 48px 24px 0; }
       .cards { grid-template-columns: 1fr; }
       .topbar { padding: 14px 20px; }
 
@@ -659,67 +737,85 @@
 
   <!-- ============ HERO ============ -->
   <div class="hero">
-    <div>
-      <div class="eyebrow" data-ar="دراسة الجدوى · التقييم · قرارات جاهزة">Feasibility · Valuation · Decision-ready</div>
-      <h1 data-ar="حلّل، أدرس، قيّم <span style='white-space:nowrap'>أي فرصة عقارية</span> <span style='white-space:nowrap'>— <em>باحترافية.</em></span>">Assess any real estate opportunity — <em>like a professional.</em></h1>
-      <p class="lede" data-ar="تحوّل REAP التحليل العقاري المعقّد إلى نماذج حيّة موجَّهة. نفّذ دراسة جدوى تطويرية كاملة أو قيّم عقارًا بأساليب معتمدة عالميًا — دون الحاجة إلى خلفية مالية.">
-        REAP turns complex real-estate analysis into guided, live models. Run a full development
-        feasibility study or value a property with globally recognised methods — no financial
-        background required.
-      </p>
-      <div class="cta">
-        <button class="btn-land primary" id="btnStart" data-ar="ابدأ الآن — مجانًا">Get started — it's free</button>
-        <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
-      </div>
-      <div class="stats">
-        <div class="stat"><b>2</b><span data-ar="منصتا تحليل">Analysis platforms</span></div>
-        <div class="stat"><b>10+</b><span data-ar="لوحة نتائج حيّة">Live dashboards</span></div>
-        <div class="stat"><b>IVS</b><span data-ar="أساليب معتمدة دوليًا">Aligned methods</span></div>
-      </div>
+    <div class="eyebrow" data-ar="دراسة الجدوى · التقييم · قرارات جاهزة">Feasibility · Valuation · Decision-ready</div>
+    <h1 data-ar="حلّل أي فرصة عقارية <em>باحترافية.</em>">Assess any real estate opportunity <em>like a professional.</em></h1>
+    <p class="lede" data-ar="تحوّل REAP التحليل العقاري المعقّد إلى نماذج حيّة موجَّهة. نفّذ دراسة جدوى تطويرية كاملة أو قيّم عقارًا بأساليب معتمدة عالميًا — دون الحاجة إلى خلفية مالية.">
+      REAP turns complex real-estate analysis into guided, live models. Run a full development
+      feasibility study or value a property with globally recognised methods — no financial
+      background required.
+    </p>
+    <div class="cta">
+      <button class="btn-land primary" id="btnStart" data-ar="ابدأ الآن — مجانًا">Get started — it's free</button>
+      <button class="btn-land" id="btnExplore" data-ar="استكشف كضيف">Explore as guest</button>
     </div>
-    <div class="arch-art">
-      <div class="mockwrap">
-        <div class="mockup" aria-hidden="true">
-          <div class="chrome">
-            <span class="mdot"></span><span class="mdot"></span><span class="mdot"></span>
-            <span class="maddr">www.reapinsights.com</span>
+    <div class="stats">
+      <div class="stat"><b>2</b><span data-ar="منصتا تحليل">Analysis platforms</span></div>
+      <div class="stat"><b>10+</b><span data-ar="لوحة نتائج حيّة">Live dashboards</span></div>
+      <div class="stat"><b>IVS</b><span data-ar="أساليب معتمدة دوليًا">Aligned methods</span></div>
+    </div>
+
+    <!-- The product itself, at full width and running off the fold. Figures are
+         the engine's own output for the worked scheme shown further down the
+         page, so the hero and the snapshots describe one project rather than
+         two. -->
+    <div class="heroShot">
+      <div class="dash" aria-hidden="true">
+        <div class="top">
+          <span class="bmark">
+            <svg width="15" height="13" viewBox="4 16 88 78" fill="#fff"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
+            <b>REAP</b><span data-ar="النمذجة المالية">Financial Modeling</span>
+          </span>
+          <span class="pname" data-ar="مشروع الواجهة — الرياض · متعدد الاستخدامات">Riyadh Frontage — mixed-use</span>
+          <span class="tk">
+            <div><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b></div>
+            <div><span data-ar="NPV">NPV</span><b>26.6M</b></div>
+            <div><span data-ar="الربح">Profit</span><b>85.7M</b></div>
+            <div><span data-ar="إجمالي التكلفة">Total cost</span><b>191.0M</b></div>
+          </span>
+        </div>
+
+        <div class="tabs">
+          <i class="on"><u>01</u><span data-ar="الملخص">Summary</span></i>
+          <i><u>02</u><span data-ar="التكاليف">Costs</span></i>
+          <i><u>03</u><span data-ar="البرنامج والإيرادات">Program</span></i>
+          <i><u>04</u><span data-ar="التدفقات النقدية">Cashflow</span></i>
+          <i><u>05</u><span data-ar="رأس المال">Capital</span></i>
+          <i><u>06</u><span data-ar="العوائد">Returns</span></i>
+          <i><u>07</u><span data-ar="الحساسية">Sensitivity</span></i>
+          <i><u>08</u><span data-ar="السيناريوهات">Scenarios</span></i>
+          <i><u>09</u><span data-ar="مونت كارلو">Monte Carlo</span></i>
+          <i><u>10</u><span data-ar="المخاطر">Risk</span></i>
+        </div>
+
+        <div class="pane">
+          <div class="eyeb" data-ar="لجنة الاستثمار · الملخص">Investment committee · summary</div>
+          <div class="verdict" data-ar="المشروع يتجاوز العائد المستهدف">The project clears its target return</div>
+
+          <div class="cards">
+            <div class="c up"><span data-ar="IRR الملكية">Equity IRR</span><b>20.5%</b><i data-ar="المستهدف 10.0%">target 10.0%</i></div>
+            <div class="c"><span data-ar="NPV الملكية">Equity NPV</span><b data-ar="26.6M ر.س">SAR 26.6M</b><i data-ar="بخصم 10.0%">at 10.0%</i></div>
+            <div class="c"><span data-ar="مضاعف الملكية">Equity multiple</span><b>2.90×</b><i data-ar="العائد 190.2%">ROI 190.2%</i></div>
+            <div class="c"><span data-ar="الربح (بعد التمويل)">Profit (levered)</span><b data-ar="85.7M ر.س">SAR 85.7M</b><i data-ar="تغطية الفوائد 3.36×">cover 3.36×</i></div>
           </div>
-          <div class="mockhead">
-            <svg width="15" height="13" viewBox="4 16 88 78" fill="#102040" aria-hidden="true"><path d="M10 88 V67 C10 60.9 14.9 56 21 56 C27.1 56 32 60.9 32 67 V88 Z"/><path d="M37 88 V51 C37 44.9 41.9 40 48 40 C54.1 40 59 44.9 59 51 V88 Z"/><path d="M64 88 V33 C64 26.9 68.9 22 75 22 C81.1 22 86 26.9 86 33 V88 Z"/></svg>
-            <b>REAP</b>
-            <span class="mtag" data-ar="لوحة نتائج حيّة">Live dashboard</span>
-            <span class="mchip" data-ar="جاهز للقرار">Decision-ready</span>
-          </div>
-          <div class="mkpis">
-            <div class="mkpi"><span data-ar="عائد الملكية IRR">Equity IRR</span><b class="tabnum">18.4%</b></div>
-            <div class="mkpi"><span data-ar="صافي القيمة NPV">NPV</span><b class="tabnum">SAR 24.6M</b></div>
-            <div class="mkpi"><span data-ar="فترة الاسترداد">Payback</span><b class="tabnum">4.2 yrs</b></div>
-          </div>
-          <div class="mchartwrap">
-            <svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
-              <line x1="4" y1="56" x2="296" y2="56" stroke="#E5E2D8" stroke-width="1"/>
-              <rect x="6"   y="56" width="11" height="16" fill="#B0BBD0"/>
-              <rect x="24"  y="56" width="11" height="20" fill="#B0BBD0"/>
-              <rect x="42"  y="56" width="11" height="13" fill="#B0BBD0"/>
-              <rect x="60"  y="56" width="11" height="7"  fill="#B0BBD0"/>
-              <rect x="78"  y="51" width="11" height="5"  fill="#4A5F8E"/>
-              <rect x="96"  y="48" width="11" height="8"  fill="#4A5F8E"/>
-              <rect x="114" y="45" width="11" height="11" fill="#4A5F8E"/>
-              <rect x="132" y="42" width="11" height="14" fill="#4A5F8E"/>
-              <rect x="150" y="39" width="11" height="17" fill="#4A5F8E"/>
-              <rect x="168" y="36" width="11" height="20" fill="#4A5F8E"/>
-              <rect x="186" y="33" width="11" height="23" fill="#4A5F8E"/>
-              <rect x="204" y="30" width="11" height="26" fill="#4A5F8E"/>
-              <rect x="222" y="27" width="11" height="29" fill="#4A5F8E"/>
-              <rect x="240" y="24" width="11" height="32" fill="#4A5F8E"/>
-              <rect x="258" y="22" width="11" height="34" fill="#4A5F8E"/>
-              <rect x="276" y="20" width="11" height="36" fill="#4A5F8E"/>
-              <path d="M6,84 C44,88 66,80 100,66 S 210,24 294,8" fill="none" stroke="#B89260" stroke-width="2.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="mfoot">
-            <span data-ar="التدفق النقدي التراكمي">Cumulative cashflow</span>
-            <span><i class="sw navy"></i><span data-ar="تدفق الفترة">Period cash</span>&nbsp;&nbsp;<i class="sw gold"></i><span data-ar="التراكمي">Cumulative</span></span>
+
+          <div class="split">
+            <div class="facts">
+              <div><span data-ar="مساحة الأرض">Land area</span><b>12,000 m²</b></div>
+              <div><span data-ar="إجمالي مسطحات البناء GFA">GFA</span><b>32,760 m²</b></div>
+              <div><span data-ar="المساحة الصافية NSA">Net saleable</span><b>25,553 m²</b></div>
+              <div><span data-ar="إجمالي الوحدات">Units</span><b>67</b></div>
+              <div><span data-ar="ذروة الدين">Peak debt</span><b>89.2M</b></div>
+              <div><span data-ar="الأفق الزمني">Horizon</span><b data-ar="7.3 سنة">7.3 yrs</b></div>
+            </div>
+            <div class="chart">
+              <svg viewBox="0 0 620 150" preserveAspectRatio="none">
+                <line x1="0" y1="96" x2="620" y2="96" stroke="#E5E2D8" stroke-width="1"/>
+                <!-- Costs below the line, revenue above — the shape the Summary tab draws. -->
+                <path d="M0,96 L0,120 C90,132 150,140 220,138 C300,136 380,128 470,116 C540,107 590,101 620,99 L620,96 Z" fill="#B0392B" opacity="0.82"/>
+                <path d="M0,96 L0,96 C90,96 150,94 220,88 C300,81 380,60 470,34 C540,17 590,10 620,8 L620,96 Z" fill="#2E7D5B" opacity="0.86"/>
+                <path class="cum" d="M0,120 C90,124 150,122 220,112 C300,100 380,74 470,46 C540,27 590,18 620,15" fill="none" stroke="#0F1E38" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
