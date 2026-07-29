@@ -272,11 +272,17 @@ function autoHorizonMonths(input) {
     ? Math.max(0, input.preSalesStartMonth | 0)
     : predesign;
   const conEnd = predesign + construction;
-  // No tail. The timeline ends on the month the project stops trading, which is
-  // also the month the exit lands, so the last year on every table is a year the
-  // project is actually in. A three-month tail beyond it only ever produced an
-  // extra, near-empty year.
-  return Math.max(12, projectEndMonth(input.components, conEnd, preSalesStart));
+  /* A DURATION in months, which is what the name says and what the sidebar
+     prints. projectEndMonth returns the last month INDEX, and a project running
+     from month 0 to month 83 lasts 84 months — hence the + 1. Returning the
+     index here made 24 months of build plus a 60-month hold display as 83
+     months (6.9 yrs) instead of 84 (7.0).
+
+     No tail. The timeline ends on the month the project stops trading, which is
+     also the month the exit lands, so the last year on every table is a year the
+     project is actually in. A three-month tail beyond it only ever produced an
+     extra, near-empty year. */
+  return Math.max(12, projectEndMonth(input.components, conEnd, preSalesStart) + 1);
 }
 
 /* Revenue for one unit (a plain component, or one sub of a mixed-use
@@ -597,16 +603,27 @@ function runFeasibility(input) {
 
   /* ---------- Auto horizon (derived from project assumptions) ----------
      Horizon = predesign + construction + max(sell-down, operating), ending ON
-     the last trading month. A user-supplied `horizonMonths` acts as a floor.  */
-  // Shared with the sidebar's horizon read-out via autoHorizonMonths(), so the
-  // two can never disagree about how long the project runs. Keep this line and
-  // that function identical.
+     the last trading month. A user-supplied `horizonMonths` acts as a floor.
+
+     TWO QUANTITIES, AND THEY ARE NOT THE SAME NUMBER. `endMonth` and `horizon`
+     are month INDICES, zero-based: the last month the project trades. The
+     `*Months` values are DURATIONS, and a run from month 0 to month 83 lasts
+     84 months, not 83.
+
+     Keeping only the index and letting each caller decide was the mistake.
+     Twenty-four months of predesign and construction plus a 60-month hold is
+     84 months, but the sidebar read the index straight out and displayed "83
+     months (6.9 yrs)" — a project a month shorter than its own inputs. The
+     user-pinned horizon is a duration too, so comparing it against an index
+     silently added a month to whatever was typed. Both are named here so
+     neither can be mistaken for the other again. */
   const endMonth = projectEndMonth(components, conEnd, preSalesStartMonth);
-  const autoHorizon = Math.max(12, endMonth);
-  const userHorizon = Math.max(0, a.horizonMonths | 0);
-  // If the user pinned a horizon, honour it as a minimum (never shorter than auto).
-  const horizon = userHorizon > autoHorizon ? userHorizon : autoHorizon;
-  const arr = () => new Array(horizon + 1).fill(0);
+  const autoHorizonMo = Math.max(12, endMonth + 1);
+  const userHorizonMo = Math.max(0, a.horizonMonths | 0);
+  // A pinned horizon is a floor, never shorter than the project itself.
+  const horizonMonths = Math.max(autoHorizonMo, userHorizonMo);
+  const horizon = horizonMonths - 1;                    // last valid month INDEX
+  const arr = () => new Array(horizonMonths).fill(0);
 
   /* ---------- Cashflow streams ---------- */
 
@@ -1189,8 +1206,8 @@ function runFeasibility(input) {
       devCostExFinance, totalExit, totalNOI,
       totalGrossIncome, totalOpex,
       totalAllocationPct, allocationUnused, allocationOverflow,
-      horizonMonths: horizon,
-      autoHorizonMonths: autoHorizon,
+      // Durations, not indices — these are what the UI prints as "N months".
+      horizonMonths, autoHorizonMonths: autoHorizonMo,
     },
     cashflow: {
       months: Array.from({ length: horizon + 1 }, (_, i) => i),
@@ -1300,18 +1317,13 @@ function runWaterfall(input, result) {
 
      `horizon` here is a COUNT of months, not a last index — everything below
      depends on that reading (`new Array(horizon)`, `.slice(0, horizon)`,
-     `horizon - 1`, and a `m < horizon` sweep). autoHorizonMonths is a last
-     index, so the count is one more. Conflating the two silently zeroes the
-     final month: `new Array(n)[n] += v` yields NaN, so the buckets and the
-     per-month party flows disagree with each other rather than throwing.
-     It matters now in a way it did not before — the exit lands ON the last
-     month of fund life, so that month carries the largest distribution of the
-     whole fund. While the horizon ran three months past the exit, an
-     off-by-one here fell in empty months and cost nothing. */
-  const lastMonth = Math.min(
-    Math.max(0, equityCF.length - 1),
-    numOr(result.kpi.autoHorizonMonths, equityCF.length - 1));
-  const horizon = lastMonth + 1;
+     `horizon - 1`, and a `m < horizon` sweep). autoHorizonMonths is a duration
+     too, so the two agree directly. They did not always: while it returned a
+     last index this needed a + 1, and getting that wrong silently zeroed the
+     final month — `new Array(n)[n] += v` yields NaN, so the buckets and the
+     per-month party flows disagreed with each other rather than throwing, and
+     the final month is the one carrying the exit. */
+  const horizon = Math.min(equityCF.length, numOr(result.kpi.autoHorizonMonths, equityCF.length));
 
   // Normalise equity splits to sum to 1
   const lpIn = +f.lpEquityPct || 0;

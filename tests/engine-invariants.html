@@ -204,7 +204,8 @@
       // A pinned horizon deliberately runs past the exit; only the auto one
       // is required to land on the last active month.
       if ((r.kpi.horizonMonths || 0) > (r.kpi.autoHorizonMonths || 0)) return null;
-      const last = r.kpi.autoHorizonMonths || 0;
+      // autoHorizonMonths is a DURATION; the last month index is one less.
+      const last = Math.max(0, (r.kpi.autoHorizonMonths || 0) - 1);
       const live =
         Math.abs((cf.sales || [])[last] || 0) > TOL ||
         Math.abs((cf.noi || [])[last] || 0) > TOL ||
@@ -337,7 +338,7 @@
        so cash accumulated for years with the debt already at zero. */
     ["cash is not hoarded once the debt is clear", (r) => {
       const cf = r.cashflow;
-      const exit = r.kpi.autoHorizonMonths || 0;
+      const exit = Math.max(0, (r.kpi.autoHorizonMonths || 0) - 1);   // duration → last index
       for (let m = 1; m < exit - 1; m++) {
         const debt = cf.debtBalance[m] || 0;
         const cash = cf.cashBalance[m] || 0;
@@ -593,7 +594,7 @@
     try {
       const P = Object.assign({}, baseProject, { horizonMonths: 0, predesignMonths: 12, constructionMonths: 12, preSalesStartMonth: 6 });
       const run = (comps) => F.runFeasibility(Object.assign({}, P, { components: comps })).kpi.autoHorizonMonths;
-      const conEndPlusTail = 12 + 12 + 3;
+      const conEndMonths = 12 + 12;   // no tail any more — the horizon ends when trading does
 
       const leaseNoTiming = { id: "x", name: "X", enabled: true, gfaSharePct: 1.0, costPerSqmGFA: 3000,
         efficiency: 0.78, mode: "lease", revenueBasis: "sqm", rentPerSqmYr: 1200, occupancy: 0.85,
@@ -602,11 +603,28 @@
       const mixed = (subs) => ({ id: "m", kind: "mixed", name: "M", mode: "mixed", enabled: true,
         allocationPct: 1.0, massingMode: "far", far: 3.0, siteWorkPct: 0.07, subs });
 
-      if (run([mixed([leaseNoTiming])]) <= conEndPlusTail + 1) fails.push("a leased space with no operating period collapsed the horizon");
-      if (run([mixed([saleNoTiming])])  <= conEndPlusTail + 1) fails.push("a sale space with no sales period collapsed the horizon");
-      if (run([Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined })]) <= conEndPlusTail + 1) {
+      if (run([mixed([leaseNoTiming])]) <= conEndMonths + 1) fails.push("a leased space with no operating period collapsed the horizon");
+      if (run([mixed([saleNoTiming])])  <= conEndMonths + 1) fails.push("a sale space with no sales period collapsed the horizon");
+      if (run([Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined })]) <= conEndMonths + 1) {
         fails.push("a plain leased component with no operating period collapsed the horizon");
       }
+
+      /* The horizon is a DURATION and must equal what the user typed in the
+         sidebar: predesign + construction + the longest hold or sell-down.
+         6 + 18 + 60 is 84 months, seven years to the month. It reported 83
+         (6.9 yrs) while the exported figure was the last month INDEX rather
+         than a count — a project a month shorter than its own inputs. */
+      const T = Object.assign({}, baseProject, { horizonMonths: 0, predesignMonths: 6, constructionMonths: 18, preSalesStartMonth: 6 });
+      const hold = (months) => Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined, operatingPeriodMonths: months });
+      [[60, 84], [12, 36], [120, 144]].forEach(([period, expected]) => {
+        const got = F.runFeasibility(Object.assign({}, T, { components: [hold(period)] })).kpi.autoHorizonMonths;
+        if (got !== expected) fails.push(`6 + 18 + ${period} should be ${expected} months, got ${got}`);
+        const shown = F.autoHorizonMonths(Object.assign({}, T, { components: [hold(period)] }));
+        if (shown !== expected) fails.push(`the sidebar read-out says ${shown} months, not ${expected}`);
+      });
+      // The cashflow must actually be that long, or the number is a label on nothing.
+      const len = F.runFeasibility(Object.assign({}, T, { components: [hold(60)] })).cashflow.months.length;
+      if (len !== 84) fails.push(`horizon says 84 months but the cashflow carries ${len}`);
 
       // A mixed building must reach exactly as far as the plain equivalent.
       const plain = Object.assign({ id: "p", kind: "retail" }, leaseNoTiming, { subs: undefined, operatingPeriodMonths: 60 });
@@ -672,7 +690,9 @@
       // Rent must stop at exit, never run to the horizon.
       const rf = L.cashflow.landRent || [];
       const lastPaid = rf.reduce((last, v, i) => (v !== 0 ? i : last), -1);
-      if (lastPaid > (L.kpi.autoHorizonMonths || 0)) fails.push(`rent charged at month ${lastPaid}, past the project exit`);
+      // autoHorizonMonths is a DURATION, so the last valid month index is one less.
+      const lastMonthIdx = Math.max(0, (L.kpi.autoHorizonMonths || 0) - 1);
+      if (lastPaid > lastMonthIdx) fails.push(`rent charged at month ${lastPaid}, past the project exit`);
 
       /* Accrued monthly, like OpEx — NOT as an annual lump. A once-a-year
          payment spikes the funding need far above that month's operating
