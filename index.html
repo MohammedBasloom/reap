@@ -73,7 +73,10 @@
        scrolling swaps them IN PLACE and the page only moves on once the track
        is spent. Height is what buys the dwell: roughly a third of a screen
        holding the first, a third crossing over, the rest holding the second. */
-    .heroes { position: relative; height: 260vh; }
+    /* 210vh, not 260: at 260 the second hero sat finished and unchanging for
+       another 600px before the pin let go, which is a long time to scroll
+       through a screen that is not doing anything. */
+    .heroes { position: relative; height: 210vh; }
     /* Two rows: the heroes share the first and are centred in it, the trust
        strip holds the floor. The strip is part of the hero screen rather than
        a band that appears once the pin lets go — it describes the platform, so
@@ -1664,6 +1667,7 @@
 
   (function heroHandover() {
     const stage = $("heroStage");
+    const pin = stage ? stage.querySelector(".heroPin") : null;
     const heroes = stage ? Array.prototype.slice.call(stage.querySelectorAll("[data-hero]")) : [];
     if (!stage || heroes.length < 2) return;
     const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1696,7 +1700,12 @@
       queued = false;
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const r = stage.getBoundingClientRect();
-      const travel = Math.max(1, r.height - vh);
+      /* The distance the pin actually stays stuck for is the track minus the
+         PIN, not the track minus the viewport — the pin is a top bar shorter
+         than the screen. Using the viewport overstated the travel and let the
+         swap finish early, before the pin let go. */
+      const pinH = pin ? pin.getBoundingClientRect().height : vh;
+      const travel = Math.max(1, r.height - pinH);
       const p = Math.max(0, Math.min(1, -r.top / travel));
       const f1 = 1 - clamp01((p - HOLD) / (OUT_END - HOLD));
       const f2 = clamp01((p - IN_START) / (HOLD + FADE - IN_START));
@@ -1708,7 +1717,16 @@
         else heroes[i].removeAttribute("data-lead");
       }
     };
+    /* Paint straight from the scroll event rather than only inside a
+       requestAnimationFrame callback. The work is one getBoundingClientRect
+       and two custom-property writes, so it is cheap enough to run inline, and
+       depending on rAF meant that anywhere it does not fire — a background
+       tab, a throttled or non-compositing window — the heroes simply never
+       swapped: the first one stayed pinned for the whole track and the reader
+       scrolled two and a half screens of empty background. rAF is still used
+       to coalesce bursts, but it is no longer what correctness rests on. */
     const onScroll = function () {
+      paint();
       if (queued) return;
       queued = true;
       window.requestAnimationFrame(paint);
