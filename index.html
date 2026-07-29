@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260903"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260903" />
+  <script src="assets/i18n.js?v=20260904"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260904" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -874,7 +874,20 @@
       background: var(--bg-1); color: var(--fg-1); width: 100%; max-width: 420px;
       padding: 34px 36px 30px; box-shadow: var(--shadow-lg); position: relative;
     }
-    .modal .close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 20px; color: var(--fg-3); cursor: pointer; }
+    /* inset-inline-end, not right: in Arabic the close button belongs on the
+       left of the sheet, and a physical `right` put it over the heading. */
+    .modal .close { position: absolute; top: 12px; inset-inline-end: 16px; background: none; border: none; font-size: 20px; color: var(--fg-3); cursor: pointer; }
+
+    /* ---------- Desktop-only notice ---------- */
+    .deskModal { max-width: 460px; }
+    .deskMark {
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--ad-gold-500); color: var(--ad-gold-600);
+      border-radius: 3px; margin-bottom: 16px;
+    }
+    .deskModal h3 { line-height: 1.25; }
+    .deskBody { font-size: 13.5px; line-height: 1.72; color: var(--fg-2); margin-top: 12px; }
+    .deskModal .submit { margin-top: 22px; }
     .modal h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
     .modal .sub { font-size: 12.5px; color: var(--fg-3); margin-top: 6px; }
     .modal label { display: block; margin-top: 16px; font-size: 11px; color: var(--fg-2); }
@@ -1014,7 +1027,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260903"></script>
+<script src="assets/mobile-notice.js?v=20260904"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1587,6 +1600,33 @@
 </div>
 
 <!-- ============ AUTH MODAL ============ -->
+<!-- Shown instead of opening a platform on a small screen. The apps put a full
+     assumptions panel beside live dashboards and wide financial tables; that
+     does not degrade gracefully to a phone, so the honest answer is to say so
+     rather than let someone into a workspace they cannot use. -->
+<div class="overlay" id="deskOverlay">
+  <div class="modal deskModal">
+    <button class="close" id="deskClose" aria-label="Close">×</button>
+    <div class="deskMark" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" />
+      </svg>
+    </div>
+    <h3 data-ar="هذه المنصة تحتاج شاشة أكبر">This platform needs a larger screen</h3>
+    <p class="deskBody" data-ar="منصّتا التحليل في REAP مصمّمتان للعمل على شاشة حاسوب: تعرض كل منهما لوحة الفرضيات كاملة إلى جانب لوحات نتائج حيّة وجداول مالية عريضة ورسومًا متعددة السلاسل — وهي عناصر لا تُقرأ ولا تُعدَّل بشكل موثوق على شاشة الجوال.">
+      REAP's analysis platforms are built for a desktop screen: each puts a full assumptions
+      panel beside live dashboards, wide financial tables and multi-series charts — none of
+      which can be read or edited reliably on a phone.
+    </p>
+    <p class="deskBody" data-ar="افتح REAP من حاسوب محمول أو مكتبي للمتابعة. ويمكنك في هذه الأثناء الاطلاع على وصف المنصّتين وإمكاناتهما من هذه الصفحة.">
+      Please open REAP on a laptop or desktop to continue. In the meantime you can read about
+      both platforms and what they cover from this page.
+    </p>
+    <button class="submit" id="deskOk" data-ar="حسنًا، فهمت">Got it</button>
+  </div>
+</div>
+
 <div class="overlay" id="authOverlay">
   <div class="modal">
     <button class="close" id="authClose">×</button>
@@ -1631,8 +1671,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260903"></script>
-<script src="assets/auth.js?v=20260903"></script>
+<script src="assets/config.js?v=20260904"></script>
+<script src="assets/auth.js?v=20260904"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -1698,11 +1738,48 @@
 
   function toServices() { document.querySelector(".services").scrollIntoView({ behavior: "smooth" }); }
 
+  /* ---------- The only door to a platform ----------
+     Every route in — a service card, a guest link, a fresh signup, a login
+     with a platform pending — ends here, so the screen-size check cannot be
+     walked around. Gating launch() alone would have let someone sign up on a
+     phone and land in the workspace anyway, since the post-auth paths navigate
+     on their own.
+
+     860px matches the breakpoint the mobile notice already uses, so the page
+     warns and refuses at the same width rather than at two different ones. */
+  function isSmallScreen() {
+    return window.matchMedia("(max-width: 860px)").matches;
+  }
+  function openPlatform(app) {
+    if (isSmallScreen()) {
+      pendingApp = null;
+      closeAuth();
+      $("deskOverlay").classList.add("open");
+      return false;
+    }
+    window.location.href = app;
+    return true;
+  }
+
   async function launch(app) {
+    if (isSmallScreen()) { openPlatform(app); return; }
     const user = await reapAuth.getUser();
-    if (user || reapAuth.isGuest()) { window.location.href = app; return; }
+    if (user || reapAuth.isGuest()) { openPlatform(app); return; }
     openAuth("signup", app);
   }
+
+  // Desktop-only notice: close on the ×, the button, the backdrop, or Escape.
+  (function wireDesktopNotice() {
+    const ov = $("deskOverlay");
+    if (!ov) return;
+    const hide = () => ov.classList.remove("open");
+    $("deskClose").onclick = hide;
+    $("deskOk").onclick = hide;
+    ov.addEventListener("click", (e) => { if (e.target === ov) hide(); });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && ov.classList.contains("open")) hide();
+    });
+  })();
 
   // Wire up
   $("btnLogin").onclick = () => openAuth("login");
@@ -1763,7 +1840,7 @@
   if (location.hash.includes("type=recovery")) openAuth("newpw");
   $("guestLink1").onclick = $("guestLink2").onclick = () => {
     reapAuth.enterGuest();
-    if (pendingApp) { window.location.href = pendingApp; }
+    if (pendingApp) { openPlatform(pendingApp); }
     else { closeAuth(); toServices(); }
   };
   // Service cards launch their platform through the auth-aware flow
@@ -1786,7 +1863,15 @@
     if (data.session) {
       reapAuth.clearGuest();
       msg(m, L("Account created — taking you in…", "تم إنشاء الحساب — جارٍ الدخول…"), "ok");
-      setTimeout(() => { window.location.href = pendingApp || "index.html"; if (!pendingApp) window.location.reload(); }, 700);
+      /* A signup on a phone still creates the account and signs the user in —
+         it just stops at the door rather than dropping them into a workspace
+         they cannot use. */
+      const small = isSmallScreen();
+      setTimeout(() => {
+        if (pendingApp && !small) { window.location.href = pendingApp; return; }
+        if (pendingApp && small) { openPlatform(pendingApp); return; }
+        window.location.reload();
+      }, 700);
       if (!pendingApp) { await refreshSessionUI(); closeAuth(); }
     } else {
       msg(m, L("Account created. Please check your inbox and confirm your email, then log in.", "تم إنشاء الحساب. فضلًا افتح بريدك الإلكتروني وأكّد التسجيل ثم سجّل الدخول."), "ok");
@@ -1802,7 +1887,7 @@
     $("liSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
     reapAuth.clearGuest();
-    if (pendingApp) { window.location.href = pendingApp; return; }
+    if (pendingApp) { openPlatform(pendingApp); return; }
     closeAuth();
     await refreshSessionUI();
   };
