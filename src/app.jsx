@@ -63,22 +63,15 @@ const SAMPLE_INPUT = {
 // empty program — no components selected until the user picks from the tiles.
 const STORAGE_KEY = "ad_feas_v5";
 
-/* Whether the input panel is expanded. Remembered, because it is a working
-   preference rather than a per-session one: someone who collapses it to read
-   the dashboards wants it collapsed next time too. */
-const SIDE_KEY = "reap_side_open";
-function useSideOpen() {
-  const [open, setOpen] = useState(() => {
-    try { return localStorage.getItem(SIDE_KEY) !== "0"; } catch (e) { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(SIDE_KEY, open ? "1" : "0"); } catch (e) {}
-  }, [open]);
-  return [open, setOpen];
-}
-
 function App() {
-  const [sideOpen, setSideOpen] = useSideOpen();
+  /* The panel always opens with the page, and collapsing is a deliberate act
+     for the session you are in.
+
+     It used to remember the choice across visits, which meant someone who had
+     collapsed it once came back to a 46px rail and no assumptions in sight —
+     the inputs are the point of arriving here, so hiding them before the user
+     has asked is the wrong default. Collapse is a reading aid, not a setting. */
+  const [sideOpen, setSideOpen] = useState(true);
   const [input, setInput] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);

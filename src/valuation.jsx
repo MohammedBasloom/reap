@@ -139,10 +139,6 @@ function PctInput({ value, onChange }) {
 }
 
 /* ---------- App ---------- */
-/* Shared with the modeling app via the same key, so collapsing the panel in
-   one and switching to the other keeps the working width the user chose. */
-const SIDE_KEY = "reap_side_open";
-
 /* Collapse control. The chevron points the way the panel travels, which is
    toward the inline-start edge — LEFT in English, RIGHT in Arabic — so the
    glyph is mirrored under RTL by .sideToggle in tokens.css. */
@@ -177,12 +173,10 @@ function ValApp() {
   // Whether the panel has been scrolled far enough that its header — and with
   // it the collapse control — has left the view.
   const [scrolledDeep, setScrolledDeep] = useState(false);
-  const [sideOpen, setSideOpen] = useState(() => {
-    try { return localStorage.getItem(SIDE_KEY) !== "0"; } catch (e) { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem(SIDE_KEY, sideOpen ? "1" : "0"); } catch (e) {}
-  }, [sideOpen]);
+  /* Always open on arrival; collapsing lasts for this visit only. Remembering
+     it across visits meant landing on a 46px rail with the inputs hidden
+     before the user had asked for that. See the note in app.jsx. */
+  const [sideOpen, setSideOpen] = useState(true);
   const [input, setInput] = useState(() => {
     try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch (e) {}
     return defaultInput();
