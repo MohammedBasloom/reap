@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260908"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260908" />
+  <script src="assets/i18n.js?v=20260909"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260909" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -60,16 +60,23 @@
     .btn-land.icon { padding: 0; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
     /* ---------- Hero ----------
-       Light band, two columns, the product tilted in on the side, a static
+       Navy band, two columns, the product tilted in on the side, a static
        trust row under a rule. The reference layout, but in REAP's navy and
        gold instead of its purple and yellow, and in REAP's own faces — the
        palette and type are untouched.
+
+       Navy, not the sand the rebuild first used: the header above it is navy
+       and the features section below it is sand, so a sand hero made the top
+       of the page one continuous sand block with a navy strip floating in it.
+       Running the hero navy continues the header and lets the sand below start
+       where the hero ends. It also gives the tilted screen a dark ground to be
+       lit against, which is what makes the tilt read at all.
 
        The section no longer sets its own height, is not sticky, and carries no
        scroll listener: the two platforms are slides, so nothing here depends on
        where the page has been scrolled to. */
     .hero {
-      background: var(--bg-2); color: var(--fg-1);
+      background: var(--ad-navy-900); color: var(--fg-onDark);
       padding: 56px 40px 0; position: relative; overflow: hidden;
     }
     .heroInner { max-width: 1240px; margin: 0 auto; }
@@ -95,7 +102,7 @@
     .hero .eyebrow {
       display: inline-flex; align-items: baseline; gap: 9px;
       font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
-      color: var(--fg-3); font-weight: 600;
+      color: rgba(255,255,255,0.58); font-weight: 600;
     }
     .hero .eyebrow b {
       font-family: var(--font-mono); font-size: 10px; font-weight: 700;
@@ -105,12 +112,13 @@
     .hero h1 {
       font-family: var(--font-display); font-weight: 700;
       font-size: clamp(30px, 3.6vw, 50px); line-height: 1.08; letter-spacing: -0.025em;
-      color: var(--ad-navy-900); margin: 14px 0 0;
+      color: var(--fg-onDark); margin: 14px 0 0;
     }
-    .hero h1 em { font-style: normal; color: var(--ad-gold-600); }
+    /* gold-400, not the 600 a light ground wanted — 600 is nearly navy itself. */
+    .hero h1 em { font-style: normal; color: var(--ad-gold-400); }
     .hero p.lede {
       margin: 16px 0 0; font-size: 15.5px; line-height: 1.7;
-      color: var(--fg-2); max-width: 46ch;
+      color: rgba(255,255,255,0.74); max-width: 46ch;
     }
     .hero .cta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
 
@@ -198,55 +206,150 @@
     .btn-flow.primary .circ { background: var(--ad-gold-500); }
     .btn-flow.primary:hover { color: var(--ad-navy-900); }
 
-    /* On a light ground the flow buttons invert: navy outline and navy type,
-       flooding navy with white type. The gold primary keeps its own fill. */
-    .hero .btn-flow { border-color: rgba(10,26,54,0.28); color: var(--ad-navy-900); }
-    .hero .btn-flow .circ { background: var(--ad-navy-900); }
-    .hero .btn-flow:hover { color: #FFFFFF; }
-    .hero .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-600); }
-    .hero .btn-flow.primary .circ { background: var(--ad-gold-500); }
-    .hero .btn-flow.primary:hover { color: var(--ad-navy-900); }
+    /* The base block above is already written for a navy ground — white outline
+       and white type flooding white, gold primary flooding gold — so the hero
+       adds nothing. The light-ground override that used to live here was only
+       needed while the hero was sand. */
 
-    /* ---------- The product, tilted ---------- */
-    .heroArt { position: relative; min-width: 0; }
+    /* ---------- The product, tilted ----------
+       A bezel, not just a cropped picture. The screenshot alone read as a flat
+       rectangle of text; wrapping it in a dark frame with a lit rim, and tilting
+       it in three dimensions rather than merely rotating it, is what makes it
+       land as a device. The frame is clipped at the bottom so the screen
+       continues past it. */
+    .heroArt { position: relative; min-width: 0; perspective: 1600px; }
     .heroShot {
       position: relative; z-index: 1;
-      border-radius: 10px; overflow: hidden;
-      border: 1px solid var(--border-1);
-      box-shadow: 0 30px 60px -22px rgba(10,26,54,0.45), 0 6px 18px -10px rgba(10,26,54,0.25);
-      transform: rotate(3deg);
-      transition: transform 420ms var(--ease-out);
+      padding: 9px 9px 0; background: var(--ad-navy-800);
+      border-radius: 14px 14px 0 0; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.16); border-bottom: none;
+      box-shadow: 0 40px 90px -26px rgba(0,0,0,0.75),
+                  0 -2px 0 rgba(255,255,255,0.06) inset;
+      transform: rotateY(-7deg) rotate(2.5deg) scale(1.02);
+      transform-origin: center left;
+      transition: transform 460ms var(--ease-out);
       /* Cropped, so the shot reads as a screen continuing past its frame. */
       max-height: 380px;
       -webkit-mask-image: linear-gradient(to bottom, #000 88%, rgba(0,0,0,0) 100%);
       mask-image: linear-gradient(to bottom, #000 88%, rgba(0,0,0,0) 100%);
     }
-    html[dir="rtl"] .heroShot { transform: rotate(-3deg); }
+    html[dir="rtl"] .heroShot {
+      transform: rotateY(7deg) rotate(-2.5deg) scale(1.02);
+      transform-origin: center right;
+    }
+    /* Hover squares it up, so the tilt is legible as a deliberate pose. */
     .heroArt:hover .heroShot,
-    html[dir="rtl"] .heroArt:hover .heroShot { transform: rotate(0deg); }
-    .dash { border: none; border-radius: 0; }
+    html[dir="rtl"] .heroArt:hover .heroShot { transform: none; }
+    /* The screen itself. Light, because it is a picture of the app, which is
+       light — it sits on the navy hero as a lit panel, which is what makes the
+       tilt read. The frame around it supplies the border and the radius. */
+    .dash {
+      background: var(--bg-1); color: var(--fg-1); text-align: start;
+      border: none; border-radius: 7px 7px 0 0; overflow: hidden;
+    }
+
+    /* Top bar — REAP's signature: the headline figures live up here. */
+    /* Every row inside the shot must be allowed to shrink and clip; the shot
+       is a picture of an app, not a layout that has to stay usable. */
+    .dash, .dash .top, .dash .tabs, .dash .pane, .dash .split, .dash .cards { min-width: 0; }
+    .dash .top > * { min-width: 0; }
+    .dash .top {
+      display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; overflow: hidden;
+      padding: 9px 14px; background: var(--ad-navy-900); border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .dash .top .bmark { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .dash .top .bmark b { font-size: 12px; letter-spacing: 0.15em; font-weight: 600; color: white; }
+    .dash .top .bmark span { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .dash .top .pname { font-size: 10.5px; color: rgba(255,255,255,0.55); white-space: nowrap; }
+    .dash .top .tk { margin-inline-start: auto; display: flex; gap: 16px; flex-shrink: 0; }
+    .dash .top .tk div { text-align: end; }
+    .dash .top .tk span { display: block; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .dash .top .tk b { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: white; margin-top: 2px; }
+    .dash .top .tk div:first-child b { color: var(--ad-gold-400); }
+
+    /* Tab strip */
+    .dash .tabs { display: flex; gap: 18px; padding: 8px 14px; border-bottom: 1px solid var(--border-1); overflow: hidden; }
+    .dash .tabs i {
+      font-style: normal; font-size: 9.5px; letter-spacing: 0.04em; color: var(--fg-3);
+      white-space: nowrap; display: flex; gap: 4px; align-items: baseline;
+    }
+    .dash .tabs i u { text-decoration: none; font-family: var(--font-mono); font-size: 8px; color: var(--fg-4); }
+    .dash .tabs i.on { color: var(--ad-navy-900); font-weight: 600; border-bottom: 2px solid var(--ad-gold-500); padding-bottom: 5px; margin-bottom: -9px; }
+
+    /* Tight, because only the top of this is ever on screen. The window is a
+       third of a pinned screen and the figures have to clear it — every row of
+       chrome above them pushes a number under the fold. */
+    .dash .pane { padding: 10px 16px 0; }
+    .dash .verdict { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+    .dash .eyeb { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+
+    .dash .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 9px; }
+    .dash .c { border: 1px solid var(--border-1); background: var(--bg-1); padding: 8px 11px; }
+    .dash .c span { display: block; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+    .dash .c b { display: block; font-family: var(--font-display); font-size: 19px; font-weight: 600; margin-top: 3px; letter-spacing: -0.02em; }
+    .dash .c i { font-style: normal; font-size: 9px; color: var(--fg-3); }
+    .dash .c.up b { color: var(--ad-success); }
+
+    .dash .split { display: grid; grid-template-columns: 0.9fr 2fr; gap: 12px; margin-top: 12px; }
+    .dash .facts { border: 1px solid var(--border-1); padding: 10px 12px; }
+    .dash .facts div { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; padding: 4px 0; border-bottom: 1px dashed var(--border-1); }
+    .dash .facts div:last-child { border-bottom: none; }
+    .dash .facts span { color: var(--fg-3); }
+    .dash .facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .dash .chart { border: 1px solid var(--border-1); padding: 10px 12px 8px; }
+    .dash .chart svg { display: block; width: 100%; height: 200px; }
+    .dash .chart .cum { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: cumDraw 2200ms var(--ease-out) 500ms forwards; }
+    @keyframes cumDraw { to { stroke-dashoffset: 0; } }
+
+    /* ---------- Valuation variant ----------
+       Same shell, different pane: one headline value carried on a filled card
+       (as the app draws it), then the three approaches side by side so the
+       reconciliation is legible at a glance rather than implied. */
+    .dash.val .vtop { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .dash.val .vhero {
+      background: var(--ad-navy-900); color: white; padding: 12px 14px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .dash.val .vhero span { font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .dash.val .vhero b { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-top: 3px; color: var(--ad-gold-400); }
+    .dash.val .vhero i { font-style: normal; font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 3px; }
+    .dash.val .eyeb.apr { margin-top: 14px; }
+    .dash.val .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
+    .dash.val .col { border: 1px solid var(--border-1); padding: 9px 11px; }
+    .dash.val .col h6 {
+      margin: 0 0 6px; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--fg-2); font-weight: 700; padding-bottom: 5px; border-bottom: 1px solid var(--border-1);
+    }
+    .dash.val .col div { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; padding: 3px 0; }
+    .dash.val .col div span { color: var(--fg-3); }
+    .dash.val .col div b { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .dash.val .col div.tot { border-top: 1px solid var(--border-1); margin-top: 4px; padding-top: 5px; }
+    .dash.val .col div.tot b { color: var(--ad-navy-900); font-size: 11.5px; }
 
     /* Geometric accents, in brand colours rather than the reference's purple
        and yellow. Decorative only, so they go on small screens. */
     .hero .deco { position: absolute; display: block; pointer-events: none; }
-    .hero .deco-a { width: 30px; height: 30px; inset-inline-start: -14px; top: -14px; background: var(--ad-navy-700); border-radius: 6px; transform: rotate(45deg); }
+    /* Navy shapes on a navy ground are invisible, so on the dark hero the
+       accents are gold and pale steel rather than the navies a sand ground
+       could carry. */
+    .hero .deco-a { width: 30px; height: 30px; inset-inline-start: -14px; top: -14px; background: var(--ad-navy-500); border-radius: 6px; transform: rotate(45deg); }
     .hero .deco-b { width: 18px; height: 18px; inset-inline-end: -10px; bottom: 26px; background: var(--ad-gold-500); border-radius: 50%; }
-    .hero .deco-c { width: 6px; height: 44px; inset-inline-end: -22px; top: 34%; background: var(--ad-navy-500); }
+    .hero .deco-c { width: 6px; height: 44px; inset-inline-end: -22px; top: 34%; background: var(--ad-gold-600); }
     /* A few loose pixels, as in the reference. */
     .hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
     .hero::before { width: 10px; height: 10px; border-radius: 50%; background: var(--ad-gold-500); inset-inline-end: 6%; top: 64px; opacity: 0.85; }
-    .hero::after { width: 8px; height: 8px; background: var(--ad-navy-600); inset-inline-end: 11%; top: 118px; transform: rotate(45deg); }
+    .hero::after { width: 8px; height: 8px; background: var(--ad-navy-400); inset-inline-end: 11%; top: 118px; transform: rotate(45deg); }
 
     /* ---------- Slider controls ---------- */
     .heroNav { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
     .heroNav .hn {
       width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
       display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid var(--border-2); background: var(--bg-1);
-      color: var(--fg-2); cursor: pointer; padding: 0;
+      border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.78); cursor: pointer; padding: 0;
       transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out);
     }
-    .heroNav .hn:hover { border-color: var(--ad-gold-500); color: var(--ad-gold-600); }
+    .heroNav .hn:hover { border-color: var(--ad-gold-500); color: var(--ad-gold-400); }
     .heroNav .hn:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 2px; }
     /* The glyphs are drawn pointing left and right; under RTL "previous" is the
        other way round, so the pair is mirrored rather than swapped in markup. */
@@ -255,7 +358,7 @@
     .hdots { display: flex; align-items: center; gap: 8px; }
     .hdots button {
       height: 3px; width: 26px; padding: 0; border: none; cursor: pointer;
-      background: var(--border-2); transition: background 200ms var(--ease-out), width 200ms var(--ease-out);
+      background: rgba(255,255,255,0.24); transition: background 200ms var(--ease-out), width 200ms var(--ease-out);
     }
     .hdots button[aria-selected="true"] { background: var(--ad-gold-500); width: 44px; }
     .hdots button:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
@@ -401,15 +504,15 @@
     }
 
     /* ---------- Trust strip ----------
-       Fixed row at the foot of the hero, under a rule, as in the reference.
-       Recoloured for a light ground: the previous rgba(255,255,255,…) rule and
-       type were invisible now that the hero is no longer navy. */
-    .trust { border-top: 1px solid var(--border-1); margin-top: 40px; }
+       Fixed row at the foot of the hero, under a rule, as in the reference. On
+       a dark ground the rule and the type are white at low alpha rather than
+       the border and fg tokens, which are both meant for sand. */
+    .trust { border-top: 1px solid rgba(255,255,255,0.12); margin-top: 40px; }
     .trust .inner {
       max-width: 1180px; margin: 0 auto; padding: 18px 0 26px;
       display: flex; gap: 14px 36px; flex-wrap: wrap; justify-content: space-between;
     }
-    .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+    .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; }
     .trust .t::before { content: "◆"; color: var(--ad-gold-500); font-size: 7px; }
 
     /* ---------- Features bento ---------- */
@@ -873,7 +976,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260908"></script>
+<script src="assets/mobile-notice.js?v=20260909"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1540,8 +1643,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260908"></script>
-<script src="assets/auth.js?v=20260908"></script>
+<script src="assets/config.js?v=20260909"></script>
+<script src="assets/auth.js?v=20260909"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
