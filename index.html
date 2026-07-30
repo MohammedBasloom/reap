@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260907"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260907" />
+  <script src="assets/i18n.js?v=20260908"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260908" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -113,6 +113,90 @@
       color: var(--fg-2); max-width: 46ch;
     }
     .hero .cta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* ---------- Flow button ----------
+       The shadcn/Tailwind FlowButton, rebuilt in plain CSS because this page
+       ships no React, no npm and no Tailwind. Same behaviour: a pill that
+       squares off on hover while a dot expands to flood it, the label slides
+       across, and a pair of arrows hand over — one entering as the other
+       leaves.
+
+       Palette is REAP's, not the original's #111 on white: gold flood with
+       navy type for the primary, white flood with navy type for the guest
+       button, both reading against the navy hero.
+
+       Direction-aware. The original hard-codes left and right, which points
+       both arrows the wrong way in Arabic — the default language here — so the
+       offsets are logical and the glyphs mirror under RTL. */
+    .btn-flow {
+      position: relative; display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px; overflow: hidden; isolation: isolate;
+      border-radius: 100px; border: 1.5px solid rgba(255,255,255,0.34);
+      background: transparent; color: white; cursor: pointer;
+      font-family: var(--font-body); font-size: 12.5px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      /* 34px, not 30: the label travels 12px and the arrows sit 16px in, so a
+         30px gutter left them a pixel apart even once the sides were right. */
+      padding: 13px 34px;
+      transition: border-color 600ms cubic-bezier(0.23,1,0.32,1),
+                  border-radius 600ms cubic-bezier(0.23,1,0.32,1),
+                  color 600ms cubic-bezier(0.23,1,0.32,1),
+                  transform 140ms var(--ease-out);
+    }
+    .btn-flow:hover { border-color: transparent; border-radius: 12px; }
+    .btn-flow:active { transform: scale(0.95); }
+    .btn-flow:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
+
+    .btn-flow .lbl {
+      position: relative; z-index: 2; display: inline-block;
+      transform: translateX(-12px);
+      transition: transform 800ms var(--ease-out);
+    }
+    html[dir="rtl"] .btn-flow .lbl { transform: translateX(12px); }
+    .btn-flow:hover .lbl { transform: translateX(12px); }
+    html[dir="rtl"] .btn-flow:hover .lbl { transform: translateX(-12px); }
+
+    /* The flood. Sized past the button's diagonal so it covers the corners. */
+    .btn-flow .circ {
+      position: absolute; top: 50%; left: 50%; z-index: 0;
+      width: 16px; height: 16px; border-radius: 50%;
+      transform: translate(-50%, -50%); opacity: 0;
+      background: white;
+      transition: width 800ms cubic-bezier(0.19,1,0.22,1),
+                  height 800ms cubic-bezier(0.19,1,0.22,1),
+                  opacity 800ms cubic-bezier(0.19,1,0.22,1);
+    }
+    .btn-flow:hover .circ { width: 320px; height: 320px; opacity: 1; }
+    .btn-flow:hover { color: var(--ad-navy-900); }
+
+    /* Arrows: the trailing one leaves, the leading one arrives.
+
+       Physical left/right with an explicit RTL mirror, NOT inset-inline-*.
+       An <svg> computes direction: ltr even inside an rtl button, so the
+       logical properties resolved against LTR and put the trailing arrow on
+       the right in Arabic — on top of the label, overlapping it by 13px. */
+    .btn-flow .fa {
+      position: absolute; z-index: 2; width: 15px; height: 15px;
+      stroke: currentColor; fill: none;
+      transition: left 800ms cubic-bezier(0.34,1.56,0.64,1),
+                  right 800ms cubic-bezier(0.34,1.56,0.64,1);
+    }
+    html[dir="rtl"] .btn-flow .fa { transform: scaleX(-1); }
+
+    .btn-flow .fa-lead  { left: -25%; right: auto; }
+    .btn-flow .fa-trail { right: 16px; left: auto; }
+    .btn-flow:hover .fa-lead  { left: 16px; }
+    .btn-flow:hover .fa-trail { right: -25%; }
+
+    html[dir="rtl"] .btn-flow .fa-lead  { right: -25%; left: auto; }
+    html[dir="rtl"] .btn-flow .fa-trail { left: 16px; right: auto; }
+    html[dir="rtl"] .btn-flow:hover .fa-lead  { right: 16px; left: auto; }
+    html[dir="rtl"] .btn-flow:hover .fa-trail { left: -25%; right: auto; }
+
+    /* Primary — the brand gold floods in and the type turns navy. */
+    .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-400); }
+    .btn-flow.primary .circ { background: var(--ad-gold-500); }
+    .btn-flow.primary:hover { color: var(--ad-navy-900); }
 
     /* On a light ground the flow buttons invert: navy outline and navy type,
        flooding navy with white type. The gold primary keeps its own fill. */
@@ -789,7 +873,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260907"></script>
+<script src="assets/mobile-notice.js?v=20260908"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1456,8 +1540,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260907"></script>
-<script src="assets/auth.js?v=20260907"></script>
+<script src="assets/config.js?v=20260908"></script>
+<script src="assets/auth.js?v=20260908"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
