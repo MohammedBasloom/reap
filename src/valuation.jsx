@@ -428,7 +428,27 @@ function ValApp() {
               </div>
               <Row cols={3}>
                 <Field label="Sale price" suffix="SAR"><NumInput value={c.price} onChange={(v) => upd(`sales.comps.${i}.price`, v)} /></Field>
-                <Field label="Area" suffix="m²"><NumInput value={c.area} onChange={(v) => upd(`sales.comps.${i}.area`, v)} /></Field>
+                {/* Named for what it must actually be, not just "Area".
+
+                    The approach divides the comparable's price by THIS number
+                    to get a price per m², then multiplies that by the
+                    subject's own area — built-up area for a building, plot
+                    area for bare land. So the two have to be measured the same
+                    way; a plot size entered against a flat's built-up area
+                    silently values the property on the wrong basis and nothing
+                    on screen would say so.
+
+                    The label follows the property type for the same reason,
+                    and matches the wording used for the subject in step 01. */}
+                <Field
+                  label={isLand ? "Comparable land area" : "Comparable built-up area"}
+                  suffix="m²"
+                  hint={isLand
+                    ? "Plot size of the comparable — the same basis as the subject."
+                    : "Covered floor area (GFA) of the comparable — the same basis as the subject."}
+                >
+                  <NumInput value={c.area} onChange={(v) => upd(`sales.comps.${i}.area`, v)} />
+                </Field>
                 <Field label="Sold" suffix="months ago"><NumInput value={c.monthsAgo} onChange={(v) => upd(`sales.comps.${i}.monthsAgo`, v)} /></Field>
               </Row>
               <Row cols={3}>

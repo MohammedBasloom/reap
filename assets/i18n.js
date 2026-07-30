@@ -794,6 +794,15 @@
     "The market approach — what did similar properties actually sell for?": "أسلوب السوق — بكم بيعت العقارات المماثلة فعليًا؟",
     "Comparable": "عقار مقارن",
     "Area": "المساحة", "Sold": "تاريخ البيع", "months ago": "قبل (شهر)",
+    /* The comparable's area, named for the basis the approach actually divides
+       by — built-up for a building, plot for bare land. Wording follows the
+       subject's own fields in step 01 so the two read as the same measurement. */
+    "Comparable built-up area": "مساحة بناء العقار المقارن",
+    "Comparable land area": "مساحة أرض العقار المقارن",
+    "Covered floor area (GFA) of the comparable — the same basis as the subject.":
+      "المسطحات المبنية المغطاة (GFA) للعقار المقارن — بالأساس نفسه المستخدم للعقار محل التقييم.",
+    "Plot size of the comparable — the same basis as the subject.":
+      "مساحة قطعة أرض العقار المقارن — بالأساس نفسه المستخدم للعقار محل التقييم.",
     "Location adj.": "تسوية الموقع", "Condition adj.": "تسوية الحالة", "Other adj.": "تسويات أخرى",
     "Comp in a better spot? use −5. Worse? +5.": "المقارن في موقع أفضل؟ استخدم −5. أسوأ؟ +5.",
     "Size, view, street width…": "المساحة، الإطلالة، عرض الشارع…",
