@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260906"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260906" />
+  <script src="assets/i18n.js?v=20260907"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260907" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -59,355 +59,133 @@
     .btn-land.primary:hover { background: var(--ad-gold-400); color: var(--ad-navy-900); }
     .btn-land.icon { padding: 0; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
-    /* ---------- Hero ---------- */
     /* ---------- Hero ----------
-       Centred: statement, then the product beneath it at full width. The
-       previous two-column split gave the dashboard a third of the page at
-       400px, too small to read as anything but decoration. */
-    /* Two heroes stacked, one per platform. Each carries --f, its "focus":
-       1 when it is the one being read, easing toward 0 as it leaves. The
-       scroll handler sets it; everything below just reacts to it, so the
-       handover is one number rather than a set of competing animations. */
-    /* The stage is a tall scroll track; the pin inside it is one viewport that
-       sticks while the track passes. Both heroes occupy that same viewport, so
-       scrolling swaps them IN PLACE and the page only moves on once the track
-       is spent. Height is what buys the dwell: roughly a third of a screen
-       holding the first, a third crossing over, the rest holding the second. */
-    /* 210vh, not 260: at 260 the second hero sat finished and unchanging for
-       another 600px before the pin let go, which is a long time to scroll
-       through a screen that is not doing anything. */
-    .heroes { position: relative; height: 210vh; height: 210dvh; }
-    /* Two rows: the heroes share the first and are centred in it, the trust
-       strip holds the floor. The strip is part of the hero screen rather than
-       a band that appears once the pin lets go — it describes the platform, so
-       it belongs to both heroes and stays put while they swap. */
-    /* Height is the viewport MINUS the top bar, not the whole viewport. At rest
-       the pin starts below the bar, so a full 100vh box hangs its last 80px —
-       exactly the trust strip — under the fold, and the strip only appeared
-       once the reader had scrolled past the bar. Once stuck the bar has gone
-       and those 80px become breathing room under the strip instead.
-       --tb is measured from the bar itself, since it is shorter on phones. */
-    .heroPin {
-      position: sticky; top: 0; overflow: hidden;
-      /* dvh, with vh as the fallback for browsers without it. On a phone 100vh
-         is the LARGE viewport — the height with the URL bar retracted — so the
-         pin came out 20px taller than the screen actually showing, and its
-         floor sat below the fold even after the chrome above was measured
-         correctly. */
-      height: calc(100vh - var(--tb, 80px));
-      height: calc(100dvh - var(--tb, 80px));
-      display: grid; grid-template-rows: 1fr auto;
-    }
-    .heroPin > .trust { grid-row: 2; grid-column: 1; align-self: end; }
-    /* Grid items default to min-width:auto, so they refuse to shrink below
-       their content. The dashboard mockup has a wide intrinsic minimum, which
-       pushed the hero — and through it the whole page — 14px past a 375px
-       screen and left the document scrolling sideways. */
-    .heroPin > * { min-width: 0; }
+       Light band, two columns, the product tilted in on the side, a static
+       trust row under a rule. The reference layout, but in REAP's navy and
+       gold instead of its purple and yellow, and in REAP's own faces — the
+       palette and type are untouched.
+
+       The section no longer sets its own height, is not sticky, and carries no
+       scroll listener: the two platforms are slides, so nothing here depends on
+       where the page has been scrolled to. */
     .hero {
-      /* Stacked in one grid cell rather than absolutely placed, so both keep a
-         normal flow height and stay vertically centred at any viewport. */
-      grid-row: 1; grid-column: 1; align-self: center;
-      position: relative; isolation: isolate;
-      padding: 0 40px; max-width: 1240px; margin: 0 auto; width: 100%;
-      text-align: center;
-      --f: 1;
+      background: var(--bg-2); color: var(--fg-1);
+      padding: 56px 40px 0; position: relative; overflow: hidden;
     }
-    /* Whichever hero is faded out must not swallow clicks meant for the other. */
-    .hero { pointer-events: none; }
-    .hero[data-lead] { pointer-events: auto; }
-    /* Copy lifts and dims as its hero hands over; the shot follows a beat
-       later and slightly further, which is what makes the two feel layered
-       rather than moving as one flat card. */
-    /* Opacity must reach ZERO, not a floor. These carried 0.25 and 0.35 floors
-       from when the heroes were separate stacked sections, where a dimmed one
-       further down the page read as depth. Superimposed in a single cell that
-       floor is not depth, it is both heroes printed on top of each other —
-       two headlines, two dashboards, permanently. */
-    .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta {
-      opacity: var(--f);
-      transform: translateY(calc((1 - var(--f)) * -16px));
-      will-change: opacity, transform;
+    .heroInner { max-width: 1240px; margin: 0 auto; }
+
+    /* Slides are stacked in one grid cell and cross-faded, so the section keeps
+       the height of the tallest and never jumps as you move between them. */
+    .heroSlides { display: grid; }
+    .heroSlide {
+      grid-area: 1 / 1; min-width: 0;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 420ms var(--ease-out), transform 420ms var(--ease-out), visibility 420ms;
     }
-    .hero .heroShot {
-      opacity: var(--f);
-      transform: translateY(calc((1 - var(--f)) * 26px)) scale(calc(0.985 + 0.015 * var(--f)));
-      transform-origin: top center;
-      will-change: opacity, transform;
+    .heroSlide.is-on {
+      opacity: 1; visibility: visible; pointer-events: auto; transform: none;
     }
-    /* The safe default, for the moment before the scroll handler first paints
-       and for the case where it never does: the first hero is visible and the
-       rest are not. --f:1 on every hero meant a scripting failure showed them
-       all at once, stacked. */
-    .heroPin .hero:not(:first-child) { --f: 0; }
-    /* Numbered platform label. */
-    .hero .eyebrow { display: inline-flex; align-items: baseline; gap: 9px; }
+
+    .heroGrid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 30px 56px; align-items: center;
+    }
+    .heroCopy { min-width: 0; }
+    .hero .eyebrow {
+      display: inline-flex; align-items: baseline; gap: 9px;
+      font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--fg-3); font-weight: 600;
+    }
     .hero .eyebrow b {
       font-family: var(--font-mono); font-size: 10px; font-weight: 700;
       color: var(--ad-navy-900); background: var(--ad-gold-500);
       padding: 3px 6px; border-radius: 2px; letter-spacing: 0.06em;
     }
-    /* A single soft light behind the headline, so the dark section has a
-       centre of gravity and the mockup edge does not read as a hard cut. */
-    /* Spans the hero exactly — no width overhang and no centring transform.
-       An earlier version used inset-inline-start:50% with translateX(-50%),
-       which centres in LTR but resolves to right:50% under RTL and threw the
-       page 780px wide. The gradient does the centring instead. */
-    .hero::before {
-      content: ""; position: absolute; z-index: -1; pointer-events: none;
-      inset-inline: 0; top: -70px; height: 620px;
-      background: radial-gradient(58% 50% at 50% 42%, rgba(184,146,96,0.16), rgba(184,146,96,0) 70%);
-    }
-    .hero .eyebrow { font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--ad-gold-400); font-weight: 600; }
-    /* Everything here is sized so the tallest case — English, which wraps to
-       more lines than the Arabic — still clears a 900px laptop viewport with
-       room to spare. The hero has to fit the pinned screen whole; anything
-       that overflows is simply never seen, because the pin does not scroll. */
     .hero h1 {
-      font-family: var(--font-display); font-size: clamp(30px, 4.4vw, 52px); font-weight: 700;
-      line-height: 1.08; letter-spacing: -0.025em; color: white; margin: 14px auto 0;
-      max-width: 17ch;
+      font-family: var(--font-display); font-weight: 700;
+      font-size: clamp(30px, 3.6vw, 50px); line-height: 1.08; letter-spacing: -0.025em;
+      color: var(--ad-navy-900); margin: 14px 0 0;
     }
-    html[dir="rtl"] .hero h1 { max-width: 22ch; }
-    .hero h1 em { font-style: normal; color: var(--ad-gold-400); }
+    .hero h1 em { font-style: normal; color: var(--ad-gold-600); }
     .hero p.lede {
-      margin: 14px auto 0; font-size: 15.5px; line-height: 1.62;
-      color: rgba(255,255,255,0.66); max-width: 600px;
+      margin: 16px 0 0; font-size: 15.5px; line-height: 1.7;
+      color: var(--fg-2); max-width: 46ch;
     }
-    .hero .cta { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    .hero .cta { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
 
-    /* ---------- Flow button ----------
-       The shadcn/Tailwind FlowButton, rebuilt in plain CSS because this page
-       ships no React, no npm and no Tailwind. Same behaviour: a pill that
-       squares off on hover while a dot expands to flood it, the label slides
-       across, and a pair of arrows hand over — one entering as the other
-       leaves.
+    /* On a light ground the flow buttons invert: navy outline and navy type,
+       flooding navy with white type. The gold primary keeps its own fill. */
+    .hero .btn-flow { border-color: rgba(10,26,54,0.28); color: var(--ad-navy-900); }
+    .hero .btn-flow .circ { background: var(--ad-navy-900); }
+    .hero .btn-flow:hover { color: #FFFFFF; }
+    .hero .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-600); }
+    .hero .btn-flow.primary .circ { background: var(--ad-gold-500); }
+    .hero .btn-flow.primary:hover { color: var(--ad-navy-900); }
 
-       Palette is REAP's, not the original's #111 on white: gold flood with
-       navy type for the primary, white flood with navy type for the guest
-       button, both reading against the navy hero.
-
-       Direction-aware. The original hard-codes left and right, which points
-       both arrows the wrong way in Arabic — the default language here — so the
-       offsets are logical and the glyphs mirror under RTL. */
-    .btn-flow {
-      position: relative; display: inline-flex; align-items: center; justify-content: center;
-      gap: 4px; overflow: hidden; isolation: isolate;
-      border-radius: 100px; border: 1.5px solid rgba(255,255,255,0.34);
-      background: transparent; color: white; cursor: pointer;
-      font-family: var(--font-body); font-size: 12.5px; font-weight: 600;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      /* 34px, not 30: the label travels 12px and the arrows sit 16px in, so a
-         30px gutter left them a pixel apart even once the sides were right. */
-      padding: 13px 34px;
-      transition: border-color 600ms cubic-bezier(0.23,1,0.32,1),
-                  border-radius 600ms cubic-bezier(0.23,1,0.32,1),
-                  color 600ms cubic-bezier(0.23,1,0.32,1),
-                  transform 140ms var(--ease-out);
-    }
-    .btn-flow:hover { border-color: transparent; border-radius: 12px; }
-    .btn-flow:active { transform: scale(0.95); }
-    .btn-flow:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
-
-    .btn-flow .lbl {
-      position: relative; z-index: 2; display: inline-block;
-      transform: translateX(-12px);
-      transition: transform 800ms var(--ease-out);
-    }
-    html[dir="rtl"] .btn-flow .lbl { transform: translateX(12px); }
-    .btn-flow:hover .lbl { transform: translateX(12px); }
-    html[dir="rtl"] .btn-flow:hover .lbl { transform: translateX(-12px); }
-
-    /* The flood. Sized past the button's diagonal so it covers the corners. */
-    .btn-flow .circ {
-      position: absolute; top: 50%; left: 50%; z-index: 0;
-      width: 16px; height: 16px; border-radius: 50%;
-      transform: translate(-50%, -50%); opacity: 0;
-      background: white;
-      transition: width 800ms cubic-bezier(0.19,1,0.22,1),
-                  height 800ms cubic-bezier(0.19,1,0.22,1),
-                  opacity 800ms cubic-bezier(0.19,1,0.22,1);
-    }
-    .btn-flow:hover .circ { width: 320px; height: 320px; opacity: 1; }
-    .btn-flow:hover { color: var(--ad-navy-900); }
-
-    /* Arrows: the trailing one leaves, the leading one arrives.
-
-       Physical left/right with an explicit RTL mirror, NOT inset-inline-*.
-       An <svg> computes direction: ltr even inside an rtl button, so the
-       logical properties resolved against LTR and put the trailing arrow on
-       the right in Arabic — on top of the label, overlapping it by 13px. */
-    .btn-flow .fa {
-      position: absolute; z-index: 2; width: 15px; height: 15px;
-      stroke: currentColor; fill: none;
-      transition: left 800ms cubic-bezier(0.34,1.56,0.64,1),
-                  right 800ms cubic-bezier(0.34,1.56,0.64,1);
-    }
-    html[dir="rtl"] .btn-flow .fa { transform: scaleX(-1); }
-
-    .btn-flow .fa-lead  { left: -25%; right: auto; }
-    .btn-flow .fa-trail { right: 16px; left: auto; }
-    .btn-flow:hover .fa-lead  { left: 16px; }
-    .btn-flow:hover .fa-trail { right: -25%; }
-
-    html[dir="rtl"] .btn-flow .fa-lead  { right: -25%; left: auto; }
-    html[dir="rtl"] .btn-flow .fa-trail { left: 16px; right: auto; }
-    html[dir="rtl"] .btn-flow:hover .fa-lead  { right: 16px; left: auto; }
-    html[dir="rtl"] .btn-flow:hover .fa-trail { left: -25%; right: auto; }
-
-    /* Primary — the brand gold floods in and the type turns navy. */
-    .btn-flow.primary { border-color: var(--ad-gold-500); color: var(--ad-gold-400); }
-    .btn-flow.primary .circ { background: var(--ad-gold-500); }
-    .btn-flow.primary:hover { color: var(--ad-navy-900); }
-    .hero .btn-land { padding: 13px 26px; font-size: 12.5px; }
-    .hero .stats { margin-top: 34px; display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; }
-    .hero .stat b { display: block; font-family: var(--font-display); font-size: 22px; color: white; font-weight: 600; }
-    .hero .stat span { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
-
-    /* ---------- Hero product shot ----------
-       Tilted back a few degrees and rising into place, then settling flat —
-       enough motion to read as live software without turning the headline
-       into a carnival. It deliberately runs off the bottom of the section:
-       the page continues into it rather than the shot sitting in a box. */
+    /* ---------- The product, tilted ---------- */
+    .heroArt { position: relative; min-width: 0; }
     .heroShot {
-      margin: clamp(22px, 3.4vh, 52px) auto 0; max-width: 1180px; perspective: 1800px;
-      /* Cropped, not shrunk — the dashboard keeps its real proportions and
-         the fold cuts it, which is what makes it read as a screen. */
-      /* Sized against the viewport, not a fixed pixel height: the hero now has
-         to fit inside the pinned screen alongside its copy, and a 400px shot
-         pushed the buttons off the bottom on a laptop. */
-      /* Measured against the PIN, not the raw viewport: the pin is a top bar
-         shorter than the screen and the trust strip takes another 50px off it.
+      position: relative; z-index: 1;
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border-1);
+      box-shadow: 0 30px 60px -22px rgba(10,26,54,0.45), 0 6px 18px -10px rgba(10,26,54,0.25);
+      transform: rotate(3deg);
+      transition: transform 420ms var(--ease-out);
+      /* Cropped, so the shot reads as a screen continuing past its frame. */
+      max-height: 380px;
+      -webkit-mask-image: linear-gradient(to bottom, #000 88%, rgba(0,0,0,0) 100%);
+      mask-image: linear-gradient(to bottom, #000 88%, rgba(0,0,0,0) 100%);
+    }
+    html[dir="rtl"] .heroShot { transform: rotate(-3deg); }
+    .heroArt:hover .heroShot,
+    html[dir="rtl"] .heroArt:hover .heroShot { transform: rotate(0deg); }
+    .dash { border: none; border-radius: 0; }
 
-         The share matters more than it looks. At 0.30 the window came out at
-         247px, the KPI cards ended at 241px, and the fade — then starting at
-         80% — was already washing their values out. On a 760px screen the
-         window was 204px and the numbers were cut off entirely: the shot
-         showed a top bar, a tab strip and a heading, and not one figure. */
-      max-height: min(300px, calc((100vh - var(--tb, 80px)) * 0.32)); overflow: hidden;
-      /* Confined to the last tenth, so it reads as a fold rather than as the
-         figures fading out. */
-      -webkit-mask-image: linear-gradient(to bottom, #000 90%, rgba(0,0,0,0.45) 97%, rgba(0,0,0,0) 100%);
-      mask-image: linear-gradient(to bottom, #000 90%, rgba(0,0,0,0.45) 97%, rgba(0,0,0,0) 100%);
-    }
-    .dash {
-      transform-origin: top center;
-      animation: dashRise 1100ms var(--ease-out) both;
-      border-radius: 8px 8px 0 0; overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.16); border-bottom: none;
-      background: var(--bg-1); color: var(--fg-1); text-align: start;
-      box-shadow: 0 -2px 0 rgba(255,255,255,0.05) inset, 0 40px 90px -26px rgba(0,0,0,0.75);
-    }
-    @keyframes dashRise {
-      from { opacity: 0; transform: translateY(56px) rotateX(12deg) scale(0.965); }
-      to   { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
-    }
+    /* Geometric accents, in brand colours rather than the reference's purple
+       and yellow. Decorative only, so they go on small screens. */
+    .hero .deco { position: absolute; display: block; pointer-events: none; }
+    .hero .deco-a { width: 30px; height: 30px; inset-inline-start: -14px; top: -14px; background: var(--ad-navy-700); border-radius: 6px; transform: rotate(45deg); }
+    .hero .deco-b { width: 18px; height: 18px; inset-inline-end: -10px; bottom: 26px; background: var(--ad-gold-500); border-radius: 50%; }
+    .hero .deco-c { width: 6px; height: 44px; inset-inline-end: -22px; top: 34%; background: var(--ad-navy-500); }
+    /* A few loose pixels, as in the reference. */
+    .hero::before, .hero::after { content: ""; position: absolute; pointer-events: none; }
+    .hero::before { width: 10px; height: 10px; border-radius: 50%; background: var(--ad-gold-500); inset-inline-end: 6%; top: 64px; opacity: 0.85; }
+    .hero::after { width: 8px; height: 8px; background: var(--ad-navy-600); inset-inline-end: 11%; top: 118px; transform: rotate(45deg); }
 
-    /* Top bar — REAP's signature: the headline figures live up here. */
-    /* Every row inside the shot must be allowed to shrink and clip; the shot
-       is a picture of an app, not a layout that has to stay usable. */
-    .dash, .dash .top, .dash .tabs, .dash .pane, .dash .split, .dash .cards { min-width: 0; }
-    .dash .top > * { min-width: 0; }
-    .dash .top {
-      display: flex; align-items: center; gap: 14px; flex-wrap: nowrap; overflow: hidden;
-      padding: 9px 14px; background: var(--ad-navy-900); border-bottom: 1px solid rgba(255,255,255,0.08);
+    /* ---------- Slider controls ---------- */
+    .heroNav { display: flex; align-items: center; gap: 14px; margin-top: 28px; }
+    .heroNav .hn {
+      width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border-2); background: var(--bg-1);
+      color: var(--fg-2); cursor: pointer; padding: 0;
+      transition: border-color 160ms var(--ease-out), color 160ms var(--ease-out);
     }
-    .dash .top .bmark { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
-    .dash .top .bmark b { font-size: 12px; letter-spacing: 0.15em; font-weight: 600; color: white; }
-    .dash .top .bmark span { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-    .dash .top .pname { font-size: 10.5px; color: rgba(255,255,255,0.55); white-space: nowrap; }
-    .dash .top .tk { margin-inline-start: auto; display: flex; gap: 16px; flex-shrink: 0; }
-    .dash .top .tk div { text-align: end; }
-    .dash .top .tk span { display: block; font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-    .dash .top .tk b { display: block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: white; margin-top: 2px; }
-    .dash .top .tk div:first-child b { color: var(--ad-gold-400); }
+    .heroNav .hn:hover { border-color: var(--ad-gold-500); color: var(--ad-gold-600); }
+    .heroNav .hn:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 2px; }
+    /* The glyphs are drawn pointing left and right; under RTL "previous" is the
+       other way round, so the pair is mirrored rather than swapped in markup. */
+    html[dir="rtl"] .heroNav .hn svg { scale: -1 1; }
 
-    /* Tab strip */
-    .dash .tabs { display: flex; gap: 18px; padding: 8px 14px; border-bottom: 1px solid var(--border-1); overflow: hidden; }
-    .dash .tabs i {
-      font-style: normal; font-size: 9.5px; letter-spacing: 0.04em; color: var(--fg-3);
-      white-space: nowrap; display: flex; gap: 4px; align-items: baseline;
+    .hdots { display: flex; align-items: center; gap: 8px; }
+    .hdots button {
+      height: 3px; width: 26px; padding: 0; border: none; cursor: pointer;
+      background: var(--border-2); transition: background 200ms var(--ease-out), width 200ms var(--ease-out);
     }
-    .dash .tabs i u { text-decoration: none; font-family: var(--font-mono); font-size: 8px; color: var(--fg-4); }
-    .dash .tabs i.on { color: var(--ad-navy-900); font-weight: 600; border-bottom: 2px solid var(--ad-gold-500); padding-bottom: 5px; margin-bottom: -9px; }
-
-    /* Tight, because only the top of this is ever on screen. The window is a
-       third of a pinned screen and the figures have to clear it — every row of
-       chrome above them pushes a number under the fold. */
-    .dash .pane { padding: 10px 16px 0; }
-    .dash .verdict { font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-    .dash .eyeb { font-size: 8.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
-
-    .dash .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; margin-top: 9px; }
-    .dash .c { border: 1px solid var(--border-1); background: var(--bg-1); padding: 8px 11px; }
-    .dash .c span { display: block; font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
-    .dash .c b { display: block; font-family: var(--font-display); font-size: 19px; font-weight: 600; margin-top: 3px; letter-spacing: -0.02em; }
-    .dash .c i { font-style: normal; font-size: 9px; color: var(--fg-3); }
-    .dash .c.up b { color: var(--ad-success); }
-
-    .dash .split { display: grid; grid-template-columns: 0.9fr 2fr; gap: 12px; margin-top: 12px; }
-    .dash .facts { border: 1px solid var(--border-1); padding: 10px 12px; }
-    .dash .facts div { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; padding: 4px 0; border-bottom: 1px dashed var(--border-1); }
-    .dash .facts div:last-child { border-bottom: none; }
-    .dash .facts span { color: var(--fg-3); }
-    .dash .facts b { font-weight: 600; font-variant-numeric: tabular-nums; }
-    .dash .chart { border: 1px solid var(--border-1); padding: 10px 12px 8px; }
-    .dash .chart svg { display: block; width: 100%; height: 200px; }
-    .dash .chart .cum { stroke-dasharray: 1400; stroke-dashoffset: 1400; animation: cumDraw 2200ms var(--ease-out) 500ms forwards; }
-    @keyframes cumDraw { to { stroke-dashoffset: 0; } }
-
-    /* ---------- Valuation variant ----------
-       Same shell, different pane: one headline value carried on a filled card
-       (as the app draws it), then the three approaches side by side so the
-       reconciliation is legible at a glance rather than implied. */
-    .dash.val .vtop { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-top: 12px; }
-    .dash.val .vhero {
-      background: var(--ad-navy-900); color: white; padding: 12px 14px;
-      display: flex; flex-direction: column; justify-content: center;
-    }
-    .dash.val .vhero span { font-size: 8.5px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
-    .dash.val .vhero b { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-top: 3px; color: var(--ad-gold-400); }
-    .dash.val .vhero i { font-style: normal; font-size: 9px; color: rgba(255,255,255,0.55); margin-top: 3px; }
-    .dash.val .eyeb.apr { margin-top: 14px; }
-    .dash.val .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px; }
-    .dash.val .col { border: 1px solid var(--border-1); padding: 9px 11px; }
-    .dash.val .col h6 {
-      margin: 0 0 6px; font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
-      color: var(--fg-2); font-weight: 700; padding-bottom: 5px; border-bottom: 1px solid var(--border-1);
-    }
-    .dash.val .col div { display: flex; justify-content: space-between; gap: 8px; font-size: 10px; padding: 3px 0; }
-    .dash.val .col div span { color: var(--fg-3); }
-    .dash.val .col div b { font-weight: 600; font-variant-numeric: tabular-nums; }
-    .dash.val .col div.tot { border-top: 1px solid var(--border-1); margin-top: 4px; padding-top: 5px; }
-    .dash.val .col div.tot b { color: var(--ad-navy-900); font-size: 11.5px; }
-
-    /* Short laptops: at 700px tall the hero came within 9px of the pinned
-       screen, and anything past it is unreachable because the pin does not
-       scroll. The paragraph is the first thing to give — the headline, the
-       buttons and the product all say more than it does. */
-    @media (max-height: 860px) and (min-width: 1001px) {
-      .hero p.lede { font-size: 14.5px; margin-top: 11px; max-width: 560px; }
-      .hero .cta { margin-top: 17px; }
-      .hero h1 { font-size: clamp(28px, 3.6vw, 42px); }
-    }
-    /* Below this the paragraph has to go. Once the top bar and the trust strip
-       are subtracted a 700px screen leaves 570px for the hero, and the English
-       one — the tallest — wants 583px with the paragraph in. The headline, the
-       buttons and the product shot all say more than it does, and anything
-       that does not fit is unreachable inside a pin that does not scroll. */
-    /* English is the binding case: it wraps to more lines than the Arabic, so
-       its hero runs ~46px taller and it is the one that decides these limits.
-       Below this height the paragraph goes and the shot gives back a little,
-       because the figures inside the shot matter more than either. */
-    @media (max-height: 820px) and (min-width: 1001px) {
-      .hero p.lede { display: none; }
-      .heroShot { max-height: calc((100vh - var(--tb, 80px)) * 0.34); }
-    }
+    .hdots button[aria-selected="true"] { background: var(--ad-gold-500); width: 44px; }
+    .hdots button:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
 
     @media (max-width: 1000px) {
-      .hero { padding: 60px 24px 0; }
-      .hero + .hero { padding-top: 72px; }
-      .heroShot { margin-top: 40px; max-height: 320px; }
+      .hero { padding: 44px 24px 0; }
+      .heroGrid { grid-template-columns: 1fr; gap: 26px; }
+      .heroCopy { text-align: center; }
+      .hero .eyebrow { justify-content: center; }
+      .hero p.lede { margin-inline: auto; }
+      .hero .cta { justify-content: center; }
+      .heroShot, html[dir="rtl"] .heroShot { transform: none; max-height: 300px; }
+      .hero .deco, .hero::before, .hero::after { display: none; }
+      .heroNav { justify-content: center; }
       .dash .top .tk div:nth-child(n+3) { display: none; }
       .dash .cards { grid-template-columns: repeat(2, 1fr); }
       .dash .split { grid-template-columns: 1fr; }
@@ -417,12 +195,11 @@
       .dash.val .col:nth-child(n+3) { display: none; }
     }
     @media (max-width: 620px) {
-      .heroShot { max-height: 240px; }
+      .heroShot { max-height: 230px; }
       .dash .tabs i:nth-child(n+5) { display: none; }
       .dash .top .pname { display: none; }
       .dash.val .vtop { grid-template-columns: 1fr; }
       .dash.val .vtop .c { display: none; }
-
     }
 
     /* ---------- Services ---------- */
@@ -539,13 +316,16 @@
       transition-delay: calc(var(--i) * 520ms + 420ms);
     }
 
-    /* ---------- Trust strip ---------- */
-    .trust { border-top: 1px solid rgba(255,255,255,0.08); }
+    /* ---------- Trust strip ----------
+       Fixed row at the foot of the hero, under a rule, as in the reference.
+       Recoloured for a light ground: the previous rgba(255,255,255,…) rule and
+       type were invisible now that the hero is no longer navy. */
+    .trust { border-top: 1px solid var(--border-1); margin-top: 40px; }
     .trust .inner {
-      max-width: 1180px; margin: 0 auto; padding: 16px 40px;
+      max-width: 1180px; margin: 0 auto; padding: 18px 0 26px;
       display: flex; gap: 14px 36px; flex-wrap: wrap; justify-content: space-between;
     }
-    .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; }
+    .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
     .trust .t::before { content: "◆"; color: var(--ad-gold-500); font-size: 7px; }
 
     /* ---------- Features bento ---------- */
@@ -809,19 +589,12 @@
       .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
       .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
 
-      /* No pinning and no handover: the track collapses, the pin stops
-         sticking, and the two heroes become ordinary stacked sections you
-         simply scroll past. Un-stacking them from the shared grid cell is the
-         part that matters — left overlapping without the crossfade they would
-         print on top of each other. */
-      .heroes { height: auto; }
-      .heroPin { position: static; height: auto; display: block; overflow: visible; }
-      .hero { grid-row: auto; grid-column: auto; pointer-events: auto; padding-block: 60px; }
-      .heroPin > .trust { grid-row: auto; grid-column: auto; }
-      .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta, .hero .heroShot {
-        opacity: 1; transform: none; will-change: auto;
-      }
-      .heroShot { max-height: none; -webkit-mask-image: none; mask-image: none; }
+      /* The slider changes slide without animating: the outgoing one is simply
+         replaced. The tilt goes too, since it reads as motion even at rest. */
+      .heroSlide { transition: none; transform: none; }
+      .heroShot, html[dir="rtl"] .heroShot,
+      .heroArt:hover .heroShot, html[dir="rtl"] .heroArt:hover .heroShot { transform: none; transition: none; }
+      .hdots button { transition: none; }
       /* The flow button keeps its hover state but stops travelling: the flood
          and the arrow hand-over are the motion, so they resolve instantly. */
       .btn-flow, .btn-flow .lbl, .btn-flow .circ, .btn-flow .fa { transition: none; }
@@ -1008,26 +781,15 @@
       .trust .t { font-size: 9.5px; letter-spacing: 0.07em; }
     }
 
-    /* Small phones give up the pin entirely. On a 320x640 screen the hero
-       still ran 110px past a pinned viewport even after the paragraph went,
-       and a hero that does not fit its pin has parts that cannot be reached at
-       all. Stacked, they simply scroll — the same fallback reduced motion
-       gets, and a far better trade at this size than a cross-fade nobody has
-       room to see. */
-    @media (max-width: 700px) and (max-height: 740px) {
-      .heroes { height: auto; }
-      .heroPin { position: static; height: auto; display: block; overflow: visible; }
-      .hero { grid-row: auto; grid-column: auto; pointer-events: auto; padding-block: 44px; }
-      .hero .eyebrow, .hero h1, .hero p.lede, .hero .cta, .hero .heroShot {
-        opacity: 1; transform: none;
-      }
-      .heroShot { max-height: none; -webkit-mask-image: none; mask-image: none; }
-      .heroPin > .trust { grid-row: auto; grid-column: auto; }
-    }
+    /* The small-phone and short-viewport rules the pinned hero needed are gone
+       with it. Nothing is pinned now, so a hero taller than the screen simply
+       scrolls, and the earlier height gymnastics — dropping the paragraph,
+       shrinking the shot against the viewport, abandoning the pin below
+       700x740 — no longer have anything to guard against. */
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260906"></script>
+<script src="assets/mobile-notice.js?v=20260907"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1059,44 +821,46 @@
     </div>
   </div>
 
-  <!-- ============ HEROES ============
-       Two of them, one per platform, handed over softly as the reader
-       scrolls. Each names its own product and speaks only about that product;
-       the generic counters that used to sit here (2 platforms, 10+ dashboards,
-       IVS) said nothing specific about either and are gone. -->
-  <div class="heroes" id="heroStage">
-   <div class="heroPin">
+  <!-- ============ HERO ============
+       Light section, two columns, the product tilted in on the side, and a
+       static trust row beneath a rule — the reference layout, in REAP's navy
+       and gold rather than its purple and yellow, and in REAP's own faces.
 
-    <!-- ---------- 01 · Financial modeling ---------- -->
-    <div class="hero" data-hero>
-      <div class="eyebrow"><b>01</b><span data-ar="النمذجة المالية">Financial Modeling</span></div>
-      <h1 data-ar="ادرس جدوى التطوير <em>قبل أن تشتري الأرض.</em>">Test a development's feasibility <em>before you buy the land.</em></h1>
-      <p class="lede" data-ar="ركّب البرنامج — فلل، شقق، تجزئة، فندق، مبنى متعدد الاستخدامات — وحدّد التكاليف والتمويل، ثم اقرأ التدفقات النقدية والعوائد والحساسية ومونت كارلو وشلال توزيعات الصندوق. محرك واحد يقود كل لوحة.">
-        Assemble the program — villas, apartments, retail, hotel, mixed-use — set costs and
-        financing, then read cashflow, returns, sensitivity, Monte Carlo and the fund waterfall.
-        One engine drives every dashboard.
-      </p>
-      <!-- Same pair on both heroes: sign up, or look around first. Wired by
-           class rather than id, since there are now two of each. -->
-      <div class="cta">
-        <!-- data-ar sits on the LABEL, not the button: the i18n layer swaps
-             innerHTML, which on the button would delete the arrows and the
-             flood span along with the English text. -->
-        <button class="btn-flow primary heroSignup" type="button">
-          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
-          <span class="circ" aria-hidden="true"></span>
-          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-        <button class="btn-flow heroGuest" type="button">
-          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
-          <span class="circ" aria-hidden="true"></span>
-          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-      </div>
+       The two platforms are SLIDES, not a scroll-driven handover: the reader
+       moves between them with the arrows, the dots, a swipe or the arrow keys,
+       and the page scrolls past normally. Nothing is pinned. -->
+  <div class="hero">
+    <div class="heroInner">
 
-      <div class="heroShot">
+      <div class="heroSlides" id="heroSlides">
+        <!-- 01 · Financial modeling -->
+        <div class="heroSlide is-on" data-slide>
+          <div class="heroGrid">
+            <div class="heroCopy">
+              <div class="eyebrow"><b>01</b><span data-ar="النمذجة المالية">Financial Modeling</span></div>
+              <h1 data-ar="ادرس جدوى التطوير <em>قبل أن تشتري الأرض.</em>">Test a development's feasibility <em>before you buy the land.</em></h1>
+              <p class="lede" data-ar="ركّب البرنامج — فلل، شقق، تجزئة، فندق، مبنى متعدد الاستخدامات — وحدّد التكاليف والتمويل، ثم اقرأ التدفقات النقدية والعوائد والحساسية ومونت كارلو وشلال توزيعات الصندوق. محرك واحد يقود كل لوحة.">
+                Assemble the program — villas, apartments, retail, hotel, mixed-use — set costs and
+                financing, then read cashflow, returns, sensitivity, Monte Carlo and the fund
+                waterfall. One engine drives every dashboard.
+              </p>
+              <div class="cta">
+                <button class="btn-flow primary heroSignup" type="button">
+                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+                  <span class="circ" aria-hidden="true"></span>
+                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+                <button class="btn-flow heroGuest" type="button">
+                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
+                  <span class="circ" aria-hidden="true"></span>
+                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="heroArt">
+              <div class="heroShot">
         <div class="dash" aria-hidden="true">
           <div class="top">
             <span class="bmark">
@@ -1155,37 +919,41 @@
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- ---------- 02 · Valuation ---------- -->
-    <div class="hero" data-hero>
-      <div class="eyebrow"><b>02</b><span data-ar="التقييم العقاري">Real Estate Valuation</span></div>
-      <h1 data-ar="اعرف ما يساويه العقار <em>بثلاثة أساليب، لا برأي واحد.</em>">Know what a property is worth <em>by three methods, not one opinion.</em></h1>
-      <p class="lede" data-ar="معالج موجّه بلغة مبسطة يقودك عبر المقارنات السوقية ورسملة الدخل وأسلوب التكلفة، ثم يرجّحها في قيمة واحدة مع نطاق ثقة — وفحوصات جودة تنبّهك إذا تباعدت الأساليب.">
-        A guided, plain-language wizard walks you through sales comparison, income capitalisation
-        and the cost approach, then reconciles them into one figure with a confidence range —
-        and quality checks that warn you when the methods disagree.
-      </p>
-      <div class="cta">
-        <!-- data-ar sits on the LABEL, not the button: the i18n layer swaps
-             innerHTML, which on the button would delete the arrows and the
-             flood span along with the English text. -->
-        <button class="btn-flow primary heroSignup" type="button">
-          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
-          <span class="circ" aria-hidden="true"></span>
-          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-        <button class="btn-flow heroGuest" type="button">
-          <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
-          <span class="circ" aria-hidden="true"></span>
-          <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </button>
-      </div>
-
-      <div class="heroShot">
+              </div>
+              <span class="deco deco-a" aria-hidden="true"></span>
+              <span class="deco deco-b" aria-hidden="true"></span>
+              <span class="deco deco-c" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+        <!-- 02 · Valuation -->
+        <div class="heroSlide" data-slide>
+          <div class="heroGrid">
+            <div class="heroCopy">
+              <div class="eyebrow"><b>02</b><span data-ar="التقييم العقاري">Real Estate Valuation</span></div>
+              <h1 data-ar="اعرف ما يساويه العقار <em>بثلاثة أساليب، لا برأي واحد.</em>">Know what a property is worth <em>by three methods, not one opinion.</em></h1>
+              <p class="lede" data-ar="معالج موجّه بلغة مبسطة يقودك عبر المقارنات السوقية ورسملة الدخل وأسلوب التكلفة، ثم يرجّحها في قيمة واحدة مع نطاق ثقة — وفحوصات جودة تنبّهك إذا تباعدت الأساليب.">
+                A guided, plain-language wizard walks you through sales comparison, income
+                capitalisation and the cost approach, then reconciles them into one figure with a
+                confidence range — and quality checks that warn you when the methods disagree.
+              </p>
+              <div class="cta">
+                <button class="btn-flow primary heroSignup" type="button">
+                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+                  <span class="circ" aria-hidden="true"></span>
+                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+                <button class="btn-flow heroGuest" type="button">
+                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                  <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
+                  <span class="circ" aria-hidden="true"></span>
+                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="heroArt">
+              <div class="heroShot">
         <div class="dash val" aria-hidden="true">
           <div class="top">
             <span class="bmark">
@@ -1248,22 +1016,39 @@
             </div>
           </div>
         </div>
+              </div>
+              <span class="deco deco-a" aria-hidden="true"></span>
+              <span class="deco deco-b" aria-hidden="true"></span>
+              <span class="deco deco-c" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Inside the pin, on the floor of the hero screen. It belongs to both
-         platforms rather than to either, so it sits below whichever hero is
-         showing and does not fade with them. -->
-    <div class="trust">
-      <div class="inner">
-        <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
-        <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
-        <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
-        <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
+      <!-- Slider controls. Arrows are direction-aware; the dots name their
+           platform for anyone on a screen reader. -->
+      <div class="heroNav">
+        <button class="hn hn-prev" id="heroPrev" type="button" aria-label="Previous platform" data-ar-title="المنصة السابقة">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="hdots" id="heroDots" role="tablist"></div>
+        <button class="hn hn-next" id="heroNext" type="button" aria-label="Next platform" data-ar-title="المنصة التالية">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
       </div>
-    </div>
 
-   </div>
+      <!-- Fixed trust row: one static band under a rule, the same on both
+           slides because it describes the platform rather than either app. -->
+      <div class="trust">
+        <div class="inner">
+          <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
+          <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
+          <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
+          <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- ============ SERVICES ============ -->
@@ -1671,8 +1456,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260906"></script>
-<script src="assets/auth.js?v=20260906"></script>
+<script src="assets/config.js?v=20260907"></script>
+<script src="assets/auth.js?v=20260907"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -1925,113 +1710,80 @@
     reveals.forEach((el) => io.observe(el));
   }
 
-  /* ---------- Soft handover between the two heroes ----------
-     Each hero gets --f, how much of the reader's attention it holds: 1 while
-     its own shot sits in the middle of the viewport, easing to 0 as it leaves.
-     The CSS above turns that single number into the fade and the lift, so the
-     two never fight each other — one rises exactly as the other settles.
+  /* ---------- Hero slider ----------
+     The two platforms are slides now, not a scroll-driven handover. Nothing is
+     pinned, nothing listens to scroll, and the page moves past the hero
+     normally — which also retired the chrome-height measurement the pin needed.
 
-     Measured off the SHOT rather than the section, because the sections are
-     tall and their midpoints pass the viewport long after the thing you are
-     actually looking at has gone. rAF-throttled, passive, and skipped
-     entirely under reduced motion, where the CSS pins everything at full
-     strength. */
-  /* Publish how much chrome sits ABOVE the pinned hero screen, so the pin can
-     be exactly the space that is left.
+     Driven by the arrows, the dots, the arrow keys while the slider has focus,
+     and a horizontal swipe. Direction-aware: in Arabic "next" is a swipe to
+     the right and the Left arrow key, since the reading order is reversed. */
+  (function heroSlider() {
+    const wrap = $("heroSlides");
+    if (!wrap) return;
+    const slides = Array.prototype.slice.call(wrap.querySelectorAll("[data-slide]"));
+    if (slides.length < 2) return;
 
-     Measured from the stage's own offset rather than from the top bar. The bar
-     is not the only thing up there: on phones a dismissable notice sits above
-     it, and measuring only the bar left the pin 76px too tall — its floor, and
-     with it the trust strip, hung below the fold. Reading the stage's position
-     counts whatever happens to be there.
+    const dotsBox = $("heroDots");
+    const rtl = document.documentElement.getAttribute("dir") === "rtl";
+    const names = slides.map((s) => {
+      const eb = s.querySelector(".eyebrow span");
+      return eb ? eb.textContent.trim() : "";
+    });
 
-     Recomputed when that notice is removed, since dismissing it changes the
-     offset without firing resize. */
-  (function publishChromeHeight() {
-    const stage = $("heroStage");
-    if (!stage) return;
-    const set = function () {
-      const above = Math.round(stage.getBoundingClientRect().top + window.pageYOffset);
-      document.documentElement.style.setProperty("--tb", Math.max(0, above) + "px");
-    };
-    set();
-    window.addEventListener("resize", set, { passive: true });
-    window.addEventListener("load", set);
-    if (window.MutationObserver) {
-      new MutationObserver(set).observe(document.body, { childList: true });
+    let at = 0;
+    const dots = names.map((name, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.title = name;
+      b.setAttribute("aria-label", name);
+      b.onclick = () => show(i);
+      dotsBox.appendChild(b);
+      return b;
+    });
+
+    function show(i) {
+      at = (i + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle("is-on", k === at));
+      dots.forEach((d, k) => d.setAttribute("aria-selected", k === at ? "true" : "false"));
+      /* The hidden slide keeps its buttons out of the tab order — a control
+         nobody can see should not be reachable by keyboard either. */
+      slides.forEach((s, k) => {
+        s.querySelectorAll("button").forEach((b) => {
+          if (k === at) b.removeAttribute("tabindex");
+          else b.setAttribute("tabindex", "-1");
+        });
+      });
     }
-  })();
+    const step = (d) => show(at + d);
 
-  (function heroHandover() {
-    const stage = $("heroStage");
-    const pin = stage ? stage.querySelector(".heroPin") : null;
-    const heroes = stage ? Array.prototype.slice.call(stage.querySelectorAll("[data-hero]")) : [];
-    if (!stage || heroes.length < 2) return;
-    const still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (still && still.matches) return;
+    $("heroPrev").onclick = () => step(-1);
+    $("heroNext").onclick = () => step(1);
 
-    /* Progress through the pinned track, 0 at the moment it sticks and 1 when
-       it lets go. Measured off the STAGE, not off either hero: inside the pin
-       the heroes no longer move, so their own positions say nothing about how
-       far the reader has come.
+    wrap.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const forward = rtl ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+      step(forward ? 1 : -1);
+    });
 
-       The first third holds hero 1, the crossover runs from HOLD to HOLD+FADE,
-       and the rest holds hero 2 — so the second one is fully settled well
-       before the page starts moving again. */
-    /* The outgoing hero clears before the incoming one arrives, rather than the
-       two dissolving through each other. A straight crossfade put both at
-       roughly half opacity mid-swap, and half of a dense dashboard on top of
-       half of another dense dashboard is not a transition — it is two
-       headlines and two tables printed over one another.
+    /* Swipe. Only a clearly horizontal drag counts, so scrolling the page
+       through the hero on a phone does not flick the slide over. */
+    let x0 = null, y0 = null;
+    wrap.addEventListener("touchstart", (e) => {
+      const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY;
+    }, { passive: true });
+    wrap.addEventListener("touchend", (e) => {
+      if (x0 === null) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - x0, dy = t.clientY - y0;
+      x0 = y0 = null;
+      if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+      const forward = rtl ? dx > 0 : dx < 0;
+      step(forward ? 1 : -1);
+    }, { passive: true });
 
-       OUT runs [HOLD, HOLD + 0.6·FADE], IN runs [HOLD + 0.45·FADE, HOLD +
-       FADE]. The 15% they share is small enough that neither exceeds about a
-       fifth of full strength while the other is on screen, which reads as a
-       handover instead of a double exposure. */
-    const HOLD = 0.30, FADE = 0.30;
-    const OUT_END = HOLD + FADE * 0.60;
-    const IN_START = HOLD + FADE * 0.45;
-    const clamp01 = function (v) { return v < 0 ? 0 : (v > 1 ? 1 : v); };
-    let queued = false;
-    const paint = function () {
-      queued = false;
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const r = stage.getBoundingClientRect();
-      /* The distance the pin actually stays stuck for is the track minus the
-         PIN, not the track minus the viewport — the pin is a top bar shorter
-         than the screen. Using the viewport overstated the travel and let the
-         swap finish early, before the pin let go. */
-      const pinH = pin ? pin.getBoundingClientRect().height : vh;
-      const travel = Math.max(1, r.height - pinH);
-      const p = Math.max(0, Math.min(1, -r.top / travel));
-      const f1 = 1 - clamp01((p - HOLD) / (OUT_END - HOLD));
-      const f2 = clamp01((p - IN_START) / (HOLD + FADE - IN_START));
-      const fs = [f1, f2];
-      for (let i = 0; i < heroes.length; i++) {
-        heroes[i].style.setProperty("--f", fs[i].toFixed(3));
-        // Only the one in front takes clicks; the other is faded past use.
-        if (fs[i] >= 0.5) heroes[i].setAttribute("data-lead", "");
-        else heroes[i].removeAttribute("data-lead");
-      }
-    };
-    /* Paint straight from the scroll event rather than only inside a
-       requestAnimationFrame callback. The work is one getBoundingClientRect
-       and two custom-property writes, so it is cheap enough to run inline, and
-       depending on rAF meant that anywhere it does not fire — a background
-       tab, a throttled or non-compositing window — the heroes simply never
-       swapped: the first one stayed pinned for the whole track and the reader
-       scrolled two and a half screens of empty background. rAF is still used
-       to coalesce bursts, but it is no longer what correctness rests on. */
-    const onScroll = function () {
-      paint();
-      if (queued) return;
-      queued = true;
-      window.requestAnimationFrame(paint);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
-    window.addEventListener("load", onScroll);
-    paint();
+    show(0);
   })();
 
   /* The weighting bars grow once, when the snapshots first come into view. */
