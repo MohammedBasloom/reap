@@ -85,11 +85,23 @@ function T(str, vars) {
 /* ---------- A4 geometry ----------
    Worked in millimetres and converted once, so the preview and the print are
    the same object rather than two layouts that agree by luck. */
+/* ---------- Slide geometry ----------
+   338.67 x 190.5mm — 13.333 x 7.5 inches, the standard 16:9 presentation
+   page. Not A4: this is read on a screen and shown in a room, so it is laid
+   out landscape, wider and shallower, with fewer blocks to a page.
+
+   The shallower page is the reason a deck runs to more pages than the
+   portrait version did, and that is the intended trade. */
 const MM = 96 / 25.4;
-const PAGE_W_MM = 210, PAGE_H_MM = 297;
-const PAD_X_MM = 18, HEAD_H_MM = 20, FOOT_H_MM = 14, GAP_MM = 6;
+const PAGE_W_MM = 338.67, PAGE_H_MM = 190.5;
+const PAD_X_MM = 20, HEAD_H_MM = 15, FOOT_H_MM = 11, GAP_MM = 5;
 const CONTENT_H_PX = Math.floor((PAGE_H_MM - HEAD_H_MM - FOOT_H_MM - GAP_MM * 2) * MM);
 const CONTENT_W_MM = PAGE_W_MM - PAD_X_MM * 2;
+
+/* How many year columns fit across one slide before the table has to be cut
+   and continued. Years run horizontally, so this is a width budget, not a
+   height one — the paginator cannot help, so the split happens at build. */
+const YEARS_PER_BLOCK = 10;
 
 /* =============================================================
    1. Derived metrics
@@ -611,34 +623,103 @@ function buildBlocks(ctx) {
   const yRev = annualise((cf.months || []).map((_, i) =>
     (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0)), months);
   const yInt = annualise(cf.interest || [], months);
+  /* Years run ACROSS, not down: a period is a column and a measure is a row,
+     which is how a development appraisal is read and how it sits on a
+     landscape slide. Figures are compact here — twelve columns of fully
+     written riyals would not fit, and nobody reads a cash flow table to the
+     nearest riyal. The full figures are in the Financial Overview. */
+  /* SIGNS COME FROM THE ENGINE, NOT FROM THE TABLE.
+
+     Cost and interest flows are already negative — they are outflows. The
+     first version of this table subtracted them, which turned every cost into
+     income: year one showed +66.2M against zero revenue and 70.2M of spend,
+     and the total came out at 412.2M instead of the 57.3M profit the engine
+     reports. It also printed "−−SAR 177.5M", the manual minus landing on top
+     of the one the formatter had already supplied.
+
+     So nothing here negates anything. Values are summed as they come and
+     handed to the formatter, which renders its own sign. The check that this
+     is right: the Net total equals kpi.profit exactly. */
   let cum = 0;
-  const cfRows = yCost.map((c, i) => {
-    const net = yRev[i] - c - Math.abs(yInt[i] || 0);
-    cum += net;
-    return [T("Year {n}", { n: FN(i + 1) }), money(yRev[i]), "−" + money(c),
-            "−" + money(Math.abs(yInt[i] || 0)), money(net), money(cum)];
+  const yNet = [], yCum = [];
+  yCost.forEach((c, i) => {
+    const net = yRev[i] + c + (yInt[i] || 0);
+    cum += net; yNet.push(net); yCum.push(cum);
   });
-  table({
-    title: "Annual cash flow",
-    note: T("Costs and finance charges are shown as outflows. The cumulative column is the running project position, undiscounted.", null),
-    head: ["Period", "Revenue", "Cost", "Finance", "Net", "Cumulative"],
-    align: ["start", "end", "end", "end", "end", "end"],
-    rows: cfRows,
-    foot: [T("Total", null), money(yRev.reduce((a, b) => a + b, 0)),
-           "−" + money(yCost.reduce((a, b) => a + b, 0)),
-           "−" + money(Math.abs(yInt.reduce((a, b) => a + b, 0))),
-           money(cum), ""],
-  });
+  const nYears = yCost.length;
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  const totalCol = [FC(sum(yRev)), FC(sum(yCost)), FC(sum(yInt)), FC(sum(yNet)), ""];
+  const measures = [T("Revenue", null), T("Cost", null), T("Finance", null),
+                    T("Net", null), T("Cumulative", null)];
+
+  for (let start = 0; start < nYears; start += YEARS_PER_BLOCK) {
+    const end = Math.min(nYears, start + YEARS_PER_BLOCK);
+    const last = end >= nYears;
+    const idx = [];
+    for (let i = start; i < end; i++) idx.push(i);
+
+    const head = [T("Measure", null), ...idx.map(i => T("Year {n}", { n: FN(i + 1) }))];
+    if (last) head.push(T("Total", null));
+
+    const cell = (vals, i) => FC(vals[i] || 0);
+    const rows = [
+      [measures[0], ...idx.map(i => cell(yRev, i)), ...(last ? [totalCol[0]] : [])],
+      [measures[1], ...idx.map(i => cell(yCost, i)), ...(last ? [totalCol[1]] : [])],
+      [measures[2], ...idx.map(i => cell(yInt, i)), ...(last ? [totalCol[2]] : [])],
+      [measures[3], ...idx.map(i => cell(yNet, i)), ...(last ? [totalCol[3]] : [])],
+      [measures[4], ...idx.map(i => cell(yCum, i)), ...(last ? [totalCol[4]] : [])],
+    ];
+    table({
+      title: start === 0 ? "Annual cash flow"
+        : T("Annual cash flow, years {a}–{b}", { a: FN(start + 1), b: FN(end) }),
+      note: start === 0
+        ? T("Costs and finance charges are shown as outflows. The cumulative row is the running project position, undiscounted. Figures are rounded for presentation.", null)
+        : null,
+      head,
+      align: head.map((_, i) => i === 0 ? "start" : "end"),
+      rows,
+      levels: null,
+      emphasis: [3, 4],
+    });
+  }
+
+  /* Two charts, because the section names two things. The first is the
+     project's own position; the second is how it was funded and what came
+     back to equity. Previously one chart carried the title of both. */
+  /* Not negated — see the note on the table above. These flows arrive
+     negative and the chart stacks negatives downward on its own. Flipping
+     them drew every cost as income. */
+  const costSeries = (cf.months || []).map((_, i) =>
+    (cf.land[i] || 0) + (cf.landRent ? cf.landRent[i] || 0 : 0) + (cf.soft[i] || 0) +
+    (cf.construction[i] || 0) + (cf.siteWork[i] || 0) + (cf.contingency[i] || 0) +
+    (cf.selling[i] || 0) + (cf.opex[i] || 0));
+  const revSeries = (cf.months || []).map((_, i) =>
+    (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0));
+  const projFlow = cf.gross || (cf.months || []).map((_, i) => revSeries[i] + costSeries[i]);
+
   B.push({
-    type: "chart", title: "Project and equity cash flow", height: 250,
-    note: T("Bars are the monthly project position bucketed by year; the line is cumulative equity cash flow.", null),
+    type: "chart", title: "Project cash flow", height: 230,
+    note: T("Cost and revenue by year, with the cumulative project position drawn over them.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
-      months: cf.months, height: 250, bucket: 12,
+      months: cf.months, height: 230, bucket: 12,
       series: [
-        { label: T("Costs", null), color: "var(--ad-navy-700)",
-          values: (cf.months || []).map((_, i) => -((cf.land[i] || 0) + (cf.landRent ? cf.landRent[i] || 0 : 0) + (cf.soft[i] || 0) + (cf.construction[i] || 0) + (cf.siteWork[i] || 0) + (cf.contingency[i] || 0) + (cf.selling[i] || 0) + (cf.opex[i] || 0))) },
-        { label: T("Revenue", null), color: "var(--ad-success)",
-          values: (cf.months || []).map((_, i) => (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0)) },
+        { label: T("Costs", null), color: "var(--ad-navy-700)", values: costSeries },
+        { label: T("Revenue", null), color: "var(--ad-success)", values: revSeries },
+      ],
+      cumulativeValues: projFlow, cumulativeOnPrimary: true,
+      formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
+    }),
+  });
+
+  B.push({
+    type: "chart", title: "Equity and debt", height: 230,
+    note: T("How the project was funded, and the cumulative equity position drawn over it.", null),
+    render: () => React.createElement(window.Charts.StackedBars, {
+      months: cf.months, height: 230, bucket: 12,
+      series: [
+        { label: T("Debt drawn", null), color: "var(--ad-navy-400)", values: cf.debtDraw || [] },
+        { label: T("Debt repaid", null), color: "var(--ad-danger)", opacity: 0.75, values: cf.debtRepay || [] },
+        { label: T("Distributions", null), color: "var(--ad-gold-500)", values: cf.distributions || [] },
       ],
       cumulativeValues: cf.net, cumulativeOnPrimary: true,
       formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
@@ -1068,8 +1149,10 @@ function TableHead({ b, bi }) {
 function TableRow({ b, ri, bi }) {
   const cells = b.rows[ri];
   const lvl = b.levels ? b.levels[ri] : null;
+  const em = b.emphasis && b.emphasis.indexOf(ri) !== -1;
   return (
-    <tr className={lvl ? "lvl-" + lvl : undefined} data-mid={bi + ":r" + ri}>
+    <tr className={[lvl ? "lvl-" + lvl : "", em ? "rp-em" : ""].filter(Boolean).join(" ") || undefined}
+        data-mid={bi + ":r" + ri}>
       {cells.map((c, i) => (
         <td key={i} className={i > 0 ? "tabnum" : undefined}
             style={{ textAlign: (b.align && b.align[i]) || "start" }}>{c}</td>
@@ -1119,7 +1202,13 @@ function renderAtoms(atoms) {
       );
       continue;
     }
-    out.push(<div className="rp-m" data-mid={a.bi + ":" + a.kind} key={"b" + a.bi + "-" + out.length}><BlockView b={a.b} /></div>);
+    /* A "tabletitle" atom carries the TABLE block, whose own type has no case
+       in BlockView — passing it through unchanged rendered nothing, so every
+       table in the report lost its heading and its explanatory note while the
+       packer went on reserving the space for them. The type is overridden
+       here exactly as the measuring pass does it. */
+    const blk = a.kind === "tabletitle" ? Object.assign({}, a.b, { type: "tabletitle" }) : a.b;
+    out.push(<div className="rp-m" data-mid={a.bi + ":" + a.kind} key={"b" + a.bi + "-" + out.length}><BlockView b={blk} /></div>);
     i++;
   }
   return out;
@@ -1326,10 +1415,14 @@ function ReportDocument({ blocks, meta }) {
      which can change their heights again (a table alone on a page lays its
      columns out differently), so an unbounded loop could oscillate. */
   useLayoutEffectRep(() => {
-    if (!pages || !docRef.current || correctedRef.current >= 2) return;
+    if (!pages || !docRef.current || correctedRef.current >= 3) return;
     const doc = docRef.current;
     let worst = 0;
-    doc.querySelectorAll(".rp-content").forEach(c => {
+    /* Only pages the packer produced. The contents page is built separately
+       and repacking cannot change it, so including it here burned the whole
+       correction budget on a page that could never converge — and left the
+       real overflows unfixed. */
+    doc.querySelectorAll(".rp-page:not(.rp-toc) .rp-content").forEach(c => {
       worst = Math.max(worst, c.scrollHeight - c.clientHeight);
     });
     if (worst <= 0) return;
@@ -1631,7 +1724,7 @@ function buildMeta(f, input) {
    already exactly A4 pushes every sheet onto two. @page is document-global
    and cannot be scoped by a selector, so the only way to override it is to
    land later in the head — which a runtime-appended <style> always does. */
-const RP_PAGE_RULE = "@page { size: A4 portrait; margin: 0; }";
+const RP_PAGE_RULE = "@page { size: 338.67mm 190.5mm; margin: 0; }";
 
 function mountPageRule() {
   if (document.getElementById("rp-page-rule")) return;

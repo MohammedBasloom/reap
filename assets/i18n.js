@@ -1136,9 +1136,18 @@
       "تُعرض التكاليف وأعباء التمويل كتدفقات خارجة. وعمود التراكم هو المركز الجاري للمشروع دون خصم.",
     "Period": "الفترة", "Cost": "التكلفة", "Finance": "التمويل",
     "Net": "الصافي", "Cumulative": "التراكمي", "Costs": "التكاليف",
-    "Project and equity cash flow": "التدفق النقدي للمشروع وحقوق الملكية",
-    "Bars are the monthly project position bucketed by year; the line is cumulative equity cash flow.":
-      "الأعمدة هي المركز الشهري للمشروع مُجمَّعًا سنويًا، والخط هو التدفق النقدي التراكمي لحقوق الملكية.",
+    "Annual cash flow, years {a}–{b}": "التدفق النقدي السنوي، السنوات {a}–{b}",
+    "Costs and finance charges are shown as outflows. The cumulative row is the running project position, undiscounted. Figures are rounded for presentation.":
+      "تُعرض التكاليف وأعباء التمويل كتدفقات خارجة. وصف التراكم هو المركز الجاري للمشروع دون خصم. والأرقام مقرّبة لأغراض العرض.",
+    "Project cash flow": "التدفق النقدي للمشروع",
+    "Cost and revenue by year, with the cumulative project position drawn over them.":
+      "التكاليف والإيرادات سنويًا، مع المركز التراكمي للمشروع مرسومًا فوقها.",
+    "Equity and debt": "حقوق الملكية والدين",
+    "How the project was funded, and the cumulative equity position drawn over it.":
+      "كيف مُوّل المشروع، مع المركز التراكمي لحقوق الملكية مرسومًا فوقه.",
+    "Debt drawn": "الدين المسحوب",
+    "Debt repaid": "الدين المسدَّد",
+    "Distributions": "التوزيعات",
 
     /* Investment metrics */
     "Metric": "المؤشر", "Value": "القيمة", "Definition": "التعريف",

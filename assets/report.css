@@ -1,20 +1,25 @@
 /* =============================================================
    Investment report — screen preview and print are the same object.
 
-   The pages are real A4 rectangles in both media. On screen they sit on a
-   grey deck so the reader can see the pagination they are going to get; in
-   print the deck disappears and each rectangle becomes a sheet. Nothing here
-   reflows between the two, which is the whole point: what the preview shows
-   is what comes out.
+   The pages are 16:9 slides, 338.67 x 190.5mm (13.333 x 7.5in), the standard
+   presentation page — not A4. The document is read on a screen and shown in a
+   room, so it is landscape, wider and shallower, and carries fewer blocks to
+   a page. On screen the slides sit on a grey deck so the reader can see the
+   pagination they are going to get; in print the deck disappears and each
+   rectangle becomes a sheet. Nothing reflows between the two, which is the
+   whole point: what the preview shows is what comes out.
+
+   The @page rule that matches these dimensions is injected at runtime from
+   report.jsx — see the note in the print block at the foot of this file.
    ============================================================= */
 
 :root {
-  --rp-page-w: 210mm;
-  --rp-page-h: 297mm;
-  --rp-pad-x: 18mm;
-  --rp-head-h: 20mm;
-  --rp-foot-h: 14mm;
-  --rp-gap: 6mm;
+  --rp-page-w: 338.67mm;
+  --rp-page-h: 190.5mm;
+  --rp-pad-x: 20mm;
+  --rp-head-h: 15mm;
+  --rp-foot-h: 11mm;
+  --rp-gap: 5mm;
   --rp-rule: #D6DCE8;
   --rp-rule-soft: #EAEEF5;
 }
@@ -53,7 +58,7 @@
    Positioned rather than translated so it can never paint over the app. */
 .rp-measure {
   position: fixed; top: 0; inset-inline-start: -10000px;
-  width: 210mm; visibility: hidden; pointer-events: none;
+  width: var(--rp-page-w); visibility: hidden; pointer-events: none;
 }
 /* Each measured block sits in its own block formatting context, so the
    block's margins are INSIDE the rectangle we measure rather than collapsing
@@ -114,7 +119,7 @@
 }
 .rp-cover > *:not(.rp-cv-band) { padding-inline-start: 26mm; padding-inline-end: 18mm; position: relative; }
 
-.rp-cv-top { padding-top: 22mm; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.rp-cv-top { padding-top: 14mm; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .rp-cv-logo { max-height: 22mm; max-width: 70mm; object-fit: contain; display: block; }
 .rp-cv-mark { display: flex; align-items: center; gap: 10px; }
 .rp-cv-mark span {
@@ -124,7 +129,7 @@
 }
 .rp-cv-org { font-size: 10pt; font-weight: 600; color: var(--ad-navy-700); letter-spacing: 0.04em; }
 
-.rp-cv-mid { padding-top: 20mm; }
+.rp-cv-mid { padding-top: 10mm; }
 .rp-cv-eyebrow {
   font-size: 8pt; letter-spacing: 0.24em; text-transform: uppercase;
   color: var(--ad-gold-600); font-weight: 700;
@@ -151,7 +156,7 @@
 .rp-cv-v { color: var(--ad-navy-900); font-weight: 500; }
 .rp-cv-notes { font-size: 8.4pt; color: var(--ad-navy-500); margin-top: 2mm; font-style: italic; }
 
-.rp-cv-foot { padding-bottom: 16mm; }
+.rp-cv-foot { padding-bottom: 11mm; }
 .rp-cv-conf {
   font-size: 8pt; line-height: 1.6; color: var(--ad-navy-700);
   border-inline-start: 3px solid var(--ad-gold-500); padding-inline-start: 4mm;
@@ -162,12 +167,19 @@
   font-size: 7.4pt; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ad-navy-500);
 }
 
-/* ---------- Contents ---------- */
-.rp-toc-list { list-style: none; margin: 6mm 0 0; padding: 0; }
+/* ---------- Contents ----------
+   Two columns. On a shallow landscape slide a single column of eleven
+   sections runs past the foot, and the contents page is the one page the
+   paginator cannot rescue — it is built outside the packer, so it has to fit
+   by construction. */
+.rp-toc-list {
+  list-style: none; margin: 5mm 0 0; padding: 0;
+  columns: 2; column-gap: 14mm;
+}
 .rp-toc-list li {
   display: flex; align-items: baseline; gap: 8px;
-  padding: 3.2mm 0; border-bottom: 1px solid var(--rp-rule-soft);
-  font-size: 10pt;
+  padding: 2.6mm 0; border-bottom: 1px solid var(--rp-rule-soft);
+  font-size: 10pt; break-inside: avoid;
 }
 .rp-toc-n {
   font-family: var(--font-mono); font-size: 8pt; color: var(--ad-gold-600);
@@ -178,25 +190,27 @@
 .rp-toc-p { color: var(--ad-navy-700); font-weight: 600; }
 
 /* ---------- Sections & text ---------- */
-.rp-section { margin-bottom: 5mm; }
+/* A slide header carries more weight than a page header: it is the first
+   thing read from across a room. */
+.rp-section { margin-bottom: 4mm; }
 .rp-section-n {
   font-family: var(--font-mono); font-size: 8pt; font-weight: 700;
   color: var(--ad-gold-600); letter-spacing: 0.1em;
 }
 .rp-section-t {
   font-family: var(--font-display); font-weight: 700;
-  font-size: 17pt; line-height: 1.15; letter-spacing: -0.015em;
+  font-size: 21pt; line-height: 1.12; letter-spacing: -0.018em;
   color: var(--ad-navy-900); margin: 1mm 0 0;
   padding-bottom: 2.5mm; border-bottom: 2px solid var(--ad-navy-900);
 }
-.rp-section-s { font-size: 8.6pt; color: var(--ad-navy-500); margin-top: 2mm; }
+.rp-section-s { font-size: 9pt; color: var(--ad-navy-500); margin-top: 2mm; }
 
 .rp-h3 {
   font-size: 10.5pt; font-weight: 700; color: var(--ad-navy-900);
   margin: 5mm 0 2mm; padding-bottom: 1.5mm;
   border-bottom: 1px solid var(--rp-rule);
 }
-.rp-p { margin: 0 0 3mm; color: var(--ad-navy-800); text-align: justify; }
+.rp-p { margin: 0 0 3mm; color: var(--ad-navy-800); text-align: justify; max-width: 215mm; }
 
 /* ---------- Verdict card ---------- */
 .rp-verdict {
@@ -222,9 +236,11 @@
 .rp-badge.tone-bad  { background: var(--ad-danger); }
 .rp-verdict-line { font-size: 12pt; font-weight: 700; color: var(--ad-navy-900); }
 
-/* ---------- KPI grid ---------- */
+/* ---------- KPI grid ----------
+   Six across on a landscape slide: twelve tiles resolve to two clean rows
+   instead of the three a four-column grid would leave. */
 .rp-kpis {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   border: 1px solid var(--rp-rule); border-width: 1px 0 0 1px;
   margin-bottom: 4mm;
 }
@@ -262,6 +278,12 @@
   color: var(--ad-navy-900); border-top: 1.5px solid var(--ad-navy-900);
   border-bottom: none;
 }
+/* Net and cumulative in the annual cash flow — the two rows a reader looks
+   for first when the years run across. */
+.rp-table tr.rp-em td {
+  font-weight: 700; color: var(--ad-navy-900);
+  border-top: 1px solid var(--rp-rule);
+}
 .rp-table tr.rp-cont td {
   background: transparent !important; border-bottom: 1px solid var(--rp-rule);
   font-size: 7.2pt; letter-spacing: 0.12em; text-transform: uppercase;
@@ -275,8 +297,14 @@ html[dir="rtl"] .rp-table tr.lvl-danger  td:first-child { box-shadow: inset -3px
 html[dir="rtl"] .rp-table tr.lvl-warning td:first-child { box-shadow: inset -3px 0 0 var(--ad-warning); }
 html[dir="rtl"] .rp-table tr.lvl-success td:first-child { box-shadow: inset -3px 0 0 var(--ad-success); }
 
-/* ---------- Finding lists ---------- */
-.rp-list { list-style: none; margin: 0 0 3mm; padding: 0; }
+/* ---------- Finding lists ----------
+   Two columns on a landscape slide. A single column across 298mm gives lines
+   nobody can track back to the start of. */
+.rp-list {
+  list-style: none; margin: 0 0 3mm; padding: 0;
+  columns: 2; column-gap: 12mm;
+}
+.rp-list li { break-inside: avoid; }
 .rp-list li {
   position: relative; padding: 2mm 0 2mm 0; padding-inline-start: 6mm;
   border-bottom: 1px solid var(--rp-rule-soft);
