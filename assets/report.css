@@ -507,3 +507,10 @@ html[dir="rtl"] .rp-table tr.lvl-success td:first-child { box-shadow: inset -3px
 }
 .rp-empty-t { font-size: 15px; font-weight: 700; color: var(--fg-1); margin-bottom: 8px; }
 .rp-empty p { font-size: 13px; line-height: 1.65; color: var(--fg-2); }
+
+/* Standing note under a fieldset legend in the report dialog — explains what
+   the whole group is for, so each field's own hint can stay short. */
+.rp-fs-hint {
+  font-size: 11.5px; line-height: 1.55; color: var(--fg-3);
+  margin: -6px 0 12px;
+}

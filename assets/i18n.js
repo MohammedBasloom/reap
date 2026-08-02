@@ -1130,6 +1130,75 @@
     "Rental income (gross)": "الدخل الإيجاري (الإجمالي)",
     "Exit / terminal value": "قيمة التخارج النهائية",
     "Operating result on the income-producing element": "النتيجة التشغيلية للعنصر المدرّ للدخل",
+    "Operating result, stabilised year": "النتيجة التشغيلية، سنة الاستقرار",
+    "The asset at full occupancy in a normal year of operation. These are annual figures, not lifetime ones — a single year, repeated for as long as the asset is held.":
+      "الأصل بإشغال كامل في سنة تشغيل اعتيادية. وهذه أرقام سنوية لا إجماليات عمر المشروع — سنة واحدة تتكرر ما دام الأصل محتفظًا به.",
+    "Operating result over the whole term": "النتيجة التشغيلية خلال كامل المدة",
+    "Everything actually collected and spent across the hold, from first letting to disposal.":
+      "كل ما حُصّل وأُنفق فعليًا طوال فترة الاحتفاظ، من أول تأجير حتى التخارج.",
+    "Gross income": "الدخل الإجمالي",
+    "Rental income collected": "الدخل الإيجاري المحصّل",
+
+    /* Chart totals — the time basis has to be on the label */
+    "Total revenue, whole term": "إجمالي الإيرادات، كامل المدة",
+    "Net project cash flow, whole term": "صافي التدفق النقدي للمشروع، كامل المدة",
+    "Net equity cash flow, whole term": "صافي التدفق النقدي لحقوق الملكية، كامل المدة",
+    "Total sources, whole term": "إجمالي المصادر، كامل المدة",
+
+    /* Fund-structure caveat */
+    "This section applies only if the project is held through a fund. Everything before it reports the scheme on its own balance sheet; the figures below show how that same result would divide between the partners under the terms set out in the appendix. If no fund is established, none of it applies and the returns already reported stand.":
+      "ينطبق هذا القسم فقط إذا كان المشروع مملوكًا عبر صندوق. فكل ما سبقه يعرض المشروع على ميزانيته الخاصة، أما الأرقام أدناه فتبيّن كيف تنقسم النتيجة نفسها بين الشركاء وفق الشروط الواردة في الملاحق. وإذا لم يُؤسَّس صندوق فلا ينطبق أي منها، وتبقى العوائد المعروضة سابقًا هي المعتمدة.",
+
+    /* Assumptions — bases, without trailing full stops (they land at the
+       wrong visual edge in an RTL table cell) */
+    "Infrastructure cost per m²": "تكلفة البنية التحتية للمتر المربع",
+    "Gross land area": "مساحة الأرض الإجمالية",
+    "The land purchase price": "سعر شراء الأرض",
+    "Gross land area, for each year of the term": "مساحة الأرض الإجمالية، عن كل سنة من المدة",
+    "The interval between ground rent reviews": "الفترة الفاصلة بين مراجعات إيجار الأرض",
+    "The rent then in force, compounded at each review": "الإيجار الساري حينها، مركَّبًا عند كل مراجعة",
+    "Gross land area, spent alongside site works during construction":
+      "مساحة الأرض الإجمالية، تُنفَق مع أعمال الموقع أثناء الإنشاء",
+    "Construction cost plus site works": "تكلفة الإنشاء زائد أعمال الموقع",
+    "Construction plus site works plus soft costs": "الإنشاء زائد أعمال الموقع زائد التكاليف غير المباشرة",
+    "Sales revenue only — raises nothing on a wholly leased scheme":
+      "إيرادات البيع فقط — لا تُحصّل شيئًا في مشروع مؤجَّر بالكامل",
+    "Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. It sets the facility limit, not the amount drawn":
+      "تكلفة التطوير قبل التمويل — الأرض ورسوم النقل والإنشاء وأعمال الموقع والتكاليف غير المباشرة والاحتياطي. وهي تحدّد سقف التسهيل لا المبلغ المسحوب",
+    "Annual, charged monthly on the outstanding balance at the twelfth root of the annual rate":
+      "سنوي، يُحتسب شهريًا على الرصيد القائم بالجذر الثاني عشر للمعدل السنوي",
+    "Annual — discounts the cash flows for NPV, and is the hurdle every return is judged against":
+      "سنوي — يُخصم به التدفق النقدي لحساب القيمة الحالية، وهو العتبة التي يُقاس عليها كل عائد",
+    "Gross land area — the remainder carries no buildable programme":
+      "مساحة الأرض الإجمالية — والباقي لا يحمل برنامجًا قابلًا للبناء",
+
+    /* Report dialog hints */
+    "Appears on the cover and in every page header": "يظهر على الغلاف وفي ترويسة كل صفحة",
+    "Leave blank to use REAP branding": "اتركه فارغًا لاستخدام هوية REAP",
+    "PNG or SVG, under 1.5 MB. Replaces the REAP mark on the cover":
+      "PNG أو SVG، أقل من ١٫٥ ميغابايت. يحل محل شعار REAP على الغلاف",
+    "Printed under your name on the cover": "يُطبع تحت اسمك على الغلاف",
+    "Cover only — not turned into a link": "على الغلاف فقط — لا يُحوَّل إلى رابط",
+    "e.g. King Fahd Road, Riyadh 12345": "مثال: طريق الملك فهد، الرياض ١٢٣٤٥",
+    "e.g. example.com": "مثال: example.com",
+    "Who is receiving this report. These four lines are printed together on the cover.":
+      "الجهة التي يُوجَّه إليها التقرير. وتُطبع هذه الأسطر الأربعة معًا على الغلاف.",
+    "The recipient organisation, not your own": "الجهة المستلمة، لا جهتك أنت",
+    "e.g. Saudi Investment Bank": "مثال: البنك السعودي للاستثمار",
+    "The individual the report is addressed to": "الشخص الموجَّه إليه التقرير",
+    "e.g. Faisal Al-Otaibi": "مثال: فيصل العتيبي",
+    "Their role at the recipient organisation": "منصبه في الجهة المستلمة",
+    "e.g. Head of Real Estate Finance": "مثال: رئيس التمويل العقاري",
+    "One line of context, printed under the recipient": "سطر واحد للسياق، يُطبع تحت اسم المستلم",
+    "e.g. Phase 1 submission": "مثال: تقديم المرحلة الأولى",
+    "The heading on the cover. Defaults to the project name": "العنوان على الغلاف. وافتراضيًا اسم المشروع",
+    "e.g. Feasibility Study — Al Nakheel": "مثال: دراسة جدوى — النخيل",
+    "Your own filing reference, if you use one": "رقم الحفظ لديك، إن كنت تستخدم واحدًا",
+    "e.g. REF-2026-014": "مثال: REF-2026-014",
+    "Printed on the cover and in every page footer": "يُطبع على الغلاف وفي تذييل كل صفحة",
+    "The author or team. Defaults to your company name": "المُعِد أو الفريق. وافتراضيًا اسم شركتك",
+    "e.g. Business Development": "مثال: تطوير الأعمال",
+    "Sets the footer marking and the notice on the cover": "يحدّد وسم التذييل والإشعار على الغلاف",
     "Site works and infrastructure": "أعمال الموقع والبنية التحتية",
     "Operating expenditure over term": "المصروفات التشغيلية خلال المدة",
     "Gross income, stabilised year": "الدخل الإجمالي، سنة الاستقرار",

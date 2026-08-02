@@ -482,6 +482,7 @@ function buildBlocks(ctx) {
   const { input, result, scenarios, waterfall, tornadoIRR, m, rec } = ctx;
   const k = m.k;
   const cf = result.cashflow;
+  const isLeasehold = k.landTenure === "lease";
   const B = [];
   /* Sections number themselves. They used to carry the numeral as a literal,
      with every section after the optional fund one written as a conditional —
@@ -657,18 +658,28 @@ function buildBlocks(ctx) {
   if (k.totalGrossIncome > 0) {
     const rentWholePeriod = (cf.rent || []).reduce((s, v) => s + v, 0);
     table({
-      title: "Operating result on the income-producing element",
-      note: T("The first three lines are stabilised annual figures — the asset at full occupancy in a normal year. The lifetime lines below are the totals actually collected and spent across the hold.", null),
+      title: "Operating result, stabilised year",
+      note: T("The asset at full occupancy in a normal year of operation. These are annual figures, not lifetime ones — a single year, repeated for as long as the asset is held.", null),
       head: ["Item", "Amount"], align: ["start", "end"],
       rows: [
-        [T("Gross income, stabilised year", null), money(k.totalGrossIncome)],
-        [T("Operating expenditure, stabilised year", null), "−" + money(k.totalOpex)],
-        [T("Net operating income, stabilised year", null), money(k.totalNOI)],
-        [T("Rental income collected over term", null), money(rentWholePeriod)],
-        [T("Operating expenditure over term", null), "−" + money(opexWholePeriod)],
+        [T("Gross income", null), money(k.totalGrossIncome)],
+        [T("Operating expenditure", null), "−" + money(k.totalOpex)],
       ],
-      foot: [T("Net operating income over term", null), money(rentWholePeriod - opexWholePeriod)],
-      kinds: [null, null, "total", null, null],
+      foot: [T("Net operating income", null), money(k.totalNOI)],
+    });
+    /* Two tables, not one. Stabilised-annual and whole-term figures differ by
+       nearly a factor of five, and stacking them under a single heading with
+       a note to explain the difference asked the reader to keep track of
+       which convention each row followed. */
+    table({
+      title: "Operating result over the whole term",
+      note: T("Everything actually collected and spent across the hold, from first letting to disposal.", null),
+      head: ["Item", "Amount"], align: ["start", "end"],
+      rows: [
+        [T("Rental income collected", null), money(rentWholePeriod)],
+        [T("Operating expenditure", null), "−" + money(opexWholePeriod)],
+      ],
+      foot: [T("Net operating income", null), money(rentWholePeriod - opexWholePeriod)],
     });
   }
 
@@ -694,7 +705,7 @@ function buildBlocks(ctx) {
   if (k.totalRevenue > 0)
     B.push({
       type: "chart", title: "Revenue by year", height: 200,
-      total: k.totalRevenue, totalLabel: T("Total revenue", null),
+      total: k.totalRevenue, totalLabel: T("Total revenue, whole term", null),
       note: T("When the income actually arrives.", null),
       render: () => React.createElement(window.Charts.StackedBars, {
         months: cf.months, height: 200, bucket: 12,
@@ -741,9 +752,20 @@ function buildBlocks(ctx) {
         note: start === 0 ? note : null,
         head,
         align: head.map((_, i) => i === 0 ? "start" : "end"),
+        /* A year in which a line did nothing is left blank rather than
+           printed as a zero. A grid of "SAR 0" reads as data and buries the
+           handful of cells carrying the actual movement; empty space says
+           "nothing happened here" at a glance.
+
+           The cumulative row is exempt: it is a running balance, and a gap in
+           it would read as missing data rather than as a nil position. */
         rows: rows.map(r => [
           r.label,
-          ...idx.map(i => FC(r.values[i] || 0)),
+          ...idx.map(i => {
+            const v = r.values[i] || 0;
+            if (r.kind !== "cum" && Math.abs(v) < 0.5) return "";
+            return FC(v);
+          }),
           ...(last ? [r.noTotal ? "" : FC(sumArr(r.values))] : []),
         ]),
         kinds: rows.map(r => r.kind || null),
@@ -790,7 +812,7 @@ function buildBlocks(ctx) {
      they find the other. */
   B.push({
     type: "chart", title: "Project cash flow", height: 215,
-    total: (cf.gross || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net project cash flow", null),
+    total: (cf.gross || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net project cash flow, whole term", null),
     note: T("Cost and revenue by year, with the cumulative project position drawn over them.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 215, bucket: 12,
@@ -825,7 +847,7 @@ function buildBlocks(ctx) {
 
   B.push({
     type: "chart", title: "Equity cash flow", height: 215,
-    total: (cf.net || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net equity cash flow", null),
+    total: (cf.net || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net equity cash flow, whole term", null),
     note: T("The facility drawn and serviced, with the cumulative equity position drawn over it.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 215, bucket: 12,
@@ -903,7 +925,7 @@ function buildBlocks(ctx) {
   B.push({
     type: "chart", title: "How the spend was funded, by year", height: 210,
     note: T("Each year of outflow, split into the equity, debt and revenue that covered it.", null),
-    total: totalSources, totalLabel: T("Total sources", null),
+    total: totalSources, totalLabel: T("Total sources, whole term", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 210, bucket: 12,
       series: [
@@ -1017,6 +1039,10 @@ function buildBlocks(ctx) {
   /* ---- Fund waterfall, only when the user has modelled one ---- */
   if (waterfall) {
     sec("Capital Structure and Waterfall", "How proceeds divide between the partners");
+    /* The section is conditional on the user having modelled a fund, so it is
+       easy to read the figures as though the structure were settled. It is
+       not — it is one way of holding the same project. */
+    p(T("This section applies only if the project is held through a fund. Everything before it reports the scheme on its own balance sheet; the figures below show how that same result would divide between the partners under the terms set out in the appendix. If no fund is established, none of it applies and the returns already reported stand.", null));
     /* Per-party totals live under `totals`, not on the waterfall itself.
        Reading them off the wrong level produced three null rows and a section
        page with nothing on it — a silent hole rather than an error. */
@@ -1193,37 +1219,45 @@ function buildBlocks(ctx) {
     align: ["start", "end", "start"], widths: ["27%", "15%", "58%"],
     rows: [
       [T("Land price per m²", null), input.landPricePerSqm ? money(input.landPricePerSqm) : "—",
-        T("Gross land area. Not charged on a leasehold site.", null)],
+        T("Gross land area", null)],
       [T("Land transfer fees", null), FP(input.landTransferFeesPct || 0),
-        T("The land purchase price. Not charged on a leasehold site.", null)],
+        T("The land purchase price", null)],
+    ]
+    /* The ground-rent trio only exists on a leasehold site. Printing a rent
+       review period against a scheme that BUYS its land invited exactly the
+       question it was meant to answer. */
+    .concat(isLeasehold ? [
       [T("Ground rent per m² per year", null), input.landRentPerSqmYr ? money(input.landRentPerSqmYr) : "—",
-        T("Gross land area, each year of the term. Leasehold only.", null)],
+        T("Gross land area, for each year of the term", null)],
       [T("Rent review period", null), input.landRentEscalationYears ? T("{n} years", { n: FN(input.landRentEscalationYears) }) : "—",
-        T("Interval between ground rent reviews.", null)],
+        T("The interval between ground rent reviews", null)],
       [T("Rent escalation at review", null), FP(input.landRentEscalationPct || 0),
-        T("The rent then in force, compounded at each review.", null)],
-      [T("Site infrastructure per m²", null), input.landInfraCostPerSqm ? money(input.landInfraCostPerSqm) : "—",
-        T("Gross land area. Spent alongside site works during construction.", null)],
-      [T("Soft costs", null), FP(input.softCostsPct || 0),
-        T("Construction cost plus site works.", null)],
-      [T("Contingency", null), FP(input.contingencyPct || 0),
-        T("Construction plus site works plus soft costs.", null)],
-      [T("Marketing", null), FP(input.marketingPct || 0),
-        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
-      [T("Sales commission", null), FP(input.salesCommissionPct || 0),
-        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
-      [T("Government and sales fees", null), FP(input.govFeesPct || 0),
-        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
-      [T("Loan to cost, as set", null), FP(input.ltc || 0),
-        T("Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. Sets the facility limit, not the amount drawn.", null)],
-      [T("Interest rate", null), FP(input.interestRate || 0),
-        T("Annual, charged monthly on the outstanding balance at the twelfth root of the annual rate.", null)],
-      [T("Discount rate / hurdle", null), FP(m.hurdle),
-        T("Annual. Discounts the cash flows for NPV, and is the hurdle every return is judged against.", null)],
-    ].concat(input.landType === "raw" ? [
+        T("The rent then in force, compounded at each review", null)],
+    ] : [])
+    .concat(input.landType === "raw" ? [
       [T("Developable share", null), FP(input.developablePct || 0),
-        T("Gross land area. The remainder carries no buildable programme.", null)],
-    ] : []),
+        T("Gross land area — the remainder carries no buildable programme", null)],
+    ] : [])
+    .concat([
+      [T("Infrastructure cost per m²", null), input.landInfraCostPerSqm ? money(input.landInfraCostPerSqm) : "—",
+        T("Gross land area, spent alongside site works during construction", null)],
+      [T("Soft costs", null), FP(input.softCostsPct || 0),
+        T("Construction cost plus site works", null)],
+      [T("Contingency", null), FP(input.contingencyPct || 0),
+        T("Construction plus site works plus soft costs", null)],
+      [T("Marketing", null), FP(input.marketingPct || 0),
+        T("Sales revenue only — raises nothing on a wholly leased scheme", null)],
+      [T("Sales commission", null), FP(input.salesCommissionPct || 0),
+        T("Sales revenue only — raises nothing on a wholly leased scheme", null)],
+      [T("Government and sales fees", null), FP(input.govFeesPct || 0),
+        T("Sales revenue only — raises nothing on a wholly leased scheme", null)],
+      [T("Loan to cost, as set", null), FP(input.ltc || 0),
+        T("Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. It sets the facility limit, not the amount drawn", null)],
+      [T("Interest rate", null), FP(input.interestRate || 0),
+        T("Annual, charged monthly on the outstanding balance at the twelfth root of the annual rate", null)],
+      [T("Discount rate / hurdle", null), FP(m.hurdle),
+        T("Annual — discounts the cash flows for NPV, and is the hurdle every return is judged against", null)],
+    ]),
   });
 
   if (input.fund && input.fund.enabled) {
@@ -1923,55 +1957,80 @@ function ReportDialog({ input, onCancel, onGenerate }) {
 
           <div className="rp-fs">{T("Branding", null)}</div>
           <div className="rp-grid2">
-            <Field label={T("Company name", null)}>
-              <input value={f.company} onChange={set("company")} placeholder="REAP" />
+            <Field label={T("Company name", null)}
+                   hint={T("Appears on the cover and in every page header", null)}>
+              <input value={f.company} onChange={set("company")}
+                     placeholder={T("Leave blank to use REAP branding", null)} />
             </Field>
-            <Field label={T("Company logo", null)} hint={logoErr || T("PNG or SVG, under 1.5 MB", null)}>
+            <Field label={T("Company logo", null)} hint={logoErr || T("PNG or SVG, under 1.5 MB. Replaces the REAP mark on the cover", null)}>
               <div className="rp-logo-row">
                 <input type="file" accept="image/*" onChange={onLogo} />
                 {f.logo ? <img src={f.logo} alt="" className="rp-logo-prev" /> : null}
                 {f.logo ? <button type="button" className="rp-clear" onClick={() => setF(v => Object.assign({}, v, { logo: "" }))}>{T("Remove", null)}</button> : null}
               </div>
             </Field>
-            <Field label={T("Company address", null)}>
-              <input value={f.address} onChange={set("address")} />
+            <Field label={T("Company address", null)}
+                   hint={T("Printed under your name on the cover", null)}>
+              <input value={f.address} onChange={set("address")}
+                     placeholder={T("e.g. King Fahd Road, Riyadh 12345", null)} />
             </Field>
-            <Field label={T("Company website", null)}>
-              <input value={f.website} onChange={set("website")} />
+            <Field label={T("Company website", null)}
+                   hint={T("Cover only — not turned into a link", null)}>
+              <input value={f.website} onChange={set("website")}
+                     placeholder={T("e.g. example.com", null)} />
             </Field>
           </div>
 
           <div className="rp-fs">{T("Prepared for", null)}</div>
+          <p className="rp-fs-hint">
+            {T("Who is receiving this report. These four lines are printed together on the cover.", null)}
+          </p>
           <div className="rp-grid2">
-            <Field label={T("Company name", null)}>
-              <input value={f.forCompany} onChange={set("forCompany")} />
+            <Field label={T("Company name", null)}
+                   hint={T("The recipient organisation, not your own", null)}>
+              <input value={f.forCompany} onChange={set("forCompany")}
+                     placeholder={T("e.g. Saudi Investment Bank", null)} />
             </Field>
-            <Field label={T("Contact person", null)}>
-              <input value={f.forPerson} onChange={set("forPerson")} />
+            <Field label={T("Contact person", null)}
+                   hint={T("The individual the report is addressed to", null)}>
+              <input value={f.forPerson} onChange={set("forPerson")}
+                     placeholder={T("e.g. Faisal Al-Otaibi", null)} />
             </Field>
-            <Field label={T("Position or title", null)}>
-              <input value={f.forPosition} onChange={set("forPosition")} />
+            <Field label={T("Position or title", null)}
+                   hint={T("Their role at the recipient organisation", null)}>
+              <input value={f.forPosition} onChange={set("forPosition")}
+                     placeholder={T("e.g. Head of Real Estate Finance", null)} />
             </Field>
-            <Field label={T("Notes", null)}>
-              <input value={f.forNotes} onChange={set("forNotes")} />
+            <Field label={T("Notes", null)}
+                   hint={T("One line of context, printed under the recipient", null)}>
+              <input value={f.forNotes} onChange={set("forNotes")}
+                     placeholder={T("e.g. Phase 1 submission", null)} />
             </Field>
           </div>
 
           <div className="rp-fs">{T("Report information", null)}</div>
           <div className="rp-grid2">
-            <Field label={T("Report title", null)}>
-              <input value={f.reportTitle} onChange={set("reportTitle")} required />
+            <Field label={T("Report title", null)}
+                   hint={T("The heading on the cover. Defaults to the project name", null)}>
+              <input value={f.reportTitle} onChange={set("reportTitle")} required
+                     placeholder={T("e.g. Feasibility Study — Al Nakheel", null)} />
             </Field>
-            <Field label={T("Report number", null)}>
-              <input value={f.reportNumber} onChange={set("reportNumber")} />
+            <Field label={T("Report number", null)}
+                   hint={T("Your own filing reference, if you use one", null)}>
+              <input value={f.reportNumber} onChange={set("reportNumber")}
+                     placeholder={T("e.g. REF-2026-014", null)} />
             </Field>
-            <Field label={T("Report date", null)}>
+            <Field label={T("Report date", null)}
+                   hint={T("Printed on the cover and in every page footer", null)}>
               <input type="date" value={f.reportDate} onChange={set("reportDate")} />
             </Field>
-            <Field label={T("Prepared by", null)}>
-              <input value={f.preparedBy} onChange={set("preparedBy")} />
+            <Field label={T("Prepared by", null)}
+                   hint={T("The author or team. Defaults to your company name", null)}>
+              <input value={f.preparedBy} onChange={set("preparedBy")}
+                     placeholder={T("e.g. Business Development", null)} />
             </Field>
-            <Field label={T("Confidentiality level", null)}>
+            <Field label={T("Confidentiality level", null)}
+                   hint={T("Sets the footer marking and the notice on the cover", null)}>
               <select value={f.confidentiality} onChange={set("confidentiality")}>
                 <option value="Public">{T("Public", null)}</option>
                 <option value="Confidential">{T("Confidential", null)}</option>
