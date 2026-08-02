@@ -1473,6 +1473,36 @@
     /* Appendix */
     "Assumptions and input parameters": "الفرضيات ومعاملات الإدخال",
     "Parameter": "المعامل",
+    "Applied to": "يُطبَّق على",
+    "Each percentage is applied to the basis named in the third column. Rates are annual unless stated.":
+      "تُطبَّق كل نسبة على الأساس المذكور في العمود الثالث. والمعدلات سنوية ما لم يُذكر خلاف ذلك.",
+    "Gross land area. Not charged on a leasehold site.":
+      "مساحة الأرض الإجمالية. لا تُحتسب على أرض بحق انتفاع.",
+    "The land purchase price. Not charged on a leasehold site.":
+      "سعر شراء الأرض. لا تُحتسب على أرض بحق انتفاع.",
+    "Gross land area, each year of the term. Leasehold only.":
+      "مساحة الأرض الإجمالية، عن كل سنة من المدة. لحق الانتفاع فقط.",
+    "Interval between ground rent reviews.": "الفترة الفاصلة بين مراجعات إيجار الأرض.",
+    "The rent then in force, compounded at each review.":
+      "الإيجار الساري حينها، مركَّبًا عند كل مراجعة.",
+    "Gross land area. Spent alongside site works during construction.":
+      "مساحة الأرض الإجمالية. تُنفَق مع أعمال الموقع أثناء الإنشاء.",
+    "Construction cost plus site works.": "تكلفة الإنشاء زائد أعمال الموقع.",
+    "Construction plus site works plus soft costs.":
+      "الإنشاء زائد أعمال الموقع زائد التكاليف غير المباشرة.",
+    "Sales revenue only. Raises nothing on a wholly leased scheme.":
+      "إيرادات البيع فقط. لا تُحصّل شيئًا في مشروع مؤجَّر بالكامل.",
+    "Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. Sets the facility limit, not the amount drawn.":
+      "تكلفة التطوير قبل التمويل — الأرض ورسوم النقل والإنشاء وأعمال الموقع والتكاليف غير المباشرة والاحتياطي. تحدّد سقف التسهيل لا المبلغ المسحوب.",
+    "Annual, charged monthly on the outstanding balance at the twelfth root of the annual rate.":
+      "سنوي، يُحتسب شهريًا على الرصيد القائم بالجذر الثاني عشر للمعدل السنوي.",
+    "Annual. Discounts the cash flows for NPV, and is the hurdle every return is judged against.":
+      "سنوي. يُخصم به التدفق النقدي لحساب القيمة الحالية، وهو العتبة التي يُقاس عليها كل عائد.",
+    "Developable share": "الحصة القابلة للتطوير",
+    "Gross land area. The remainder carries no buildable programme.":
+      "مساحة الأرض الإجمالية. والباقي لا يحمل برنامجًا قابلًا للبناء.",
+    "Unlevered: revenue less development cost, before any financing. Figures are rounded for presentation; the full amounts are in the Cost and Revenue sections.":
+      "غير مرفوع: الإيرادات ناقص تكلفة التطوير، قبل أي تمويل. والأرقام مقرّبة لأغراض العرض، والمبالغ الكاملة في قسمَي التكاليف والإيرادات.",
     "Land price per m²": "سعر الأرض للمتر المربع",
     "Ground rent per m² per year": "إيجار الأرض للمتر المربع سنويًا",
     "Rent review period": "دورة مراجعة الإيجار",

@@ -780,24 +780,12 @@ function buildBlocks(ctx) {
   ].filter(r => r.kind !== "sub" || r.values.some(v => Math.abs(v) > 0.5));
 
   yearTable("Project cash flow",
-    T("Unlevered: revenue less development cost, before any financing. Figures are rounded for presentation; the full amounts are in the Financial Overview.", null),
+    T("Unlevered: revenue less development cost, before any financing. Figures are rounded for presentation; the full amounts are in the Cost and Revenue sections.", null),
     projRows);
 
-  /* --- Equity statement, levered --- */
-  const eDraw = yr(cf.debtDraw), eRepay = yr(cf.debtRepay);
-  const eNet = yr(cf.net);
-  let c2 = 0; const eCum = eNet.map(v => (c2 += v));
-  const equityRows = [
-    { label: T("Net project cash flow", null), values: pNet, kind: "sub" },
-    { label: T("Debt drawn", null), values: eDraw, kind: "sub" },
-    { label: T("Debt service", null), values: eRepay, kind: "sub" },
-    { label: T("Net equity cash flow", null), values: eNet, kind: "grand" },
-    { label: T("Cumulative", null), values: eCum, kind: "cum", noTotal: true },
-  ];
-  yearTable("Equity cash flow",
-    T("The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.", null),
-    equityRows);
-
+  /* The chart sits with the statement it draws, not at the end of the
+     section — a reader should not have to hold one page in their head while
+     they find the other. */
   B.push({
     type: "chart", title: "Project cash flow", height: 215,
     note: T("Cost and revenue by year, with the cumulative project position drawn over them.", null),
@@ -816,6 +804,21 @@ function buildBlocks(ctx) {
       formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
     }),
   });
+
+  /* --- Equity statement, levered --- */
+  const eDraw = yr(cf.debtDraw), eRepay = yr(cf.debtRepay);
+  const eNet = yr(cf.net);
+  let c2 = 0; const eCum = eNet.map(v => (c2 += v));
+  const equityRows = [
+    { label: T("Net project cash flow", null), values: pNet, kind: "sub" },
+    { label: T("Debt drawn", null), values: eDraw, kind: "sub" },
+    { label: T("Debt service", null), values: eRepay, kind: "sub" },
+    { label: T("Net equity cash flow", null), values: eNet, kind: "grand" },
+    { label: T("Cumulative", null), values: eCum, kind: "cum", noTotal: true },
+  ];
+  yearTable("Equity cash flow",
+    T("The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.", null),
+    equityRows);
 
   B.push({
     type: "chart", title: "Equity cash flow", height: 215,
@@ -1156,25 +1159,50 @@ function buildBlocks(ctx) {
   /* ---- Appendix ---- */
   sec("Appendix", "Assumptions, formulae and definitions");
 
+  /* A percentage on its own says nothing — 5% contingency is 5% OF something,
+     and the something differs from line to line. Every basis below was read
+     off the engine rather than assumed: soft costs run on construction plus
+     site works, contingency on that sum PLUS soft costs, and the three selling
+     percentages on sales revenue only, so they raise nothing on a scheme that
+     is entirely leased. */
   h("Assumptions and input parameters");
   table({
-    head: ["Parameter", "Value"], align: ["start", "end"],
+    note: T("Each percentage is applied to the basis named in the third column. Rates are annual unless stated.", null),
+    head: ["Parameter", "Value", "Applied to"],
+    align: ["start", "end", "start"], widths: ["27%", "15%", "58%"],
     rows: [
-      [T("Land price per m²", null), input.landPricePerSqm ? money(input.landPricePerSqm) : "—"],
-      [T("Land transfer fees", null), FP(input.landTransferFeesPct || 0)],
-      [T("Ground rent per m² per year", null), input.landRentPerSqmYr ? money(input.landRentPerSqmYr) : "—"],
-      [T("Rent review period", null), input.landRentEscalationYears ? T("{n} years", { n: FN(input.landRentEscalationYears) }) : "—"],
-      [T("Rent escalation at review", null), FP(input.landRentEscalationPct || 0)],
-      [T("Site infrastructure per m²", null), input.landInfraCostPerSqm ? money(input.landInfraCostPerSqm) : "—"],
-      [T("Soft costs", null), FP(input.softCostsPct || 0)],
-      [T("Contingency", null), FP(input.contingencyPct || 0)],
-      [T("Marketing", null), FP(input.marketingPct || 0)],
-      [T("Sales commission", null), FP(input.salesCommissionPct || 0)],
-      [T("Government and sales fees", null), FP(input.govFeesPct || 0)],
-      [T("Loan to cost, as set", null), FP(input.ltc || 0)],
-      [T("Interest rate", null), FP(input.interestRate || 0)],
-      [T("Discount rate / hurdle", null), FP(m.hurdle)],
-    ],
+      [T("Land price per m²", null), input.landPricePerSqm ? money(input.landPricePerSqm) : "—",
+        T("Gross land area. Not charged on a leasehold site.", null)],
+      [T("Land transfer fees", null), FP(input.landTransferFeesPct || 0),
+        T("The land purchase price. Not charged on a leasehold site.", null)],
+      [T("Ground rent per m² per year", null), input.landRentPerSqmYr ? money(input.landRentPerSqmYr) : "—",
+        T("Gross land area, each year of the term. Leasehold only.", null)],
+      [T("Rent review period", null), input.landRentEscalationYears ? T("{n} years", { n: FN(input.landRentEscalationYears) }) : "—",
+        T("Interval between ground rent reviews.", null)],
+      [T("Rent escalation at review", null), FP(input.landRentEscalationPct || 0),
+        T("The rent then in force, compounded at each review.", null)],
+      [T("Site infrastructure per m²", null), input.landInfraCostPerSqm ? money(input.landInfraCostPerSqm) : "—",
+        T("Gross land area. Spent alongside site works during construction.", null)],
+      [T("Soft costs", null), FP(input.softCostsPct || 0),
+        T("Construction cost plus site works.", null)],
+      [T("Contingency", null), FP(input.contingencyPct || 0),
+        T("Construction plus site works plus soft costs.", null)],
+      [T("Marketing", null), FP(input.marketingPct || 0),
+        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
+      [T("Sales commission", null), FP(input.salesCommissionPct || 0),
+        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
+      [T("Government and sales fees", null), FP(input.govFeesPct || 0),
+        T("Sales revenue only. Raises nothing on a wholly leased scheme.", null)],
+      [T("Loan to cost, as set", null), FP(input.ltc || 0),
+        T("Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. Sets the facility limit, not the amount drawn.", null)],
+      [T("Interest rate", null), FP(input.interestRate || 0),
+        T("Annual, charged monthly on the outstanding balance at the twelfth root of the annual rate.", null)],
+      [T("Discount rate / hurdle", null), FP(m.hurdle),
+        T("Annual. Discounts the cash flows for NPV, and is the hurdle every return is judged against.", null)],
+    ].concat(input.landType === "raw" ? [
+      [T("Developable share", null), FP(input.developablePct || 0),
+        T("Gross land area. The remainder carries no buildable programme.", null)],
+    ] : []),
   });
 
   if (input.fund && input.fund.enabled) {
