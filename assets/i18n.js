@@ -1085,6 +1085,10 @@
 
     /* Project overview */
     "Project particulars": "بيانات المشروع",
+    "Project name": "اسم المشروع",
+    "Development type": "نوع التطوير",
+    "Gross floor area": "المساحة الطابقية الإجمالية",
+    "Net saleable / leasable area": "المساحة الصافية القابلة للبيع أو التأجير",
     "Development programme": "برنامج التطوير",
     "Item": "البند", "Detail": "التفصيل",
     "Land tenure": "حيازة الأرض",
@@ -1126,6 +1130,15 @@
     "Rental income (gross)": "الدخل الإيجاري (الإجمالي)",
     "Exit / terminal value": "قيمة التخارج النهائية",
     "Operating result on the income-producing element": "النتيجة التشغيلية للعنصر المدرّ للدخل",
+    "Site works and infrastructure": "أعمال الموقع والبنية التحتية",
+    "Operating expenditure over term": "المصروفات التشغيلية خلال المدة",
+    "Gross income, stabilised year": "الدخل الإجمالي، سنة الاستقرار",
+    "Operating expenditure, stabilised year": "المصروفات التشغيلية، سنة الاستقرار",
+    "Net operating income, stabilised year": "صافي الدخل التشغيلي، سنة الاستقرار",
+    "Rental income collected over term": "الدخل الإيجاري المحصّل خلال المدة",
+    "Net operating income over term": "صافي الدخل التشغيلي خلال المدة",
+    "The first three lines are stabilised annual figures — the asset at full occupancy in a normal year. The lifetime lines below are the totals actually collected and spent across the hold.":
+      "الأسطر الثلاثة الأولى أرقام سنوية عند الاستقرار — أي الأصل بإشغال كامل في سنة اعتيادية. أما أسطر المدة أدناه فهي الإجماليات المحصّلة والمنفَقة فعليًا طوال فترة الاحتفاظ.",
     "Gross income over term": "الدخل الإجمالي خلال المدة",
     "Operating expenditure": "المصروفات التشغيلية",
     "Result": "النتيجة",
@@ -1139,7 +1152,46 @@
     "Annual cash flow, years {a}–{b}": "التدفق النقدي السنوي، السنوات {a}–{b}",
     "{t}, years {a}–{b}": "{t}، السنوات {a}–{b}",
 
+    /* Cost & Revenue sections */
+    "Cost": "التكاليف",
+    "What the scheme costs to build and carry": "ما يكلّفه المشروع بناءً وحملًا",
+    "Revenue": "الإيرادات",
+    "What the scheme earns, and from where": "ما يحققه المشروع، ومن أين",
+    "Cost mix": "مزيج التكاليف",
+    "The same heads as a share of the whole.": "البنود نفسها كنسبة من الإجمالي.",
+    "Revenue by year": "الإيرادات حسب السنة",
+    "When the income actually arrives.": "متى يصل الدخل فعليًا.",
+
+    /* Financial metrics */
+    "Financial Metrics": "المؤشرات المالية",
+    "The project on its own, and what reaches equity": "المشروع بذاته، وما يصل إلى حقوق الملكية",
+    "From revenue to profit": "من الإيراد إلى الربح",
+    "Every cost head taken off revenue in turn, ending at net profit.":
+      "كل بند تكلفة يُخصم من الإيراد بالتتابع، انتهاءً بصافي الربح.",
+    "Project measures": "مؤشرات المشروع",
+    "Unlevered. These judge the scheme on its own, before any facility.":
+      "غير مرفوعة. تقيس المشروع بذاته، قبل أي تسهيل ائتماني.",
+    "Equity measures": "مؤشرات حقوق الملكية",
+    "Levered. These judge what reaches the sponsor once the facility has been served.":
+      "مرفوعة. تقيس ما يصل إلى الراعي بعد خدمة التسهيل الائتماني.",
+    "Project payback": "استرداد المشروع",
+    "The month in which the unlevered position first turns positive.":
+      "الشهر الذي يتحوّل فيه المركز غير المرفوع إلى الموجب لأول مرة.",
+    "Total revenue less every cost, including finance charges.":
+      "إجمالي الإيرادات ناقص كل التكاليف، بما فيها أعباء التمويل.",
+    "Every cost the scheme incurs, finance charges included.":
+      "كل تكلفة يتكبّدها المشروع، بما فيها أعباء التمويل.",
+    "Total equity called": "إجمالي حقوق الملكية المستدعاة",
+    "Every riyal of equity the scheme required over its life.":
+      "كل ريال من حقوق الملكية احتاجه المشروع طوال عمره.",
+    "OpEx": "المصروفات التشغيلية",
+    "Selling": "البيع",
+    "Finance": "التمويل",
+    "Profit": "الربح",
+    "Land": "الأرض",
+
     /* Sources and uses */
+    "Uses and Sources": "الاستخدامات والمصادر",
     "Sources and Uses": "المصادر والاستخدامات",
     "What the project spends, and what pays for it": "ما ينفقه المشروع، وما يموّله",
     "Uses of funds": "استخدامات الأموال",

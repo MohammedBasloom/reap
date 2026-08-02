@@ -3,7 +3,7 @@
 
    WHAT THIS IS. A consulting-grade report assembled entirely from data the
    platform already holds: the input the user typed, the engine's own output,
-   and the scenario / sensitivity / Monte Carlo runs the results tabs already
+   and the scenario and sensitivity runs the results tabs already
    perform. Nothing here calls a model, a service or an API. Every sentence
    comes from a template selected by a published rule over those numbers, so
    the same input always produces byte-identical prose.
@@ -325,7 +325,7 @@ function deriveOpportunities(m, input, result) {
 /* Forward-looking risks derived from the numbers, distinct from the engine's
    own register — that one reports what the model already flagged, this one
    reports what the exposure implies. */
-function deriveRiskFactors(m, input, result, scenarios, mc) {
+function deriveRiskFactors(m, input, result, scenarios) {
   const { k } = m, out = [];
   const add = (title, detail) => out.push({ title, detail });
 
@@ -351,11 +351,8 @@ function deriveRiskFactors(m, input, result, scenarios, mc) {
     add("Exit pricing", T(
       "{exit} of the total return is a terminal value set by a capitalisation rate. Yield expansion between now and disposal reduces it directly.",
       { exit: money(k.totalExit) }));
-  if (mc && mc.probPositive !== null && mc.probPositive !== undefined && mc.irrSampleCount)
-    add("Simulated dispersion", T(
-      "Across {n} trials that required equity, {p} returned a positive IRR and {h} cleared the hurdle. The tenth percentile outcome is {p10}.",
-      { n: FN(mc.irrSampleCount), p: FP(mc.probPositive), h: FP(mc.probAboveHurdle),
-        p10: mc.irrP10 === null || mc.irrP10 === undefined ? "—" : FP(mc.irrP10) }));
+  /* The simulated-dispersion factor was dropped with Monte Carlo: it quoted
+     trial probabilities, and there are no trials any more. */
   if (k.landTenure === "lease")
     add("Ground rent obligation", T(
       "Rent of {rent} accrues over the term whether or not the asset performs, and it is payable ahead of any return to capital.",
@@ -482,7 +479,7 @@ function execParagraph(m, input, result, rec) {
    ============================================================= */
 
 function buildBlocks(ctx) {
-  const { input, result, scenarios, waterfall, tornadoIRR, mc, m, rec } = ctx;
+  const { input, result, scenarios, waterfall, tornadoIRR, m, rec } = ctx;
   const k = m.k;
   const cf = result.cashflow;
   const B = [];
@@ -564,17 +561,35 @@ function buildBlocks(ctx) {
   }
 
   /* ---- 03 Financial overview ---- */
-  sec("Financial Overview", "Development cost, revenue and the profit between them");
+  /* ---- Cost ---- */
+  sec("Cost", "What the scheme costs to build and carry");
+
+  /* Two traps in this table, both found by checking that the rows add to the
+     foot rather than trusting that they would.
+
+     ONE: kpi.siteWorkCost ALREADY INCLUDES landInfraCost — the engine adds
+     them on the same line, since both are horizontal works on the same
+     S-curve. Listing "Site infrastructure" as its own row counted the
+     infrastructure twice on any raw-land scheme.
+
+     TWO: kpi.totalOpex is the STABILISED ANNUAL figure, not the whole-period
+     one, while kpi.totalCost carries operating expenditure over the entire
+     hold. Omitting an OpEx row therefore left the rows 13.1M short of their
+     own total on the worked scheme, and the shares summing to 94%. The
+     whole-period figure comes off the cashflow, as it does everywhere else
+     in the app. */
+  const opexWholePeriod = -((cf.opex || []).reduce((s, v) => s + v, 0));
+
   const costRows = [];
   const pushCost = (label, v) => { if (v) costRows.push([label, money(v), FP(m.totalInvestment > 0 ? v / m.totalInvestment : 0)]); };
   pushCost(T("Land acquisition", null), k.landCost);
   pushCost(T("Land transfer fees", null), k.landTransferFees);
   pushCost(T("Ground rent over term", null), k.totalLandRent);
-  pushCost(T("Site infrastructure", null), k.landInfraCost);
   pushCost(T("Construction", null), k.constructionCost);
-  pushCost(T("Site works", null), k.siteWorkCost);
+  pushCost(T("Site works and infrastructure", null), k.siteWorkCost);
   pushCost(T("Soft costs", null), k.softCosts);
   pushCost(T("Contingency", null), k.contingency);
+  pushCost(T("Operating expenditure over term", null), opexWholePeriod);
   pushCost(T("Marketing", null), k.marketing);
   pushCost(T("Sales commission", null), k.salesCommission);
   pushCost(T("Government and sales fees", null), k.govFees);
@@ -585,6 +600,39 @@ function buildBlocks(ctx) {
     foot: [T("Total investment", null), money(m.totalInvestment), "100.0%"],
   });
 
+  /* The table says what each head costs; the bars say which of them the
+     project actually turns on. Same numbers, read in one glance. */
+  if (costRows.length) {
+    const bars = [];
+    const pushBar = (label, v, color) => { if (v > 0) bars.push({ label, value: v, color }); };
+    pushBar(T("Land", null), (k.landCost || 0) + (k.landTransferFees || 0) + (k.totalLandRent || 0), "var(--ad-navy-900)");
+    pushBar(T("Construction", null), k.constructionCost || 0, "var(--ad-navy-700)");
+    // siteWorkCost already carries landInfraCost — adding both double-counted.
+    pushBar(T("Site works", null), k.siteWorkCost || 0, "var(--ad-navy-500)");
+    pushBar(T("Soft costs", null), k.softCosts || 0, "var(--ad-navy-400)");
+    pushBar(T("Contingency", null), k.contingency || 0, "var(--ad-sand-700)");
+    pushBar(T("Operating expenditure", null), opexWholePeriod, "var(--ad-sand-900)");
+    pushBar(T("Selling and fees", null), (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0), "var(--ad-sand-500)");
+    pushBar(T("Finance charges", null), k.totalInterest || 0, "var(--ad-gold-500)");
+    bars.sort((a, b2) => b2.value - a.value);
+    if (bars.length) {
+      B.push({
+        type: "chart", title: "Cost structure", height: Math.max(150, bars.length * 30 + 20),
+        note: T("Every cost head, largest first, against total investment.", null),
+        render: () => React.createElement(window.Charts.HBars, {
+          data: bars, height: Math.max(150, bars.length * 30 + 20), formatV: FC,
+        }),
+      });
+      const barTotal = bars.reduce((a, b2) => a + b2.value, 0);
+      B.push({
+        type: "donut", title: "Cost mix", data: bars, total: barTotal,
+        note: T("The same heads as a share of the whole.", null),
+      });
+    }
+  }
+
+  /* ---- Revenue ---- */
+  sec("Revenue", "What the scheme earns, and from where");
   const revRows = [];
   if (k.totalRevenue) {
     const salesTotal = (cf.sales || []).reduce((a, b) => a + b, 0);
@@ -600,52 +648,32 @@ function buildBlocks(ctx) {
       foot: [T("Total revenue", null), money(k.totalRevenue), "100.0%"],
     });
 
-  if (k.totalGrossIncome > 0)
+  /* These three are the STABILISED ANNUAL figures the engine reports, which
+     is how the app labels them too ("Annual rent (stab.)"). They were headed
+     "over term" here, which invited them to be read as lifetime totals — off
+     by a factor of nearly five on the worked scheme. The lifetime figures are
+     added underneath so both are on the page and neither is ambiguous. */
+  if (k.totalGrossIncome > 0) {
+    const rentWholePeriod = (cf.rent || []).reduce((s, v) => s + v, 0);
     table({
       title: "Operating result on the income-producing element",
+      note: T("The first three lines are stabilised annual figures — the asset at full occupancy in a normal year. The lifetime lines below are the totals actually collected and spent across the hold.", null),
       head: ["Item", "Amount"], align: ["start", "end"],
       rows: [
-        [T("Gross income over term", null), money(k.totalGrossIncome)],
-        [T("Operating expenditure", null), "−" + money(k.totalOpex)],
+        [T("Gross income, stabilised year", null), money(k.totalGrossIncome)],
+        [T("Operating expenditure, stabilised year", null), "−" + money(k.totalOpex)],
+        [T("Net operating income, stabilised year", null), money(k.totalNOI)],
+        [T("Rental income collected over term", null), money(rentWholePeriod)],
+        [T("Operating expenditure over term", null), "−" + money(opexWholePeriod)],
       ],
-      foot: [T("Net operating income", null), money(k.totalNOI)],
+      foot: [T("Net operating income over term", null), money(rentWholePeriod - opexWholePeriod)],
+      kinds: [null, null, "total", null, null],
     });
-
-  table({
-    title: "Result", head: ["Item", "Amount"], align: ["start", "end"],
-    rows: [
-      [T("Total revenue", null), money(k.totalRevenue)],
-      [T("Total investment", null), "−" + money(m.totalInvestment)],
-    ],
-    foot: [T("Net profit", null) + " (" + (m.margin === null ? "—" : FP(m.margin)) + ")", money(k.profit)],
-  });
-
-  /* The cost table says what each head costs; the bars say which of them the
-     project actually turns on. Same numbers, read in one glance. */
-  if (costRows.length) {
-    const bars = [];
-    const pushBar = (label, v, color) => { if (v > 0) bars.push({ label, value: v, color }); };
-    pushBar(T("Land", null), (k.landCost || 0) + (k.landTransferFees || 0) + (k.totalLandRent || 0), "var(--ad-navy-900)");
-    pushBar(T("Construction", null), k.constructionCost || 0, "var(--ad-navy-700)");
-    pushBar(T("Site works", null), (k.siteWorkCost || 0) + (k.landInfraCost || 0), "var(--ad-navy-500)");
-    pushBar(T("Soft costs", null), k.softCosts || 0, "var(--ad-navy-400)");
-    pushBar(T("Contingency", null), k.contingency || 0, "var(--ad-sand-700)");
-    pushBar(T("Selling and fees", null), (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0), "var(--ad-sand-500)");
-    pushBar(T("Finance charges", null), k.totalInterest || 0, "var(--ad-gold-500)");
-    bars.sort((a, b2) => b2.value - a.value);
-    if (bars.length)
-      B.push({
-        type: "chart", title: "Cost structure", height: Math.max(150, bars.length * 30 + 20),
-        note: T("Every cost head, largest first, against total investment.", null),
-        render: () => React.createElement(window.Charts.HBars, {
-          data: bars, height: Math.max(150, bars.length * 30 + 20), formatV: FC,
-        }),
-      });
   }
 
   /* Built from the three sources by name, not by walking revRows — that list
      drops empty lines, so its indices do not map to sales / rent / exit once
-     any one of them is absent, and the donut would have labelled the wrong
+     any one of them is absent, and the ring would have labelled the wrong
      slice on a lease-only or sale-only scheme. */
   {
     const tot = (a) => (a || []).reduce((x, y) => x + y, 0);
@@ -660,68 +688,22 @@ function buildBlocks(ctx) {
                note: T("Where the income comes from.", null) });
   }
 
-  /* ---- Sources and uses ----
-     Both sides come from the engine's own per-month coverage decomposition,
-     which is why they balance: every riyal of use is attributed to the debt,
-     revenue or equity that funded it in the month it arose. */
-  sec("Sources and Uses", "What the project spends, and what pays for it");
-  const uses = cf.usesByCat || {};
-  const sumOf = (a) => (a || []).reduce((x, y) => x + y, 0);
-  const usesRows = [
-    [T("Land and ground rent", null), sumOf(uses.land)],
-    [T("Construction", null), sumOf(uses.construction)],
-    [T("Site works", null), sumOf(uses.siteWork)],
-    [T("Soft costs", null), sumOf(uses.soft)],
-    [T("Contingency", null), sumOf(uses.contingency)],
-    [T("Marketing, commission and fees", null), sumOf(uses.marketing)],
-    [T("Operating expenditure", null), sumOf(uses.opex)],
-    [T("Finance charges", null), sumOf(uses.interest)],
-  ].filter(r => Math.abs(r[1]) > 0.5);
-  const totalUses = sumOf(cf.totalUses);
-  const cov = cf.coverageTotals || { equity: 0, debt: 0, revenue: 0 };
-  const totalSources = cov.equity + cov.debt + cov.revenue;
-
-  table({
-    title: "Uses of funds",
-    head: ["Use", "Amount", "Share"], align: ["start", "end", "end"],
-    rows: usesRows.map(r => [r[0], money(r[1]), FP(totalUses > 0 ? r[1] / totalUses : 0)]),
-    foot: [T("Total uses", null), money(totalUses), "100.0%"],
-  });
-  table({
-    title: "Sources of funds",
-    note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
-    head: ["Source", "Amount", "Share"], align: ["start", "end", "end"],
-    rows: [
-      [T("Revenue applied", null), money(cov.revenue), FP(totalSources > 0 ? cov.revenue / totalSources : 0)],
-      [T("Debt facility", null), money(cov.debt), FP(totalSources > 0 ? cov.debt / totalSources : 0)],
-      [T("Equity injected", null), money(cov.equity), FP(totalSources > 0 ? cov.equity / totalSources : 0)],
-    ],
-    foot: [T("Total sources", null), money(totalSources), "100.0%"],
-  });
-  B.push({
-    type: "donut", title: "Uses of funds",
-    note: T("Where the money goes, by cost head.", null),
-    data: usesRows.map((r, i) => ({
-      label: r[0], value: r[1],
-      color: ["var(--ad-navy-900)", "var(--ad-navy-700)", "var(--ad-navy-500)", "var(--ad-navy-400)",
-              "var(--ad-sand-700)", "var(--ad-sand-500)", "var(--ad-gold-600)", "var(--ad-gold-400)"][i % 8],
-    })),
-    total: totalUses,
-  });
-  B.push({
-    type: "chart", title: "How the spend was funded, month by month", height: 210,
-    note: T("Each month of outflow, split into the equity, debt and revenue that covered it.", null),
-    render: () => React.createElement(window.Charts.StackedBars, {
-      months: cf.months, height: 210, bucket: 12,
-      series: [
-        { label: T("Revenue applied", null), color: "var(--ad-success)", values: cf.revenueApplied || [] },
-        { label: T("Debt drawn", null), color: "var(--ad-navy-500)", values: cf.debtDraw || [] },
-        { label: T("Equity injected", null), color: "var(--ad-gold-500)", values: cf.equityInjected || [] },
-      ],
-      formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
-    }),
-  });
-
+  /* Revenue arriving over time is a different question from where it comes
+     from, and the one a funder asks first. */
+  if (k.totalRevenue > 0)
+    B.push({
+      type: "chart", title: "Revenue by year", height: 200,
+      note: T("When the income actually arrives.", null),
+      render: () => React.createElement(window.Charts.StackedBars, {
+        months: cf.months, height: 200, bucket: 12,
+        series: [
+          { label: T("Sales proceeds", null), color: "var(--ad-success)", values: cf.sales || [] },
+          { label: T("Rental income", null), color: "var(--ad-navy-600)", values: cf.rent || [] },
+          { label: T("Exit / terminal value", null), color: "var(--ad-gold-500)", values: cf.exit || [] },
+        ],
+        formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
+      }),
+    });
   /* ---- Cash flow ----
      Two statements rather than one summary. The project statement is
      unlevered: revenue less cost, each broken into its components with a
@@ -848,27 +830,149 @@ function buildBlocks(ctx) {
       formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
     }),
   });
-  /* ---- 05 Investment metrics ---- */
-  sec("Investment Metrics", "Each measure, its value, and what it means");
-  const metricRows = [
+  /* ---- Sources and uses ----
+     Both sides come from the engine's own per-month coverage decomposition,
+     which is why they balance: every riyal of use is attributed to the debt,
+     revenue or equity that funded it in the month it arose. */
+  sec("Uses and Sources", "What the project spends, and what pays for it");
+  const uses = cf.usesByCat || {};
+  const sumOf = (a) => (a || []).reduce((x, y) => x + y, 0);
+  const usesRows = [
+    [T("Land and ground rent", null), sumOf(uses.land)],
+    [T("Construction", null), sumOf(uses.construction)],
+    [T("Site works", null), sumOf(uses.siteWork)],
+    [T("Soft costs", null), sumOf(uses.soft)],
+    [T("Contingency", null), sumOf(uses.contingency)],
+    [T("Marketing, commission and fees", null), sumOf(uses.marketing)],
+    [T("Operating expenditure", null), sumOf(uses.opex)],
+    [T("Finance charges", null), sumOf(uses.interest)],
+  ].filter(r => Math.abs(r[1]) > 0.5);
+  const totalUses = sumOf(cf.totalUses);
+  const cov = cf.coverageTotals || { equity: 0, debt: 0, revenue: 0 };
+  const totalSources = cov.equity + cov.debt + cov.revenue;
+
+  table({
+    title: "Uses of funds",
+    head: ["Use", "Amount", "Share"], align: ["start", "end", "end"],
+    rows: usesRows.map(r => [r[0], money(r[1]), FP(totalUses > 0 ? r[1] / totalUses : 0)]),
+    foot: [T("Total uses", null), money(totalUses), "100.0%"],
+  });
+  table({
+    title: "Sources of funds",
+    note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
+    head: ["Source", "Amount", "Share"], align: ["start", "end", "end"],
+    rows: [
+      [T("Revenue applied", null), money(cov.revenue), FP(totalSources > 0 ? cov.revenue / totalSources : 0)],
+      [T("Debt facility", null), money(cov.debt), FP(totalSources > 0 ? cov.debt / totalSources : 0)],
+      [T("Equity injected", null), money(cov.equity), FP(totalSources > 0 ? cov.equity / totalSources : 0)],
+    ],
+    foot: [T("Total sources", null), money(totalSources), "100.0%"],
+  });
+  B.push({
+    type: "donut", title: "Uses of funds",
+    note: T("Where the money goes, by cost head.", null),
+    data: usesRows.map((r, i) => ({
+      label: r[0], value: r[1],
+      color: ["var(--ad-navy-900)", "var(--ad-navy-700)", "var(--ad-navy-500)", "var(--ad-navy-400)",
+              "var(--ad-sand-700)", "var(--ad-sand-500)", "var(--ad-gold-600)", "var(--ad-gold-400)"][i % 8],
+    })),
+    total: totalUses,
+  });
+  B.push({
+    type: "chart", title: "How the spend was funded, month by month", height: 210,
+    note: T("Each month of outflow, split into the equity, debt and revenue that covered it.", null),
+    render: () => React.createElement(window.Charts.StackedBars, {
+      months: cf.months, height: 210, bucket: 12,
+      series: [
+        { label: T("Revenue applied", null), color: "var(--ad-success)", values: cf.revenueApplied || [] },
+        { label: T("Debt drawn", null), color: "var(--ad-navy-500)", values: cf.debtDraw || [] },
+        { label: T("Equity injected", null), color: "var(--ad-gold-500)", values: cf.equityInjected || [] },
+      ],
+      formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
+    }),
+  });
+
+  /* ---- Financial metrics ----
+     Split by whose money it is. Project measures are unlevered — they judge
+     the scheme on its own, before any facility. Equity measures judge what
+     reaches the sponsor after the debt has been served. Reading them in one
+     undifferentiated list invites the two to be compared as though they
+     answered the same question. */
+  sec("Financial Metrics", "The project on its own, and what reaches equity");
+
+  B.push({
+    type: "kpis", items: [
+      { label: "Project IRR", value: k.projectIRR === null ? "—" : FP(k.projectIRR) },
+      { label: "Equity IRR", value: k.equityIRR === null ? "—" : FP(k.equityIRR) },
+      { label: "Project NPV", value: money(k.projectNPV) },
+      { label: "Equity NPV", value: money(k.equityNPV) },
+      { label: "Net profit", value: money(k.profit) },
+      { label: "Profit margin", value: m.margin === null ? "—" : FP(m.margin) },
+    ]
+  });
+
+  /* Revenue down to profit, one cost head at a time. The single most useful
+     picture in the report: it shows which head actually consumes the margin,
+     which no table of totals makes obvious. */
+  const wfSteps = [
+    { label: T("Revenue", null), value: k.totalRevenue, type: "start" },
+    { label: T("Land", null), value: -((k.landCost || 0) + (k.landTransferFees || 0)), type: "delta" },
+    { label: T("Ground rent", null), value: -(k.totalLandRent || 0), type: "delta" },
+    { label: T("Construction", null), value: -(k.constructionCost || 0), type: "delta" },
+    { label: T("Site works", null), value: -(k.siteWorkCost || 0), type: "delta" },
+    { label: T("Soft costs", null), value: -(k.softCosts || 0), type: "delta" },
+    { label: T("Contingency", null), value: -(k.contingency || 0), type: "delta" },
+    // Whole-period, off the cashflow — kpi.totalOpex is the stabilised annual
+    // figure, and using it left the bridge 10.3M short of the profit it ends on.
+    { label: T("OpEx", null), value: -opexWholePeriod, type: "delta" },
+    { label: T("Selling", null), value: -((k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0)), type: "delta" },
+    { label: T("Finance", null), value: -(k.totalInterest || 0), type: "delta" },
+    { label: T("Profit", null), value: k.profit, type: "end" },
+  ].filter(s => s.type !== "delta" || Math.abs(s.value) > 0.5);
+  B.push({
+    type: "chart", title: "From revenue to profit", height: 235,
+    note: T("Every cost head taken off revenue in turn, ending at net profit.", null),
+    render: () => React.createElement(window.Charts.Waterfall, {
+      steps: wfSteps, height: 235, formatY: v => (v / 1e6).toFixed(1) + "M",
+    }),
+  });
+
+  const projectMetrics = [
     [T("Project IRR", null), k.projectIRR === null ? "—" : FP(k.projectIRR),
       T("Annualised return on all capital employed, before the effect of debt.", null)],
-    [T("Equity IRR", null), k.equityIRR === null ? "—" : FP(k.equityIRR),
-      T("Annualised return to the equity holder after debt is serviced.", null)],
     [T("Project NPV", null), money(k.projectNPV),
       T("Value of the unlevered cash flows discounted at the target rate, less the capital they require.", null)],
-    [T("Equity NPV", null), money(k.equityNPV),
-      T("The same measure applied to the equity cash flows alone.", null)],
     [T("Project ROI", null), k.projectROI === null ? "—" : FP(k.projectROI),
       T("Total gain expressed as a proportion of capital employed, without regard to timing.", null)],
+    [T("Project payback", null), k.projectPayback === null ? "—" : T("Month {m}", { m: FN(k.projectPayback) }),
+      T("The month in which the unlevered position first turns positive.", null)],
+    [T("Net profit", null), money(k.profit),
+      T("Total revenue less every cost, including finance charges.", null)],
+    [T("Profit margin", null), m.margin === null ? "—" : FP(m.margin),
+      T("Net profit as a share of total revenue.", null)],
+    [T("Total investment", null), money(m.totalInvestment),
+      T("Every cost the scheme incurs, finance charges included.", null)],
+  ];
+  table({
+    title: "Project measures",
+    note: T("Unlevered. These judge the scheme on its own, before any facility.", null),
+    head: ["Metric", "Value", "Definition"], align: ["start", "end", "start"],
+    rows: projectMetrics, widths: ["24%", "17%", "59%"],
+  });
+
+  const equityMetrics = [
+    [T("Equity IRR", null), k.equityIRR === null ? "—" : FP(k.equityIRR),
+      T("Annualised return to the equity holder after debt is serviced.", null)],
+    [T("Equity NPV", null), money(k.equityNPV),
+      T("The same measure applied to the equity cash flows alone.", null)],
     [T("Equity ROI", null), k.equityROI === null ? "—" : FP(k.equityROI),
       T("The same proportion measured on equity alone.", null)],
     [T("Equity multiple", null), m.equityMultiple === null ? "—" : m.equityMultiple.toFixed(2) + "×",
       T("Every riyal of equity returns this many riyals in total.", null)],
-    [T("Profit margin", null), m.margin === null ? "—" : FP(m.margin),
-      T("Net profit as a share of total revenue.", null)],
     [T("Equity payback", null), k.equityPayback === null ? "—" : T("Month {m}", { m: FN(k.equityPayback) }),
       T("The month in which cumulative equity distributions first equal contributions.", null)],
+    [T("Total equity called", null), money(k.totalEquity),
+      T("Every riyal of equity the scheme required over its life.", null)],
     [T("Peak equity at risk", null), money(k.peakEquity),
       T("The largest amount of equity outstanding at any one point.", null)],
     [T("Peak debt", null), money(k.peakDebt),
@@ -877,11 +981,13 @@ function buildBlocks(ctx) {
       T("Peak debt as a proportion of total investment.", null)],
   ];
   if (k.interestCover !== null && k.interestCover !== undefined)
-    metricRows.push([T("Interest cover", null), k.interestCover.toFixed(2) + "×",
+    equityMetrics.push([T("Interest cover", null), k.interestCover.toFixed(2) + "×",
       T("Operating income divided by interest, measured once the asset has stabilised. Reported in place of a debt service cover ratio because the facility is a revolving cash sweep with no amortisation schedule.", null)]);
   table({
+    title: "Equity measures",
+    note: T("Levered. These judge what reaches the sponsor once the facility has been served.", null),
     head: ["Metric", "Value", "Definition"], align: ["start", "end", "start"],
-    rows: metricRows, widths: ["26%", "18%", "56%"],
+    rows: equityMetrics, widths: ["24%", "17%", "59%"],
   });
 
   /* ---- Fund waterfall, only when the user has modelled one ---- */
@@ -1016,42 +1122,13 @@ function buildBlocks(ctx) {
         }),
       });
   }
-  if (mc && mc.trials) {
-    table({
-      title: "Monte Carlo simulation",
-      note: T("{n} trials, each shocking price, cost, occupancy and construction duration together. Probabilities are measured on the {s} trials that required equity and therefore produced a defined IRR.",
-        { n: FN(mc.trials), s: FN(mc.irrSampleCount || 0) }),
-      head: ["Measure", "P10", "P50 (median)", "P90"],
-      align: ["start", "end", "end", "end"],
-      rows: [
-        [T("Equity IRR", null),
-          mc.irrP10 == null ? "—" : FP(mc.irrP10), mc.irrP50 == null ? "—" : FP(mc.irrP50), mc.irrP90 == null ? "—" : FP(mc.irrP90)],
-        [T("Equity NPV", null), money(mc.npvP10), money(mc.npvP50), money(mc.npvP90)],
-      ],
-    });
-    if (mc.irrSampleCount)
-      table({
-        head: ["Probability", "Value"], align: ["start", "end"],
-        rows: [
-          [T("Trials returning a positive IRR", null), mc.probPositive == null ? "—" : FP(mc.probPositive)],
-          [T("Trials clearing the {h} hurdle", { h: FP(m.hurdle) }), mc.probAboveHurdle == null ? "—" : FP(mc.probAboveHurdle)],
-        ],
-      });
-    if (mc.irrs && mc.irrs.length)
-      B.push({
-        type: "chart", title: "Distribution of simulated equity IRR", height: 200,
-        render: () => React.createElement(window.Charts.Histogram, {
-          values: mc.irrs, bins: 28, height: 200, target: m.hurdle, formatX: v => FP(v, 0),
-        }),
-      });
-  }
 
   /* ---- Assessment: strengths, weaknesses, opportunities, risks ---- */
   sec("Assessment", "Strengths, weaknesses, opportunities and risk factors");
   const strengths = deriveStrengths(m, input, result);
   const weaknesses = deriveWeaknesses(m, input, result);
   const opportunities = deriveOpportunities(m, input, result);
-  const riskFactors = deriveRiskFactors(m, input, result, scenarios, mc);
+  const riskFactors = deriveRiskFactors(m, input, result, scenarios);
 
   h("Strengths");
   if (strengths.length) list("good", strengths);
@@ -1955,10 +2032,9 @@ function ReportHost({ input, result, scenarios, waterfall }) {
       if (c.pricePerUnit) drivers.push({ key: "c" + ci + "punit", label: nm + " — " + T("price/unit", null), path: base + ".pricePerUnit" });
       if (c.rentPerSqmYr) drivers.push({ key: "c" + ci + "rsqm", label: nm + " — " + T("rent/m²", null), path: base + ".rentPerSqmYr" });
     });
-    let tornadoIRR = [], mc = null;
+    let tornadoIRR = [];
     try { tornadoIRR = window.Feas.tornado(input, drivers, 0.10); } catch (e) { tornadoIRR = []; }
-    try { mc = window.Feas.monteCarlo(input, 400); } catch (e) { mc = null; }
-    return { tornadoIRR, mc };
+    return { tornadoIRR };
   }, [phase, input]);
 
   const blocks = useMemoRep(() => {
@@ -1967,7 +2043,7 @@ function ReportHost({ input, result, scenarios, waterfall }) {
     const rec = deriveRecommendation(m, input, result);
     return buildBlocks({
       input, result, scenarios, waterfall,
-      tornadoIRR: heavy.tornadoIRR, mc: heavy.mc, m, rec,
+      tornadoIRR: heavy.tornadoIRR, m, rec,
     });
   }, [phase, heavy, input, result, scenarios, waterfall]);
 
