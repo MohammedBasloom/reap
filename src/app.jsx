@@ -86,8 +86,6 @@ function App() {
     return SAMPLE_INPUT;
   });
   const [tab, setTab] = useState("summary");
-  const tabRef = useRef(tab);
-  useEffect(() => { tabRef.current = tab; }, [tab]);
 
   // Persist
   useEffect(() => {
@@ -104,21 +102,12 @@ function App() {
     const onReset = () => {
       if (confirm(I18N.t("Reset all inputs and clear program components?"))) setInput(SAMPLE_INPUT);
     };
-    const onExport = () => {
-      // The PDF report is always the Summary view — switch to it, print,
-      // then return the user to the tab they were on.
-      const prev = tabRef.current;
-      setTab("summary");
-      setTimeout(() => {
-        window.print();
-        setTab(prev);
-      }, 350);
-    };
+    /* "feas:export" is no longer handled here. It used to switch to Summary
+       and print the dashboard; it now opens the report builder, which listens
+       for the event itself and renders a real document instead. */
     window.addEventListener("feas:reset", onReset);
-    window.addEventListener("feas:export", onExport);
     return () => {
       window.removeEventListener("feas:reset", onReset);
-      window.removeEventListener("feas:export", onExport);
     };
   }, []);
 
@@ -372,6 +361,14 @@ function App() {
       {fundToast &&
       <FundTabToast onOpen={() => setTab("fund")} onClose={() => setFundToast(false)} />
       }
+
+      {/* Report builder. Renders nothing until "feas:export" fires, and
+          portals itself out of the app when it does. */}
+      <Report.ReportHost
+        input={input}
+        result={result}
+        scenarios={scenarios}
+        waterfall={waterfall} />
 
       <AppFooter />
     </div>);

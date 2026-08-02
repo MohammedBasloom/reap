@@ -942,6 +942,470 @@
     "m²": "م²", "SAR": "ر.س", "SAR/m²": "ر.س/م²", "SAR/yr": "ر.س/سنة", "mo": "شهر", "yrs": "سنة",
     "Mode": "النمط", "Timing": "التوقيت", "Exit cap": "رسملة التخارج", "Exit value": "قيمة التخارج",
     "Price / Rent": "السعر / الإيجار", "Gross / NOI": "الإجمالي / الصافي", "Units / Keys": "وحدات / مفاتيح",
+
+    /* =========================================================
+       Investment report.
+
+       The report's prose is assembled from templates rather than written
+       per-sentence, so the KEY here is a whole sentence with {placeholders}
+       still in it. Keep every placeholder — the code substitutes into the
+       Arabic string after this lookup, and a dropped one leaves a literal
+       "{irr}" in a document going to a bank. Placeholders may be reordered
+       freely to suit Arabic word order.
+       ========================================================= */
+
+    /* Report chrome & dialog */
+    "Report": "التقرير",
+    "Prepare the report": "إعداد التقرير",
+    "Everything below is optional. Anything left blank is simply omitted, and the report falls back to REAP branding.":
+      "كل ما يلي اختياري. أي حقل يُترك فارغًا يُحذف من التقرير، وتُستخدم هوية REAP الافتراضية.",
+    "Branding": "الهوية المؤسسية",
+    "Company name": "اسم الشركة",
+    "Company logo": "شعار الشركة",
+    "Company address": "عنوان الشركة",
+    "Company website": "الموقع الإلكتروني",
+    "PNG or SVG, under 1.5 MB": "PNG أو SVG، أقل من ١٫٥ ميغابايت",
+    "That file is not an image.": "هذا الملف ليس صورة.",
+    "That image could not be read.": "تعذّرت قراءة الصورة.",
+    "Please use an image under 1.5 MB.": "الرجاء استخدام صورة أقل من ١٫٥ ميغابايت.",
+    "Remove": "إزالة",
+    "Cancel": "إلغاء",
+    "Close": "إغلاق",
+    "Prepared for": "أُعدّ لصالح",
+    "Prepared by": "أُعدّ بواسطة",
+    "Contact person": "الشخص المسؤول",
+    "Position or title": "المنصب أو الصفة",
+    "Notes": "ملاحظات",
+    "Report information": "بيانات التقرير",
+    "Report title": "عنوان التقرير",
+    "Report number": "رقم التقرير",
+    "Report date": "تاريخ التقرير",
+    "Report details": "تفاصيل التقرير",
+    "Confidentiality level": "مستوى السرية",
+    "Public": "عام",
+    "Confidential": "سرّي",
+    "Strictly Confidential": "سرّي للغاية",
+    "Generate report": "إنشاء التقرير",
+    "There is no programme to report on yet": "لا يوجد برنامج ليُعدّ عنه تقرير بعد",
+    "Add at least one component to the programme — and set the land area and price — and the report will assemble from the results. Generating now would produce a complete document in which every figure is zero.":
+      "أضف مكوّنًا واحدًا على الأقل إلى البرنامج — وحدّد مساحة الأرض وسعرها — وعندها يُبنى التقرير من النتائج. أما الإنشاء الآن فسينتج وثيقة كاملة كل أرقامها أصفار.",
+    "Edit details": "تعديل البيانات",
+    "Print or save as PDF": "طباعة أو حفظ بصيغة PDF",
+    "Contents": "المحتويات",
+    "Page {a} of {b}": "صفحة {a} من {b}",
+    "Date": "التاريخ",
+    "Reference": "المرجع",
+    "Classification": "التصنيف",
+    "Feasibility Study": "دراسة جدوى",
+    "Produced with REAP — Real Estate Assessment Platform":
+      "أُنتج باستخدام REAP — منصة تقييم العقارات",
+    "continued": "تابع",
+    "The project": "المشروع",
+
+    /* Confidentiality statements */
+    "This report may be circulated without restriction.":
+      "يجوز تداول هذا التقرير دون قيد.",
+    "This report is confidential and is provided solely for the use of the recipient named above. It may not be reproduced or circulated without written consent.":
+      "هذا التقرير سرّي ومُقدَّم حصريًا لاستخدام الجهة المذكورة أعلاه، ولا يجوز نسخه أو تداوله دون موافقة خطية.",
+    "This report is strictly confidential. It is provided solely for the named recipient and may not be copied, quoted, or disclosed to any other party under any circumstances.":
+      "هذا التقرير سرّي للغاية، ومُقدَّم حصريًا للجهة المذكورة، ولا يجوز نسخه أو الاقتباس منه أو الإفصاح عنه لأي طرف آخر تحت أي ظرف.",
+
+    /* Section titles & subtitles */
+    "Executive Summary": "الملخص التنفيذي",
+    "Findings, headline metrics and overall assessment": "النتائج والمؤشرات الرئيسية والتقييم العام",
+    "Project Overview": "نظرة عامة على المشروع",
+    "The site, the programme and the timeline as modelled": "الموقع والبرنامج والجدول الزمني كما نُمذجت",
+    "Financial Overview": "النظرة المالية العامة",
+    "Development cost, revenue and the profit between them": "تكلفة التطوير والإيرادات والربح بينهما",
+    "Cash Flow Analysis": "تحليل التدفقات النقدية",
+    "Annual movement and the cumulative position": "الحركة السنوية والمركز التراكمي",
+    "Investment Metrics": "مؤشرات الاستثمار",
+    "Each measure, its value, and what it means": "كل مؤشر وقيمته ودلالته",
+    "Capital Structure and Waterfall": "هيكل رأس المال وشلال التوزيعات",
+    "How proceeds divide between the partners": "كيفية توزيع العوائد بين الشركاء",
+    "Risk Assessment": "تقييم المخاطر",
+    "The engine's register of flags raised by these inputs": "سجل التنبيهات التي أثارها المحرك على هذه المدخلات",
+    "Sensitivity Analysis": "تحليل الحساسية",
+    "What moves the return, and by how much": "ما الذي يحرّك العائد، وبأي مقدار",
+    "Assessment": "التقييم",
+    "Strengths, weaknesses, opportunities and risk factors": "نقاط القوة والضعف والفرص وعوامل المخاطرة",
+    "Recommendation": "التوصية",
+    "The conclusion these numbers support": "الاستنتاج الذي تدعمه هذه الأرقام",
+    "Appendix": "الملاحق",
+    "Assumptions, formulae and definitions": "الفرضيات والمعادلات والتعريفات",
+
+    /* Ratings */
+    "Strong": "قوي", "Favourable": "مواتٍ", "Moderate": "متوسط",
+    "Marginal": "حدّي", "Unfavourable": "غير مواتٍ",
+
+    /* Verdicts */
+    "Proceed": "المضي قدمًا",
+    "Proceed, subject to conditions": "المضي قدمًا بشروط",
+    "Proceed with caution": "المضي بحذر",
+    "Restructure before proceeding": "إعادة الهيكلة قبل المضي",
+    "Do not proceed on these assumptions": "عدم المضي وفق هذه الفرضيات",
+    "Conditions": "الشروط",
+    "Confirm the facility at the modelled peak of {debt}, or restructure toward a lower loan-to-cost.":
+      "تأكيد التسهيل عند الذروة المنمذجة {debt}، أو إعادة الهيكلة نحو نسبة دين إلى تكلفة أقل.",
+    "Raise contingency to at least 5% of construction before the cost plan is fixed.":
+      "رفع الاحتياطي إلى ٥٪ من الإنشاء على الأقل قبل تثبيت خطة التكاليف.",
+    "Re-test soft costs against a real consultant fee schedule.":
+      "إعادة اختبار التكاليف غير المباشرة مقابل جدول أتعاب استشاري فعلي.",
+    "Demonstrate that the stabilised asset can service the facility, or size the debt to the income rather than to cost.":
+      "إثبات قدرة الأصل بعد استقراره على خدمة التسهيل، أو تحجيم الدين وفق الدخل لا وفق التكلفة.",
+    "Resolve the land allocation, which currently exceeds the site.":
+      "معالجة تخصيص الأرض، فهو يتجاوز حاليًا مساحة الموقع.",
+    "Support the exit capitalisation rate with transactional evidence.":
+      "دعم معدل رسملة التخارج بأدلة من صفقات فعلية.",
+    "Re-run the study against tendered construction rates once they are available.":
+      "إعادة تشغيل الدراسة على أسعار إنشاء مناقصية فور توفرها.",
+
+    /* Table column heads used verbatim */
+    "GFA (m²)": "المساحة الطابقية (م²)",
+    "NSA (m²)": "المساحة الصافية (م²)",
+    "MOIC": "مضاعف رأس المال",
+    "Score": "الدرجة",
+    "P10": "المئين ١٠", "P90": "المئين ٩٠",
+
+    /* Executive paragraph */
+    "{name} is a {type} scheme in {loc} on a site of {area} m², carrying a total investment of {inv} including finance charges.":
+      "{name} مشروع {type} في {loc} على أرض مساحتها {area} م²، بإجمالي استثمار قدره {inv} شاملًا أعباء التمويل.",
+    "mixed-use": "متعدد الاستخدامات",
+    "the location stated in the inputs": "الموقع المحدد في المدخلات",
+    "Revenue of {rev} produces a net profit of {profit}, a margin of {margin}.":
+      "إيرادات قدرها {rev} تُنتج صافي ربح {profit}، بهامش {margin}.",
+    "Revenue of {rev} does not cover cost, leaving a shortfall of {loss}.":
+      "إيرادات قدرها {rev} لا تغطي التكلفة، ما يترك عجزًا قدره {loss}.",
+    "The scheme calls {eq} of equity against a peak debt of {debt}, and returns an equity IRR of {irr} with a net present value of {npv} at a {hurdle} discount rate.":
+      "يستدعي المشروع {eq} من حقوق الملكية مقابل ذروة دين قدرها {debt}، ويحقق معدل عائد داخلي على الملكية قدره {irr} بقيمة حالية صافية {npv} عند معدل خصم {hurdle}.",
+    "No equity was required: income and debt covered every outflow, so the return is reported at project level as {irr} with a net present value of {npv}.":
+      "لم تُطلب حقوق ملكية: غطّى الدخل والدين كل التدفقات الخارجة، لذا يُعرض العائد على مستوى المشروع بـ {irr} وقيمة حالية صافية {npv}.",
+    "Against the platform's composite measure the scheme scores {score} of 100 and is rated {rating}. The recommendation of this report is: {verdict}.":
+      "وفق المقياس المركّب للمنصة يحصل المشروع على {score} من ١٠٠ ويُصنَّف {rating}. وتوصية هذا التقرير هي: {verdict}.",
+
+    /* Project overview */
+    "Project particulars": "بيانات المشروع",
+    "Development programme": "برنامج التطوير",
+    "Item": "البند", "Detail": "التفصيل",
+    "Land tenure": "حيازة الأرض",
+    "Freehold — purchased": "ملكية تامة — مشتراة",
+    "Leasehold — ground rent": "حق انتفاع — إيجار أرض",
+    "Site condition": "حالة الموقع",
+    "Raw — requires infrastructure": "خام — تتطلب بنية تحتية",
+    "Serviced": "مخدومة",
+    "Gross land area": "مساحة الأرض الإجمالية",
+    "Net developable area": "المساحة الصافية القابلة للتطوير",
+    "Residential units": "الوحدات السكنية",
+    "Hotel keys": "مفاتيح الفندق",
+    "Pre-design period": "فترة ما قبل التصميم",
+    "Construction period": "فترة الإنشاء",
+    "Sales commence": "بدء البيع",
+    "Analysis horizon": "أفق التحليل",
+    "Land share": "حصة الأرض",
+    "Units / keys": "وحدات / مفاتيح",
+    "Basis": "الأساس",
+    "Sale": "بيع", "Lease": "تأجير", "Mixed": "مختلط",
+    "{n} months": "{n} شهرًا",
+    "{n} years": "{n} سنوات",
+    "Month {m}": "الشهر {m}",
+    "Year {n}": "السنة {n}",
+
+    /* Financial overview */
+    "Development cost": "تكلفة التطوير",
+    "Cost head": "بند التكلفة", "Amount": "المبلغ", "Share": "الحصة",
+    "Land acquisition": "شراء الأرض",
+    "Land transfer fees": "رسوم نقل الملكية",
+    "Ground rent over term": "إيجار الأرض خلال المدة",
+    "Site infrastructure": "البنية التحتية للموقع",
+    "Site works": "أعمال الموقع",
+    "Government and sales fees": "الرسوم الحكومية ورسوم البيع",
+    "Finance charges": "أعباء التمويل",
+    "Total investment": "إجمالي الاستثمار",
+    "Revenue source": "مصدر الإيراد",
+    "Sales proceeds": "متحصلات البيع",
+    "Rental income (gross)": "الدخل الإيجاري (الإجمالي)",
+    "Exit / terminal value": "قيمة التخارج النهائية",
+    "Operating result on the income-producing element": "النتيجة التشغيلية للعنصر المدرّ للدخل",
+    "Gross income over term": "الدخل الإجمالي خلال المدة",
+    "Operating expenditure": "المصروفات التشغيلية",
+    "Result": "النتيجة",
+
+    /* Cash flow */
+    "Annual cash flow": "التدفق النقدي السنوي",
+    "Costs and finance charges are shown as outflows. The cumulative column is the running project position, undiscounted.":
+      "تُعرض التكاليف وأعباء التمويل كتدفقات خارجة. وعمود التراكم هو المركز الجاري للمشروع دون خصم.",
+    "Period": "الفترة", "Cost": "التكلفة", "Finance": "التمويل",
+    "Net": "الصافي", "Cumulative": "التراكمي", "Costs": "التكاليف",
+    "Project and equity cash flow": "التدفق النقدي للمشروع وحقوق الملكية",
+    "Bars are the monthly project position bucketed by year; the line is cumulative equity cash flow.":
+      "الأعمدة هي المركز الشهري للمشروع مُجمَّعًا سنويًا، والخط هو التدفق النقدي التراكمي لحقوق الملكية.",
+
+    /* Investment metrics */
+    "Metric": "المؤشر", "Value": "القيمة", "Definition": "التعريف",
+    "Project NPV": "القيمة الحالية الصافية للمشروع",
+    "Project ROI": "العائد على الاستثمار للمشروع",
+    "Equity payback": "استرداد حقوق الملكية",
+    "Profit margin": "هامش الربح",
+    "Loan to cost, as set": "نسبة الدين إلى التكلفة كما حُدِّدت",
+    "Annualised return on all capital employed, before the effect of debt.":
+      "العائد السنوي على كامل رأس المال المستخدم، قبل أثر الدين.",
+    "Annualised return to the equity holder after debt is serviced.":
+      "العائد السنوي لحامل حقوق الملكية بعد خدمة الدين.",
+    "Value of the unlevered cash flows discounted at the target rate, less the capital they require.":
+      "قيمة التدفقات غير المرفوعة مخصومة بالمعدل المستهدف، مطروحًا منها رأس المال الذي تتطلبه.",
+    "The same measure applied to the equity cash flows alone.":
+      "المقياس نفسه مطبَّقًا على تدفقات حقوق الملكية وحدها.",
+    "Total gain expressed as a proportion of capital employed, without regard to timing.":
+      "إجمالي المكسب كنسبة من رأس المال المستخدم، بصرف النظر عن التوقيت.",
+    "The same proportion measured on equity alone.": "النسبة نفسها مقيسة على حقوق الملكية وحدها.",
+    "Every riyal of equity returns this many riyals in total.":
+      "كل ريال من حقوق الملكية يعود بهذا العدد من الريالات إجمالًا.",
+    "Net profit as a share of total revenue.": "صافي الربح كنسبة من إجمالي الإيرادات.",
+    "The month in which cumulative equity distributions first equal contributions.":
+      "الشهر الذي تتساوى فيه التوزيعات التراكمية مع المساهمات لأول مرة.",
+    "The largest amount of equity outstanding at any one point.":
+      "أكبر مبلغ من حقوق الملكية قائم في أي لحظة.",
+    "The highest facility balance reached during the draw period.":
+      "أعلى رصيد للتسهيل بلغه المشروع خلال فترة السحب.",
+    "Peak debt as a proportion of total investment.": "ذروة الدين كنسبة من إجمالي الاستثمار.",
+    "Operating income divided by interest, measured once the asset has stabilised. Reported in place of a debt service cover ratio because the facility is a revolving cash sweep with no amortisation schedule.":
+      "الدخل التشغيلي مقسومًا على الفائدة، مقيسًا بعد استقرار الأصل. ويُعرض بدلًا من نسبة تغطية خدمة الدين لأن التسهيل عبارة عن كنس نقدي متجدد بلا جدول إطفاء.",
+
+    /* Waterfall */
+    "Distribution by party": "التوزيع حسب الطرف",
+    "Party": "الطرف", "Contributed": "المساهَم به", "Distributed": "الموزَّع",
+    "Limited partners": "الشركاء المحدودون",
+    "Waterfall tiers": "شرائح الشلال",
+    "Capital is returned first, then the preferred return accrues and is paid, and only the surplus above both is split.":
+      "يُعاد رأس المال أولًا، ثم يستحق العائد التفضيلي ويُدفع، ولا يُقسَّم إلا الفائض فوقهما.",
+    "Tier": "الشريحة",
+    "Return of capital": "إعادة رأس المال",
+    "Preferred return": "العائد التفضيلي",
+    "Performance fee to GP": "رسوم الأداء للشريك العام",
+    "Residual, pro rata": "المتبقي بالتناسب",
+    "Fees": "الرسوم",
+    "Fee": "الرسم", "Recipient": "المستفيد",
+    "Subscription fee": "رسوم الاشتراك",
+    "Asset management fee": "رسوم إدارة الأصول",
+    "Development fee": "رسوم التطوير",
+    "Performance fee": "رسوم الأداء",
+    "Total fees": "إجمالي الرسوم",
+    "The preferred return was not achieved over the fund's life, so no performance fee is payable to the general partner.":
+      "لم يتحقق العائد التفضيلي خلال عمر الصندوق، فلا تستحق أي رسوم أداء للشريك العام.",
+    "Developer": "المطوّر",
+    "General partner": "الشريك العام",
+
+    /* Risk register */
+    "Severity": "الدرجة", "Finding": "الملاحظة",
+    "Critical": "حرجة", "Caution": "تنبيه", "Confirmed": "مؤكَّدة",
+    "The model raised {d} critical flags, {w} cautions and {s} confirmations on these inputs. Each is listed below with the condition that produced it.":
+      "أثار النموذج {d} تنبيهات حرجة و{w} تنبيهات تحذيرية و{s} تأكيدات على هذه المدخلات. وفيما يلي كل منها مع الشرط الذي أنتجه.",
+
+    /* Sensitivity */
+    "Each driver below was flexed ±10% in isolation and the study re-run. The drivers are ordered by the spread they open in equity IRR — the ones at the top are where estimating error costs most.":
+      "جرى تحريك كل محرّك أدناه بنسبة ±١٠٪ على حدة وأُعيد تشغيل الدراسة. والمحرّكات مرتبة حسب الفارق الذي تُحدثه في معدل العائد على الملكية — فالأعلى هي التي يكلّف الخطأ في تقديرها أكثر.",
+    "Equity IRR sensitivity": "حساسية العائد على حقوق الملكية",
+    "Driver sensitivity, ±10%": "حساسية المحرّكات، ±١٠٪",
+    "Driver": "المحرّك",
+    "IRR at −10%": "العائد عند −١٠٪", "Base IRR": "العائد الأساس", "IRR at +10%": "العائد عند +١٠٪",
+    "Spread": "الفارق",
+    "Downside": "السيناريو المتشائم", "Base": "الأساس", "Upside": "السيناريو المتفائل",
+    "Downside applies a 10% fall in price, a 5% rise in cost, a 3% fall in occupancy and a three-month delay. Upside mirrors it. Base is the study as modelled.":
+      "يطبّق السيناريو المتشائم انخفاضًا ١٠٪ في السعر وارتفاعًا ٥٪ في التكلفة وانخفاضًا ٣٪ في الإشغال وتأخيرًا ثلاثة أشهر. ويعكسه السيناريو المتفائل. أما الأساس فهو الدراسة كما نُمذجت.",
+    "Scenario": "السيناريو",
+    "Monte Carlo simulation": "محاكاة مونت كارلو",
+    "{n} trials, each shocking price, cost, occupancy and construction duration together. Probabilities are measured on the {s} trials that required equity and therefore produced a defined IRR.":
+      "{n} محاولة، تُصدم في كل منها الأسعار والتكاليف والإشغال ومدة الإنشاء معًا. وتُقاس الاحتمالات على {s} محاولة استلزمت حقوق ملكية ومن ثم أنتجت عائدًا معرّفًا.",
+    "Measure": "المقياس", "P50 (median)": "الوسيط P50",
+    "Probability": "الاحتمال",
+    "Trials returning a positive IRR": "المحاولات التي حققت عائدًا موجبًا",
+    "Trials clearing the {h} hurdle": "المحاولات التي تجاوزت عتبة {h}",
+    "Distribution of simulated equity IRR": "توزيع العائد المحاكى على حقوق الملكية",
+    "Land price / m²": "سعر الأرض / م²",
+    "Soft costs %": "التكاليف غير المباشرة ٪",
+    "Contingency %": "الاحتياطي ٪",
+    "Construction duration": "مدة الإنشاء",
+    "Component": "المكوّن",
+    "build cost": "تكلفة البناء", "price/m²": "السعر/م²", "price/unit": "السعر/وحدة", "rent/m²": "الإيجار/م²",
+
+    /* Strengths */
+    "Strengths": "نقاط القوة",
+    "Return clears the target hurdle": "العائد يتجاوز العتبة المستهدفة",
+    "Equity IRR of {irr} exceeds the {hurdle} discount rate set for this study, leaving {gap} of headroom.":
+      "معدل العائد على الملكية {irr} يتجاوز معدل الخصم {hurdle} المحدد لهذه الدراسة، بفارق {gap}.",
+    "Positive net present value": "قيمة حالية صافية موجبة",
+    "Discounted at {hurdle}, the equity position creates {npv} of value above the cost of capital.":
+      "بالخصم عند {hurdle}، يخلق مركز حقوق الملكية قيمة قدرها {npv} فوق تكلفة رأس المال.",
+    "Healthy margin on revenue": "هامش صحي على الإيرادات",
+    "Net profit of {profit} on {rev} of revenue is a margin of {margin}.":
+      "صافي ربح {profit} على إيرادات {rev} يمثل هامشًا قدره {margin}.",
+    "Conservative financing structure": "هيكل تمويل متحفّظ",
+    "Peak debt of {debt} is {ltc} of total investment, below the 60% level at which lenders typically begin to price additional risk.":
+      "ذروة دين قدرها {debt} تمثل {ltc} من إجمالي الاستثمار، دون مستوى ٦٠٪ الذي يبدأ المقرضون عنده عادةً بتسعير مخاطر إضافية.",
+    "Self-funding through the cycle": "تمويل ذاتي طوال الدورة",
+    "Income and debt covered every outflow, so the scheme never required an equity injection.":
+      "غطّى الدخل والدين كل التدفقات الخارجة، فلم يحتج المشروع إلى ضخ حقوق ملكية.",
+    "Comfortable interest cover": "تغطية فائدة مريحة",
+    "Operating income covers interest {x}× once the asset stabilises.":
+      "يغطي الدخل التشغيلي الفائدة {x}× بعد استقرار الأصل.",
+    "Capital returns inside half the horizon": "استرداد رأس المال خلال نصف الأفق",
+    "Equity is recovered in month {m} of a {h}-month analysis period.":
+      "تُسترد حقوق الملكية في الشهر {m} من فترة تحليل مدتها {h} شهرًا.",
+    "Diversified revenue base": "قاعدة إيرادات متنوعة",
+    "{n} distinct components spread income across more than one product and demand pool.":
+      "{n} مكوّنات متمايزة توزّع الدخل على أكثر من منتج وأكثر من شريحة طلب.",
+    "Land held on lease rather than purchased": "الأرض بحق انتفاع لا بالشراء",
+    "Ground rent of {rent} over the term replaces an outright land purchase, which lowers the capital the project must raise up front.":
+      "إيجار أرض قدره {rent} خلال المدة يحل محل شراء الأرض بالكامل، ما يخفض رأس المال المطلوب مقدمًا.",
+    "Value realised at exit": "قيمة محققة عند التخارج",
+    "A terminal disposal of {exit} converts the stabilised income into recoverable capital.":
+      "تخارج نهائي بقيمة {exit} يحوّل الدخل المستقر إلى رأس مال قابل للاسترداد.",
+
+    /* Weaknesses */
+    "Weaknesses": "نقاط الضعف",
+    "Return below the target hurdle": "العائد دون العتبة المستهدفة",
+    "Equity IRR of {irr} falls short of the {hurdle} discount rate by {gap}.":
+      "معدل العائد على الملكية {irr} يقصُر عن معدل الخصم {hurdle} بمقدار {gap}.",
+    "Return could not be solved": "تعذّر حساب العائد",
+    "The equity cashflow does not change sign, which means contributions are never recovered — no internal rate of return exists.":
+      "لا يغيّر التدفق النقدي لحقوق الملكية إشارته، ما يعني عدم استرداد المساهمات إطلاقًا — فلا وجود لمعدل عائد داخلي.",
+    "Negative net present value": "قيمة حالية صافية سالبة",
+    "Discounted at {hurdle}, the equity position destroys {npv} of value against the cost of capital.":
+      "بالخصم عند {hurdle}، يُهدر مركز حقوق الملكية قيمة قدرها {npv} مقابل تكلفة رأس المال.",
+    "The scheme runs at a loss": "المشروع يحقق خسارة",
+    "Revenue of {rev} does not cover {cost} of cost and finance charges.":
+      "إيرادات قدرها {rev} لا تغطي {cost} من التكاليف وأعباء التمويل.",
+    "Thin margin on revenue": "هامش ضعيف على الإيرادات",
+    "A margin of {margin} leaves little absorption for cost overrun or price softening.":
+      "هامش قدره {margin} لا يترك مجالًا يُذكر لامتصاص تجاوز التكاليف أو تراجع الأسعار.",
+    "High leverage": "رافعة مالية مرتفعة",
+    "Peak debt of {debt} is {ltc} of total investment, which magnifies the effect of any rate move or delay.":
+      "ذروة دين قدرها {debt} تمثل {ltc} من إجمالي الاستثمار، ما يضخّم أثر أي تحرك في الفائدة أو أي تأخير.",
+    "Slow capital recovery": "بطء استرداد رأس المال",
+    "Equity is not recovered until month {m} of a {h}-month horizon, leaving capital exposed for most of the project's life.":
+      "لا تُسترد حقوق الملكية حتى الشهر {m} من أفق مدته {h} شهرًا، ما يُبقي رأس المال معرّضًا طوال معظم عمر المشروع.",
+    "Tight interest cover": "تغطية فائدة ضيقة",
+    "Operating income covers interest only {x}×, which is close to the point at which the facility cannot be serviced from the asset.":
+      "يغطي الدخل التشغيلي الفائدة {x}× فقط، وهو قريب من الحد الذي يتعذّر عنده خدمة التسهيل من الأصل.",
+    "Contingency below convention": "احتياطي دون المتعارف عليه",
+    "A {c} contingency is thinner than the 5–10% normally carried through construction.":
+      "احتياطي قدره {c} أقل من نطاق ٥–١٠٪ المعتاد حمله خلال الإنشاء.",
+    "Soft costs look understated": "التكاليف غير المباشرة تبدو منخفضة",
+    "Design, consultants and project management at {s} of construction sit below the 10–15% ordinarily observed.":
+      "التصميم والاستشاريون وإدارة المشروع عند {s} من الإنشاء تقع دون نطاق ١٠–١٥٪ المعتاد.",
+    "Single-product exposure": "انكشاف على منتج واحد",
+    "All revenue derives from one component, so the scheme carries no internal diversification.":
+      "كل الإيرادات تأتي من مكوّن واحد، فلا يحمل المشروع أي تنويع داخلي.",
+
+    /* Opportunities */
+    "Opportunities": "الفرص",
+    "Unallocated land remains": "بقيت أرض غير مخصصة",
+    "{pct} of the site — about {area} m² — carries no component. It is available for a further phase, for public realm, or for density the current program does not use.":
+      "{pct} من الموقع — نحو {area} م² — لا يحمل أي مكوّن، وهو متاح لمرحلة لاحقة أو لمرافق عامة أو لكثافة لا يستخدمها البرنامج الحالي.",
+    "Capacity for additional leverage": "قدرة على رافعة إضافية",
+    "At {ltc} of total investment the facility is well inside conventional limits, so more debt could be drawn to lift the return on equity.":
+      "عند {ltc} من إجمالي الاستثمار يقع التسهيل داخل الحدود المتعارف عليها بمريح، فيمكن سحب دين إضافي لرفع العائد على حقوق الملكية.",
+    "An exit is not currently priced in": "لم تُسعَّر قيمة تخارج حاليًا",
+    "The model holds the income-producing element to the end of the horizon without a disposal. Setting an exit cap rate would show what a sale is worth.":
+      "يحتفظ النموذج بالعنصر المدرّ للدخل حتى نهاية الأفق دون تخارج. وتحديد معدل رسملة للتخارج سيُظهر قيمة البيع.",
+    "Developable share could be tested": "يمكن اختبار الحصة القابلة للتطوير",
+    "Only {pct} of the gross site is treated as developable. A masterplan that lifts that share would spread the land cost over more saleable area.":
+      "يُعامَل {pct} فقط من الموقع الإجمالي كقابل للتطوير. ومخطط رئيسي يرفع هذه الحصة سيوزّع تكلفة الأرض على مساحة قابلة للبيع أكبر.",
+    "Pre-sales could start earlier": "يمكن بدء البيع المسبق مبكرًا",
+    "Sales begin in month {m}, after the {p}-month design period. Releasing earlier would pull revenue forward and reduce the peak funding requirement.":
+      "يبدأ البيع في الشهر {m} بعد فترة تصميم مدتها {p} شهرًا. والطرح مبكرًا سيقدّم الإيرادات ويخفض ذروة الاحتياج التمويلي.",
+    "A fund structure has not been modelled": "لم يُنمذج هيكل صندوق",
+    "The study reports the project on its own balance sheet. Modelling an LP / GP structure would show how the return divides between sponsor and investor.":
+      "تعرض الدراسة المشروع على ميزانيته الخاصة. ونمذجة هيكل شريك محدود / شريك عام ستُظهر كيف ينقسم العائد بين الراعي والمستثمر.",
+    "Density has room to move": "لدى الكثافة مجال للزيادة",
+    "The program does not exhaust the site's allocation, so additional gross floor area could be tested against the same land cost.":
+      "لا يستنفد البرنامج تخصيص الموقع، فيمكن اختبار مساحة طابقية إجمالية إضافية مقابل تكلفة الأرض نفسها.",
+
+    /* Risk factors */
+    "Risk factors": "عوامل المخاطرة",
+    "Downside case": "الحالة المتشائمة",
+    "A 10% adverse move in price, cost and absorption together with a three-month construction delay takes profit to {p} and equity IRR to {i}.":
+      "تحرك معاكس بنسبة ١٠٪ في السعر والتكلفة والامتصاص مع تأخير إنشائي ثلاثة أشهر يأخذ الربح إلى {p} والعائد على الملكية إلى {i}.",
+    "Interest rate exposure": "الانكشاف على سعر الفائدة",
+    "Debt peaks at {debt} and total finance charges are {int}. A one-point rise in the {r} rate is felt across the whole draw period.":
+      "يبلغ الدين ذروته عند {debt} وإجمالي أعباء التمويل {int}. وارتفاع نقطة واحدة عن معدل {r} يُحسّ أثره طوال فترة السحب.",
+    "A {n}-month build carries the scheme through more of the cycle than a shorter programme, and extends the window over which cost inflation applies.":
+      "بناء مدته {n} شهرًا يعبر بالمشروع جزءًا أكبر من الدورة مقارنة ببرنامج أقصر، ويمدّد النافذة التي يسري عليها تضخم التكاليف.",
+    "Letting and occupancy": "التأجير والإشغال",
+    "Gross income of {g} depends on the occupancy assumed for the leased element. Income is the first thing to move if absorption is slower than planned.":
+      "دخل إجمالي قدره {g} يعتمد على الإشغال المفترض للعنصر المؤجَّر. والدخل أول ما يتحرك إذا كان الامتصاص أبطأ من المخطط.",
+    "Exit pricing": "تسعير التخارج",
+    "{exit} of the total return is a terminal value set by a capitalisation rate. Yield expansion between now and disposal reduces it directly.":
+      "{exit} من إجمالي العائد قيمة نهائية يحددها معدل رسملة. وأي اتساع في العائد المطلوب حتى التخارج يخفضها مباشرة.",
+    "Simulated dispersion": "تشتت المحاكاة",
+    "Across {n} trials that required equity, {p} returned a positive IRR and {h} cleared the hurdle. The tenth percentile outcome is {p10}.":
+      "من بين {n} محاولة استلزمت حقوق ملكية، حققت {p} عائدًا موجبًا وتجاوزت {h} العتبة. ونتيجة المئين العاشر هي {p10}.",
+    "Ground rent obligation": "التزام إيجار الأرض",
+    "Rent of {rent} accrues over the term whether or not the asset performs, and it is payable ahead of any return to capital.":
+      "يستحق إيجار قدره {rent} خلال المدة سواء أدّى الأصل أم لا، ويُدفع قبل أي عائد لرأس المال.",
+    "Peak capital at risk": "ذروة رأس المال المعرّض",
+    "The most capital exposed at any one time is {pe}, which is the figure a sponsor must be able to fund before any of it comes back.":
+      "أكبر رأس مال معرّض في أي لحظة هو {pe}، وهو المبلغ الذي يجب أن يقدر الراعي على تمويله قبل عودة أي جزء منه.",
+
+    /* Empty states */
+    "No strength test was met on these inputs.": "لم يتحقق أي اختبار قوة على هذه المدخلات.",
+    "No weakness test was triggered on these inputs.": "لم يُفعَّل أي اختبار ضعف على هذه المدخلات.",
+    "No opportunity test was met on these inputs.": "لم يتحقق أي اختبار فرصة على هذه المدخلات.",
+    "No risk factor test was triggered on these inputs.": "لم يُفعَّل أي اختبار مخاطرة على هذه المدخلات.",
+
+    /* Recommendation bodies */
+    "The scheme clears its return target with margin, creates value on a discounted basis, and carries no red flag on the risk register. On the assumptions set out in this report it supports a decision to proceed.":
+      "يتجاوز المشروع هدف العائد بهامش، ويخلق قيمة على أساس مخصوم، ولا يحمل أي تنبيه حرج في سجل المخاطر. ووفق الفرضيات الواردة في هذا التقرير فإنه يدعم قرار المضي قدمًا.",
+    "The scheme meets its return target and creates value on a discounted basis. The margin over the hurdle is not wide, so the conditions below should be satisfied before capital is committed.":
+      "يحقق المشروع هدف العائد ويخلق قيمة على أساس مخصوم. غير أن الهامش فوق العتبة ليس واسعًا، لذا ينبغي استيفاء الشروط أدناه قبل الالتزام برأس المال.",
+    "The scheme creates value but does not clear the return target on the current assumptions. It merits further work on the inputs carrying the most sensitivity before a commitment is made.":
+      "يخلق المشروع قيمة لكنه لا يتجاوز هدف العائد وفق الفرضيات الحالية. ويستحق مزيدًا من العمل على المدخلات الأكثر حساسية قبل اتخاذ أي التزام.",
+    "The scheme returns capital but falls short of the target and shows material risk. The structure — programme, price, cost or financing — should be revised and the study re-run before it is taken further.":
+      "يعيد المشروع رأس المال لكنه يقصُر عن الهدف ويُظهر مخاطر جوهرية. وينبغي مراجعة الهيكل — البرنامج أو السعر أو التكلفة أو التمويل — وإعادة تشغيل الدراسة قبل المضي به أبعد.",
+    "On the inputs modelled the scheme does not recover its capital at an acceptable return. It should not be progressed without a material change to the assumptions on which it rests.":
+      "وفق المدخلات المنمذجة لا يسترد المشروع رأس ماله بعائد مقبول. ولا ينبغي المضي به دون تغيير جوهري في الفرضيات التي يقوم عليها.",
+
+    /* Appendix */
+    "Assumptions and input parameters": "الفرضيات ومعاملات الإدخال",
+    "Parameter": "المعامل",
+    "Land price per m²": "سعر الأرض للمتر المربع",
+    "Ground rent per m² per year": "إيجار الأرض للمتر المربع سنويًا",
+    "Rent review period": "دورة مراجعة الإيجار",
+    "Rent escalation at review": "نسبة التصعيد عند المراجعة",
+    "Site infrastructure per m²": "البنية التحتية للمتر المربع",
+    "Discount rate / hurdle": "معدل الخصم / العتبة",
+    "Fund terms": "شروط الصندوق",
+    "Term": "الشرط",
+    "Limited partner equity": "حقوق الشركاء المحدودين",
+    "Developer co-investment": "مشاركة المطوّر",
+    "General partner co-investment": "مشاركة الشريك العام",
+    "Asset management fee per year": "رسوم إدارة الأصول سنويًا",
+    "Performance split to GP": "حصة الأداء للشريك العام",
+    "How the score was calculated": "كيف احتُسبت الدرجة",
+    "The composite score is the sum of five components, each capped at its own maximum and computed only from figures printed elsewhere in this report. It is a summary of those figures, not an additional judgement about them.":
+      "الدرجة المركّبة هي مجموع خمسة مكوّنات، لكل منها حد أقصى خاص، وتُحتسب حصريًا من أرقام مطبوعة في مواضع أخرى من هذا التقرير. وهي تلخيص لتلك الأرقام لا حكم إضافي عليها.",
+    "Maximum": "الحد الأقصى",
+    "Return vs hurdle": "العائد مقابل العتبة",
+    "IRR ÷ hurdle, credited in full at 1.5× and above": "العائد ÷ العتبة، يُحتسب كاملًا عند ١٫٥× فأعلى",
+    "Value created per riyal of capital": "القيمة المخلوقة لكل ريال من رأس المال",
+    "NPV ÷ capital at risk, credited in full at 0.50 and above": "القيمة الحالية ÷ رأس المال المعرّض، تُحتسب كاملة عند ٠٫٥٠ فأعلى",
+    "Profit margin on revenue": "هامش الربح على الإيرادات",
+    "Profit ÷ revenue, credited in full at 25% and above": "الربح ÷ الإيرادات، يُحتسب كاملًا عند ٢٥٪ فأعلى",
+    "Speed of capital recovery": "سرعة استرداد رأس المال",
+    "Proportion of the horizon remaining once capital is repaid": "نسبة ما تبقّى من الأفق بعد سداد رأس المال",
+    "Risk register": "سجل المخاطر",
+    "Ten points, less three per critical flag and one and a half per caution":
+      "عشر نقاط، تُخصم ثلاث لكل تنبيه حرج ونقطة ونصف لكل تحذير",
+    "Composite score": "الدرجة المركّبة",
+    "Rating bands": "نطاقات التصنيف",
+    "Rating": "التصنيف",
+    "This scheme called no equity, so the return, value and payback components were measured at project level. An equity IRR is undefined when there is no equity series to solve — that is a property of a self-funding project, not a failure of it.":
+      "لم يستدعِ هذا المشروع حقوق ملكية، لذا قيست مكوّنات العائد والقيمة والاسترداد على مستوى المشروع. والعائد على حقوق الملكية غير معرّف حين لا توجد سلسلة ملكية تُحل — وتلك خاصية مشروع ممول ذاتيًا لا إخفاق فيه.",
+    "Basis of preparation": "أساس الإعداد",
+    "Every figure in this report is produced by the platform's own calculation engine from the inputs listed above. Cash flows are modelled monthly and aggregated for presentation. Discounting is monthly at the rate stated. No figure has been adjusted, rounded up, or supplied from outside the model, and no part of this document was generated by a language model — the narrative is assembled from fixed templates selected by the rules printed in this appendix, so the same inputs will always produce the same report.":
+      "كل رقم في هذا التقرير ناتج عن محرك الحساب الخاص بالمنصة من المدخلات المدرجة أعلاه. وتُنمذَج التدفقات النقدية شهريًا وتُجمَّع للعرض، ويجري الخصم شهريًا بالمعدل المذكور. ولم يُعدَّل أي رقم أو يُقرَّب صعودًا أو يُستمد من خارج النموذج، ولم يُنتَج أي جزء من هذه الوثيقة بنموذج لغوي — بل يُجمَّع السرد من قوالب ثابتة تختارها القواعد المطبوعة في هذا الملحق، ومن ثم تُنتج المدخلات نفسها التقرير نفسه دائمًا.",
+    "This is an indicative analysis for screening and decision support. It is not an accredited valuation and not a substitute for one where a licensed valuer, a physical inspection or a regulated report is required.":
+      "هذا تحليل استرشادي لأغراض الفرز ودعم القرار. وليس تقييمًا معتمدًا ولا بديلًا عنه حيثما يُشترط مقيّم مرخّص أو معاينة ميدانية أو تقرير خاضع للتنظيم.",
   };
 
   /* Pattern rules for dynamically composed strings (numbers baked in). */
