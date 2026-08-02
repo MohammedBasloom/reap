@@ -618,6 +618,7 @@ function buildBlocks(ctx) {
     if (bars.length) {
       B.push({
         type: "chart", title: "Cost structure", height: Math.max(150, bars.length * 30 + 20),
+        total: m.totalInvestment, totalLabel: T("Total investment", null),
         note: T("Every cost head, largest first, against total investment.", null),
         render: () => React.createElement(window.Charts.HBars, {
           data: bars, height: Math.max(150, bars.length * 30 + 20), formatV: FC,
@@ -625,7 +626,7 @@ function buildBlocks(ctx) {
       });
       const barTotal = bars.reduce((a, b2) => a + b2.value, 0);
       B.push({
-        type: "donut", title: "Cost mix", data: bars, total: barTotal,
+        type: "donut", title: "Cost mix", data: bars, total: barTotal, totalLabel: T("Total investment", null),
         note: T("The same heads as a share of the whole.", null),
       });
     }
@@ -684,7 +685,7 @@ function buildBlocks(ctx) {
     ].filter(x => x.value > 0);
     const mixTotal = mix.reduce((a, b2) => a + b2.value, 0);
     if (mix.length > 1 && mixTotal > 0)
-      B.push({ type: "donut", title: "Revenue mix", data: mix, total: mixTotal,
+      B.push({ type: "donut", title: "Revenue mix", data: mix, total: mixTotal, totalLabel: T("Total revenue", null),
                note: T("Where the income comes from.", null) });
   }
 
@@ -693,6 +694,7 @@ function buildBlocks(ctx) {
   if (k.totalRevenue > 0)
     B.push({
       type: "chart", title: "Revenue by year", height: 200,
+      total: k.totalRevenue, totalLabel: T("Total revenue", null),
       note: T("When the income actually arrives.", null),
       render: () => React.createElement(window.Charts.StackedBars, {
         months: cf.months, height: 200, bucket: 12,
@@ -788,6 +790,7 @@ function buildBlocks(ctx) {
      they find the other. */
   B.push({
     type: "chart", title: "Project cash flow", height: 215,
+    total: (cf.gross || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net project cash flow", null),
     note: T("Cost and revenue by year, with the cumulative project position drawn over them.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 215, bucket: 12,
@@ -822,6 +825,7 @@ function buildBlocks(ctx) {
 
   B.push({
     type: "chart", title: "Equity cash flow", height: 215,
+    total: (cf.net || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net equity cash flow", null),
     note: T("The facility drawn and serviced, with the cumulative equity position drawn over it.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 215, bucket: 12,
@@ -860,6 +864,18 @@ function buildBlocks(ctx) {
     rows: usesRows.map(r => [r[0], money(r[1]), FP(totalUses > 0 ? r[1] / totalUses : 0)]),
     foot: [T("Total uses", null), money(totalUses), "100.0%"],
   });
+  /* Each chart follows the table it draws, as in the cash flow section. */
+  B.push({
+    type: "donut", title: "Uses of funds",
+    note: T("Where the money goes, by cost head.", null),
+    data: usesRows.map((r, i) => ({
+      label: r[0], value: r[1],
+      color: ["var(--ad-navy-900)", "var(--ad-navy-700)", "var(--ad-navy-500)", "var(--ad-navy-400)",
+              "var(--ad-sand-700)", "var(--ad-sand-500)", "var(--ad-gold-600)", "var(--ad-gold-400)"][i % 8],
+    })),
+    total: totalUses, totalLabel: T("Total uses", null),
+  });
+
   table({
     title: "Sources of funds",
     note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
@@ -872,18 +888,22 @@ function buildBlocks(ctx) {
     foot: [T("Total sources", null), money(totalSources), "100.0%"],
   });
   B.push({
-    type: "donut", title: "Uses of funds",
-    note: T("Where the money goes, by cost head.", null),
-    data: usesRows.map((r, i) => ({
-      label: r[0], value: r[1],
-      color: ["var(--ad-navy-900)", "var(--ad-navy-700)", "var(--ad-navy-500)", "var(--ad-navy-400)",
-              "var(--ad-sand-700)", "var(--ad-sand-500)", "var(--ad-gold-600)", "var(--ad-gold-400)"][i % 8],
-    })),
-    total: totalUses,
+    type: "donut", title: "Sources of funds",
+    note: T("What pays for it, by funding stream.", null),
+    data: [
+      { label: T("Revenue applied", null), value: cov.revenue, color: "var(--ad-success)" },
+      { label: T("Debt facility", null), value: cov.debt, color: "var(--ad-navy-500)" },
+      { label: T("Equity injected", null), value: cov.equity, color: "var(--ad-gold-500)" },
+    ].filter(x => x.value > 0),
+    total: totalSources, totalLabel: T("Total sources", null),
   });
+  /* Bucketed by year like every other bar chart here — it was titled "month
+     by month", which described the underlying series rather than the picture
+     actually drawn. */
   B.push({
-    type: "chart", title: "How the spend was funded, month by month", height: 210,
-    note: T("Each month of outflow, split into the equity, debt and revenue that covered it.", null),
+    type: "chart", title: "How the spend was funded, by year", height: 210,
+    note: T("Each year of outflow, split into the equity, debt and revenue that covered it.", null),
+    total: totalSources, totalLabel: T("Total sources", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 210, bucket: 12,
       series: [
@@ -934,6 +954,7 @@ function buildBlocks(ctx) {
   ].filter(s => s.type !== "delta" || Math.abs(s.value) > 0.5);
   B.push({
     type: "chart", title: "From revenue to profit", height: 235,
+    total: k.profit, totalLabel: T("Net profit", null),
     note: T("Every cost head taken off revenue in turn, ending at net profit.", null),
     render: () => React.createElement(window.Charts.Waterfall, {
       steps: wfSteps, height: 235, formatY: v => (v / 1e6).toFixed(1) + "M",
@@ -1487,8 +1508,21 @@ function BlockView({ b }) {
     case "chart":
       return (
         <div className="rp-chart">
-          {b.title ? <div className="rp-tt-t">{b.title}</div> : null}
-          {b.note ? <div className="rp-tt-n">{b.note}</div> : null}
+          <div className="rp-chart-head">
+            <div>
+              {b.title ? <div className="rp-tt-t">{b.title}</div> : null}
+              {b.note ? <div className="rp-tt-n">{b.note}</div> : null}
+            </div>
+            {/* A stacked bar chart shows the shape of the spend but never the
+                size of it — the total has to be stated, not inferred from
+                adding up columns by eye. */}
+            {b.total !== undefined && b.total !== null ? (
+              <div className="rp-chart-total">
+                <div className="rp-ct-l">{b.totalLabel || T("Total", null)}</div>
+                <div className="rp-ct-v tabnum">{money(b.total)}</div>
+              </div>
+            ) : null}
+          </div>
           <div className="rp-chart-body">{b.render()}</div>
         </div>
       );
@@ -1501,8 +1535,14 @@ function BlockView({ b }) {
           {b.title ? <div className="rp-tt-t">{b.title}</div> : null}
           {b.note ? <div className="rp-tt-n">{b.note}</div> : null}
           <div className="rp-donut-body">
+            {/* The ring's hole is the natural place for the total, and Donut
+                leaves it empty — it draws arcs and nothing else. */}
             <div className="rp-donut-ring">
               {React.createElement(window.Charts.Donut, { data: b.data, size: 150, thickness: 26 })}
+              <div className="rp-donut-centre">
+                <div className="rp-dc-l">{b.totalLabel || T("Total", null)}</div>
+                <div className="rp-dc-v tabnum">{FC(b.total)}</div>
+              </div>
             </div>
             <ul className="rp-legend">
               {b.data.map((d, i) => (

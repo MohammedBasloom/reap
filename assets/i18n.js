@@ -1207,9 +1207,10 @@
     "Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.":
       "يموّل الإيراد التكلفة حين يصل في الشهر نفسه، ويغطي التسهيل ما لا يغطيه الإيراد، وحقوق الملكية هي المتبقي الذي يغطي الباقي. والإجماليان متطابقان بحكم البناء.",
     "Where the money goes, by cost head.": "إلى أين تذهب الأموال، بحسب بند التكلفة.",
-    "How the spend was funded, month by month": "كيف مُوّل الإنفاق، شهرًا بشهر",
-    "Each month of outflow, split into the equity, debt and revenue that covered it.":
-      "كل شهر من التدفق الخارج، مقسّمًا إلى حقوق الملكية والدين والإيراد الذي غطّاه.",
+    "How the spend was funded, by year": "كيف مُوّل الإنفاق، سنويًا",
+    "Each year of outflow, split into the equity, debt and revenue that covered it.":
+      "كل سنة من التدفق الخارج، مقسّمة إلى حقوق الملكية والدين والإيراد الذي غطّاها.",
+    "What pays for it, by funding stream.": "ما يموّله، بحسب مصدر التمويل.",
 
     /* Cash flow statements */
     "The project statement, and what reaches equity": "بيان المشروع، وما يصل إلى حقوق الملكية",

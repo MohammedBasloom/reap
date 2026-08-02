@@ -348,10 +348,38 @@ html[dir="rtl"] .rp-table tr.lvl-success td:first-child { box-shadow: inset -3px
 .rp-chart { margin: 3mm 0 4mm; border: 1px solid var(--rp-rule); padding: 4mm; }
 .rp-chart-body { margin-top: 3mm; }
 
-/* Ring and legend side by side — the landscape page has the width for it,
-   and the ring carries no figures of its own. */
+/* Title on one side, the total on the other. A stacked chart shows shape but
+   not size, so the size is stated rather than left to be added up by eye. */
+.rp-chart-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8mm;
+}
+.rp-chart-total {
+  flex-shrink: 0; text-align: end;
+  border-inline-start: 2px solid var(--ad-gold-500); padding-inline-start: 3mm;
+}
+.rp-ct-l {
+  font-size: 7pt; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ad-navy-500); font-weight: 600;
+}
+.rp-ct-v { font-size: 10.5pt; font-weight: 700; color: var(--ad-navy-900); margin-top: 0.5mm; }
+
+/* Ring and legend side by side — the landscape page has the width for it. */
 .rp-donut-body { display: flex; align-items: center; gap: 10mm; margin-top: 3mm; }
-.rp-donut-ring { flex-shrink: 0; }
+/* The hole is the natural home for the total; Donut draws arcs only. */
+.rp-donut-ring { flex-shrink: 0; position: relative; }
+.rp-donut-centre {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; pointer-events: none; padding: 0 6mm;
+}
+.rp-dc-l {
+  font-size: 6.4pt; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ad-navy-500); font-weight: 600; line-height: 1.2;
+}
+.rp-dc-v {
+  font-size: 11pt; font-weight: 700; color: var(--ad-navy-900);
+  margin-top: 0.8mm; line-height: 1.1;
+}
 .rp-legend { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; }
 .rp-legend li {
   display: grid; grid-template-columns: 4mm 1fr auto auto;
