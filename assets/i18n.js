@@ -1137,6 +1137,50 @@
     "Period": "الفترة", "Cost": "التكلفة", "Finance": "التمويل",
     "Net": "الصافي", "Cumulative": "التراكمي", "Costs": "التكاليف",
     "Annual cash flow, years {a}–{b}": "التدفق النقدي السنوي، السنوات {a}–{b}",
+    "{t}, years {a}–{b}": "{t}، السنوات {a}–{b}",
+
+    /* Sources and uses */
+    "Sources and Uses": "المصادر والاستخدامات",
+    "What the project spends, and what pays for it": "ما ينفقه المشروع، وما يموّله",
+    "Uses of funds": "استخدامات الأموال",
+    "Sources of funds": "مصادر الأموال",
+    "Use": "الاستخدام", "Source": "المصدر",
+    "Land and ground rent": "الأرض وإيجارها",
+    "Marketing, commission and fees": "التسويق والعمولة والرسوم",
+    "Total uses": "إجمالي الاستخدامات",
+    "Total sources": "إجمالي المصادر",
+    "Revenue applied": "الإيراد المستخدم",
+    "Debt facility": "التسهيل الائتماني",
+    "Equity injected": "حقوق الملكية المضخوخة",
+    "Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.":
+      "يموّل الإيراد التكلفة حين يصل في الشهر نفسه، ويغطي التسهيل ما لا يغطيه الإيراد، وحقوق الملكية هي المتبقي الذي يغطي الباقي. والإجماليان متطابقان بحكم البناء.",
+    "Where the money goes, by cost head.": "إلى أين تذهب الأموال، بحسب بند التكلفة.",
+    "How the spend was funded, month by month": "كيف مُوّل الإنفاق، شهرًا بشهر",
+    "Each month of outflow, split into the equity, debt and revenue that covered it.":
+      "كل شهر من التدفق الخارج، مقسّمًا إلى حقوق الملكية والدين والإيراد الذي غطّاه.",
+
+    /* Cash flow statements */
+    "The project statement, and what reaches equity": "بيان المشروع، وما يصل إلى حقوق الملكية",
+    "Equity cash flow": "التدفق النقدي لحقوق الملكية",
+    "Net project cash flow": "صافي التدفق النقدي للمشروع",
+    "Net equity cash flow": "صافي التدفق النقدي لحقوق الملكية",
+    "Debt service": "خدمة الدين",
+    "Unlevered: revenue less development cost, before any financing. Figures are rounded for presentation; the full amounts are in the Financial Overview.":
+      "غير مرفوع: الإيرادات ناقص تكلفة التطوير، قبل أي تمويل. والأرقام مقرّبة لأغراض العرض، والمبالغ الكاملة في النظرة المالية العامة.",
+    "The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.":
+      "نتيجة المشروع بعد تطبيق التسهيل. وخدمة الدين تحمل الأصل والفائدة معًا — فالفائدة داخلها لا في بند مستقل، وإظهارها مرة أخرى يعني احتسابها مرتين.",
+    "The facility drawn and serviced, with the cumulative equity position drawn over it.":
+      "التسهيل مسحوبًا ومخدومًا، مع المركز التراكمي لحقوق الملكية مرسومًا فوقه.",
+
+    /* Added charts */
+    "Cost structure": "هيكل التكاليف",
+    "Every cost head, largest first, against total investment.":
+      "كل بنود التكلفة، الأكبر أولًا، مقابل إجمالي الاستثمار.",
+    "Selling and fees": "البيع والرسوم",
+    "Revenue mix": "مزيج الإيرادات",
+    "Where the income comes from.": "من أين يأتي الدخل.",
+    "Profit by scenario": "الربح حسب السيناريو",
+    "Net profit under each case.": "صافي الربح في كل حالة.",
     "Costs and finance charges are shown as outflows. The cumulative row is the running project position, undiscounted. Figures are rounded for presentation.":
       "تُعرض التكاليف وأعباء التمويل كتدفقات خارجة. وصف التراكم هو المركز الجاري للمشروع دون خصم. والأرقام مقرّبة لأغراض العرض.",
     "Project cash flow": "التدفق النقدي للمشروع",

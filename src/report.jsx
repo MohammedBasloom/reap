@@ -486,14 +486,21 @@ function buildBlocks(ctx) {
   const k = m.k;
   const cf = result.cashflow;
   const B = [];
-  const sec = (num, title, subtitle) => B.push({ type: "section", num, title, subtitle });
+  /* Sections number themselves. They used to carry the numeral as a literal,
+     with every section after the optional fund one written as a conditional —
+     which meant inserting a section anywhere meant editing the rest by hand. */
+  let secN = 0;
+  const sec = (title, subtitle) => {
+    secN += 1;
+    B.push({ type: "section", num: (secN < 10 ? "0" : "") + secN, title, subtitle });
+  };
   const h = (text) => B.push({ type: "heading", text });
   const p = (text) => B.push({ type: "para", text });
   const table = (o) => B.push(Object.assign({ type: "table" }, o));
   const list = (variant, items) => items.length && B.push({ type: "list", variant, items });
 
   /* ---- 01 Executive summary ---- */
-  sec("01", "Executive Summary", "Findings, headline metrics and overall assessment");
+  sec("Executive Summary", "Findings, headline metrics and overall assessment");
   B.push({ type: "verdict", score: m.score.total, rating: m.rating, rec });
   p(execParagraph(m, input, result, rec));
   B.push({
@@ -514,7 +521,7 @@ function buildBlocks(ctx) {
   });
 
   /* ---- 02 Project overview ---- */
-  sec("02", "Project Overview", "The site, the programme and the timeline as modelled");
+  sec("Project Overview", "The site, the programme and the timeline as modelled");
   const ov = [
     ["Project name", input.projectName || "—"],
     ["Location", input.location && input.location !== "—" ? input.location : "—"],
@@ -557,7 +564,7 @@ function buildBlocks(ctx) {
   }
 
   /* ---- 03 Financial overview ---- */
-  sec("03", "Financial Overview", "Development cost, revenue and the profit between them");
+  sec("Financial Overview", "Development cost, revenue and the profit between them");
   const costRows = [];
   const pushCost = (label, v) => { if (v) costRows.push([label, money(v), FP(m.totalInvestment > 0 ? v / m.totalInvestment : 0)]); };
   pushCost(T("Land acquisition", null), k.landCost);
@@ -613,121 +620,236 @@ function buildBlocks(ctx) {
     foot: [T("Net profit", null) + " (" + (m.margin === null ? "—" : FP(m.margin)) + ")", money(k.profit)],
   });
 
-  /* ---- 04 Cash flow ---- */
-  sec("04", "Cash Flow Analysis", "Annual movement and the cumulative position");
-  const months = k.horizonMonths || (cf.months || []).length;
-  const yCost = annualise((cf.months || []).map((_, i) =>
-    (cf.land[i] || 0) + (cf.landRent ? cf.landRent[i] || 0 : 0) + (cf.soft[i] || 0) +
-    (cf.construction[i] || 0) + (cf.siteWork[i] || 0) + (cf.contingency[i] || 0) +
-    (cf.selling[i] || 0) + (cf.opex[i] || 0)), months);
-  const yRev = annualise((cf.months || []).map((_, i) =>
-    (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0)), months);
-  const yInt = annualise(cf.interest || [], months);
-  /* Years run ACROSS, not down: a period is a column and a measure is a row,
-     which is how a development appraisal is read and how it sits on a
-     landscape slide. Figures are compact here — twelve columns of fully
-     written riyals would not fit, and nobody reads a cash flow table to the
-     nearest riyal. The full figures are in the Financial Overview. */
-  /* SIGNS COME FROM THE ENGINE, NOT FROM THE TABLE.
-
-     Cost and interest flows are already negative — they are outflows. The
-     first version of this table subtracted them, which turned every cost into
-     income: year one showed +66.2M against zero revenue and 70.2M of spend,
-     and the total came out at 412.2M instead of the 57.3M profit the engine
-     reports. It also printed "−−SAR 177.5M", the manual minus landing on top
-     of the one the formatter had already supplied.
-
-     So nothing here negates anything. Values are summed as they come and
-     handed to the formatter, which renders its own sign. The check that this
-     is right: the Net total equals kpi.profit exactly. */
-  let cum = 0;
-  const yNet = [], yCum = [];
-  yCost.forEach((c, i) => {
-    const net = yRev[i] + c + (yInt[i] || 0);
-    cum += net; yNet.push(net); yCum.push(cum);
-  });
-  const nYears = yCost.length;
-  const sum = (a) => a.reduce((x, y) => x + y, 0);
-  const totalCol = [FC(sum(yRev)), FC(sum(yCost)), FC(sum(yInt)), FC(sum(yNet)), ""];
-  const measures = [T("Revenue", null), T("Cost", null), T("Finance", null),
-                    T("Net", null), T("Cumulative", null)];
-
-  for (let start = 0; start < nYears; start += YEARS_PER_BLOCK) {
-    const end = Math.min(nYears, start + YEARS_PER_BLOCK);
-    const last = end >= nYears;
-    const idx = [];
-    for (let i = start; i < end; i++) idx.push(i);
-
-    const head = [T("Measure", null), ...idx.map(i => T("Year {n}", { n: FN(i + 1) }))];
-    if (last) head.push(T("Total", null));
-
-    const cell = (vals, i) => FC(vals[i] || 0);
-    const rows = [
-      [measures[0], ...idx.map(i => cell(yRev, i)), ...(last ? [totalCol[0]] : [])],
-      [measures[1], ...idx.map(i => cell(yCost, i)), ...(last ? [totalCol[1]] : [])],
-      [measures[2], ...idx.map(i => cell(yInt, i)), ...(last ? [totalCol[2]] : [])],
-      [measures[3], ...idx.map(i => cell(yNet, i)), ...(last ? [totalCol[3]] : [])],
-      [measures[4], ...idx.map(i => cell(yCum, i)), ...(last ? [totalCol[4]] : [])],
-    ];
-    table({
-      title: start === 0 ? "Annual cash flow"
-        : T("Annual cash flow, years {a}–{b}", { a: FN(start + 1), b: FN(end) }),
-      note: start === 0
-        ? T("Costs and finance charges are shown as outflows. The cumulative row is the running project position, undiscounted. Figures are rounded for presentation.", null)
-        : null,
-      head,
-      align: head.map((_, i) => i === 0 ? "start" : "end"),
-      rows,
-      levels: null,
-      emphasis: [3, 4],
-    });
+  /* The cost table says what each head costs; the bars say which of them the
+     project actually turns on. Same numbers, read in one glance. */
+  if (costRows.length) {
+    const bars = [];
+    const pushBar = (label, v, color) => { if (v > 0) bars.push({ label, value: v, color }); };
+    pushBar(T("Land", null), (k.landCost || 0) + (k.landTransferFees || 0) + (k.totalLandRent || 0), "var(--ad-navy-900)");
+    pushBar(T("Construction", null), k.constructionCost || 0, "var(--ad-navy-700)");
+    pushBar(T("Site works", null), (k.siteWorkCost || 0) + (k.landInfraCost || 0), "var(--ad-navy-500)");
+    pushBar(T("Soft costs", null), k.softCosts || 0, "var(--ad-navy-400)");
+    pushBar(T("Contingency", null), k.contingency || 0, "var(--ad-sand-700)");
+    pushBar(T("Selling and fees", null), (k.marketing || 0) + (k.salesCommission || 0) + (k.govFees || 0), "var(--ad-sand-500)");
+    pushBar(T("Finance charges", null), k.totalInterest || 0, "var(--ad-gold-500)");
+    bars.sort((a, b2) => b2.value - a.value);
+    if (bars.length)
+      B.push({
+        type: "chart", title: "Cost structure", height: Math.max(150, bars.length * 30 + 20),
+        note: T("Every cost head, largest first, against total investment.", null),
+        render: () => React.createElement(window.Charts.HBars, {
+          data: bars, height: Math.max(150, bars.length * 30 + 20), formatV: FC,
+        }),
+      });
   }
 
-  /* Two charts, because the section names two things. The first is the
-     project's own position; the second is how it was funded and what came
-     back to equity. Previously one chart carried the title of both. */
-  /* Not negated — see the note on the table above. These flows arrive
-     negative and the chart stacks negatives downward on its own. Flipping
-     them drew every cost as income. */
-  const costSeries = (cf.months || []).map((_, i) =>
-    (cf.land[i] || 0) + (cf.landRent ? cf.landRent[i] || 0 : 0) + (cf.soft[i] || 0) +
-    (cf.construction[i] || 0) + (cf.siteWork[i] || 0) + (cf.contingency[i] || 0) +
-    (cf.selling[i] || 0) + (cf.opex[i] || 0));
-  const revSeries = (cf.months || []).map((_, i) =>
-    (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0));
-  const projFlow = cf.gross || (cf.months || []).map((_, i) => revSeries[i] + costSeries[i]);
+  /* Built from the three sources by name, not by walking revRows — that list
+     drops empty lines, so its indices do not map to sales / rent / exit once
+     any one of them is absent, and the donut would have labelled the wrong
+     slice on a lease-only or sale-only scheme. */
+  {
+    const tot = (a) => (a || []).reduce((x, y) => x + y, 0);
+    const mix = [
+      { label: T("Sales proceeds", null), value: tot(cf.sales), color: "var(--ad-success)" },
+      { label: T("Rental income", null), value: tot(cf.rent), color: "var(--ad-navy-600)" },
+      { label: T("Exit / terminal value", null), value: k.totalExit || 0, color: "var(--ad-gold-500)" },
+    ].filter(x => x.value > 0);
+    const mixTotal = mix.reduce((a, b2) => a + b2.value, 0);
+    if (mix.length > 1 && mixTotal > 0)
+      B.push({ type: "donut", title: "Revenue mix", data: mix, total: mixTotal,
+               note: T("Where the income comes from.", null) });
+  }
+
+  /* ---- Sources and uses ----
+     Both sides come from the engine's own per-month coverage decomposition,
+     which is why they balance: every riyal of use is attributed to the debt,
+     revenue or equity that funded it in the month it arose. */
+  sec("Sources and Uses", "What the project spends, and what pays for it");
+  const uses = cf.usesByCat || {};
+  const sumOf = (a) => (a || []).reduce((x, y) => x + y, 0);
+  const usesRows = [
+    [T("Land and ground rent", null), sumOf(uses.land)],
+    [T("Construction", null), sumOf(uses.construction)],
+    [T("Site works", null), sumOf(uses.siteWork)],
+    [T("Soft costs", null), sumOf(uses.soft)],
+    [T("Contingency", null), sumOf(uses.contingency)],
+    [T("Marketing, commission and fees", null), sumOf(uses.marketing)],
+    [T("Operating expenditure", null), sumOf(uses.opex)],
+    [T("Finance charges", null), sumOf(uses.interest)],
+  ].filter(r => Math.abs(r[1]) > 0.5);
+  const totalUses = sumOf(cf.totalUses);
+  const cov = cf.coverageTotals || { equity: 0, debt: 0, revenue: 0 };
+  const totalSources = cov.equity + cov.debt + cov.revenue;
+
+  table({
+    title: "Uses of funds",
+    head: ["Use", "Amount", "Share"], align: ["start", "end", "end"],
+    rows: usesRows.map(r => [r[0], money(r[1]), FP(totalUses > 0 ? r[1] / totalUses : 0)]),
+    foot: [T("Total uses", null), money(totalUses), "100.0%"],
+  });
+  table({
+    title: "Sources of funds",
+    note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
+    head: ["Source", "Amount", "Share"], align: ["start", "end", "end"],
+    rows: [
+      [T("Revenue applied", null), money(cov.revenue), FP(totalSources > 0 ? cov.revenue / totalSources : 0)],
+      [T("Debt facility", null), money(cov.debt), FP(totalSources > 0 ? cov.debt / totalSources : 0)],
+      [T("Equity injected", null), money(cov.equity), FP(totalSources > 0 ? cov.equity / totalSources : 0)],
+    ],
+    foot: [T("Total sources", null), money(totalSources), "100.0%"],
+  });
+  B.push({
+    type: "donut", title: "Uses of funds",
+    note: T("Where the money goes, by cost head.", null),
+    data: usesRows.map((r, i) => ({
+      label: r[0], value: r[1],
+      color: ["var(--ad-navy-900)", "var(--ad-navy-700)", "var(--ad-navy-500)", "var(--ad-navy-400)",
+              "var(--ad-sand-700)", "var(--ad-sand-500)", "var(--ad-gold-600)", "var(--ad-gold-400)"][i % 8],
+    })),
+    total: totalUses,
+  });
+  B.push({
+    type: "chart", title: "How the spend was funded, month by month", height: 210,
+    note: T("Each month of outflow, split into the equity, debt and revenue that covered it.", null),
+    render: () => React.createElement(window.Charts.StackedBars, {
+      months: cf.months, height: 210, bucket: 12,
+      series: [
+        { label: T("Revenue applied", null), color: "var(--ad-success)", values: cf.revenueApplied || [] },
+        { label: T("Debt drawn", null), color: "var(--ad-navy-500)", values: cf.debtDraw || [] },
+        { label: T("Equity injected", null), color: "var(--ad-gold-500)", values: cf.equityInjected || [] },
+      ],
+      formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
+    }),
+  });
+
+  /* ---- Cash flow ----
+     Two statements rather than one summary. The project statement is
+     unlevered: revenue less cost, each broken into its components with a
+     subtotal on each side. The equity statement takes that result and applies
+     the facility to it.
+
+     One trap worth recording: debtRepay ALREADY CARRIES THE INTEREST. On the
+     worked scheme the draw is 80.1M and the repayment 104.7M, the difference
+     being exactly the 24.6M of interest. Listing interest as a third line
+     would count it twice. Both identities below were checked against the
+     engine at every month, not merely in total:
+       revenue lines + cost lines = cf.gross
+       cf.gross + debtDraw + debtRepay = cf.net                              */
+  sec("Cash Flow Analysis", "The project statement, and what reaches equity");
+  const months = k.horizonMonths || (cf.months || []).length;
+  const yr = (a) => annualise(a || [], months);
+  const nYears = Math.ceil(months / 12);
+  const sumArr = (a) => a.reduce((x, y) => x + y, 0);
+
+  /* Years across, sub-lines under their subtotal, a Total column on the last
+     block. One table per YEARS_PER_BLOCK columns, because the paginator
+     splits rows and cannot split columns. */
+  const yearTable = (title, note, rows) => {
+    for (let start = 0; start < nYears; start += YEARS_PER_BLOCK) {
+      const end = Math.min(nYears, start + YEARS_PER_BLOCK);
+      const last = end >= nYears;
+      const idx = []; for (let i = start; i < end; i++) idx.push(i);
+      const head = [T("Measure", null), ...idx.map(i => T("Year {n}", { n: FN(i + 1) }))];
+      if (last) head.push(T("Total", null));
+      table({
+        title: start === 0 ? title
+          : T("{t}, years {a}–{b}", { t: T(title, null), a: FN(start + 1), b: FN(end) }),
+        note: start === 0 ? note : null,
+        head,
+        align: head.map((_, i) => i === 0 ? "start" : "end"),
+        rows: rows.map(r => [
+          r.label,
+          ...idx.map(i => FC(r.values[i] || 0)),
+          ...(last ? [r.noTotal ? "" : FC(sumArr(r.values))] : []),
+        ]),
+        kinds: rows.map(r => r.kind || null),
+      });
+    }
+  };
+
+  const addUp = (...arrs) => arrs[0].map((_, i) => arrs.reduce((s, a) => s + (a[i] || 0), 0));
+
+  /* --- Project statement, unlevered --- */
+  const pSales = yr(cf.sales), pRent = yr(cf.rent), pExit = yr(cf.exit);
+  const pLand = yr(cf.land), pGround = yr(cf.landRent), pSoft = yr(cf.soft);
+  const pCon = yr(cf.construction), pSite = yr(cf.siteWork), pCont = yr(cf.contingency);
+  const pSell = yr(cf.selling), pOpex = yr(cf.opex);
+  const pRevTotal = addUp(pSales, pRent, pExit);
+  const pCostTotal = addUp(pLand, pGround, pSoft, pCon, pSite, pCont, pSell, pOpex);
+  const pNet = yr(cf.gross);
+  let c1 = 0; const pCum = pNet.map(v => (c1 += v));
+
+  const projRows = [
+    { label: T("Sales proceeds", null), values: pSales, kind: "sub" },
+    { label: T("Rental income", null), values: pRent, kind: "sub" },
+    { label: T("Exit / terminal value", null), values: pExit, kind: "sub" },
+    { label: T("Total revenue", null), values: pRevTotal, kind: "total" },
+    { label: T("Land acquisition", null), values: pLand, kind: "sub" },
+    { label: T("Ground rent", null), values: pGround, kind: "sub" },
+    { label: T("Construction", null), values: pCon, kind: "sub" },
+    { label: T("Site works", null), values: pSite, kind: "sub" },
+    { label: T("Soft costs", null), values: pSoft, kind: "sub" },
+    { label: T("Contingency", null), values: pCont, kind: "sub" },
+    { label: T("Selling costs", null), values: pSell, kind: "sub" },
+    { label: T("Operating expenditure", null), values: pOpex, kind: "sub" },
+    { label: T("Total cost", null), values: pCostTotal, kind: "total" },
+    { label: T("Net project cash flow", null), values: pNet, kind: "grand" },
+    { label: T("Cumulative", null), values: pCum, kind: "cum", noTotal: true },
+  ].filter(r => r.kind !== "sub" || r.values.some(v => Math.abs(v) > 0.5));
+
+  yearTable("Project cash flow",
+    T("Unlevered: revenue less development cost, before any financing. Figures are rounded for presentation; the full amounts are in the Financial Overview.", null),
+    projRows);
+
+  /* --- Equity statement, levered --- */
+  const eDraw = yr(cf.debtDraw), eRepay = yr(cf.debtRepay);
+  const eNet = yr(cf.net);
+  let c2 = 0; const eCum = eNet.map(v => (c2 += v));
+  const equityRows = [
+    { label: T("Net project cash flow", null), values: pNet, kind: "sub" },
+    { label: T("Debt drawn", null), values: eDraw, kind: "sub" },
+    { label: T("Debt service", null), values: eRepay, kind: "sub" },
+    { label: T("Net equity cash flow", null), values: eNet, kind: "grand" },
+    { label: T("Cumulative", null), values: eCum, kind: "cum", noTotal: true },
+  ];
+  yearTable("Equity cash flow",
+    T("The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.", null),
+    equityRows);
 
   B.push({
-    type: "chart", title: "Project cash flow", height: 230,
+    type: "chart", title: "Project cash flow", height: 215,
     note: T("Cost and revenue by year, with the cumulative project position drawn over them.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
-      months: cf.months, height: 230, bucket: 12,
+      months: cf.months, height: 215, bucket: 12,
       series: [
-        { label: T("Costs", null), color: "var(--ad-navy-700)", values: costSeries },
-        { label: T("Revenue", null), color: "var(--ad-success)", values: revSeries },
+        { label: T("Costs", null), color: "var(--ad-navy-700)",
+          values: (cf.months || []).map((_, i) =>
+            (cf.land[i] || 0) + (cf.landRent ? cf.landRent[i] || 0 : 0) + (cf.soft[i] || 0) +
+            (cf.construction[i] || 0) + (cf.siteWork[i] || 0) + (cf.contingency[i] || 0) +
+            (cf.selling[i] || 0) + (cf.opex[i] || 0)) },
+        { label: T("Revenue", null), color: "var(--ad-success)",
+          values: (cf.months || []).map((_, i) => (cf.sales[i] || 0) + (cf.rent[i] || 0) + (cf.exit[i] || 0)) },
       ],
-      cumulativeValues: projFlow, cumulativeOnPrimary: true,
+      cumulativeValues: cf.gross, cumulativeOnPrimary: true,
       formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
     }),
   });
 
   B.push({
-    type: "chart", title: "Equity and debt", height: 230,
-    note: T("How the project was funded, and the cumulative equity position drawn over it.", null),
+    type: "chart", title: "Equity cash flow", height: 215,
+    note: T("The facility drawn and serviced, with the cumulative equity position drawn over it.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
-      months: cf.months, height: 230, bucket: 12,
+      months: cf.months, height: 215, bucket: 12,
       series: [
         { label: T("Debt drawn", null), color: "var(--ad-navy-400)", values: cf.debtDraw || [] },
-        { label: T("Debt repaid", null), color: "var(--ad-danger)", opacity: 0.75, values: cf.debtRepay || [] },
-        { label: T("Distributions", null), color: "var(--ad-gold-500)", values: cf.distributions || [] },
+        { label: T("Debt service", null), color: "var(--ad-danger)", opacity: 0.75, values: cf.debtRepay || [] },
       ],
       cumulativeValues: cf.net, cumulativeOnPrimary: true,
       formatY: v => v === 0 ? "0" : (v / 1e6).toFixed(0) + "M",
     }),
   });
-
   /* ---- 05 Investment metrics ---- */
-  sec("05", "Investment Metrics", "Each measure, its value, and what it means");
+  sec("Investment Metrics", "Each measure, its value, and what it means");
   const metricRows = [
     [T("Project IRR", null), k.projectIRR === null ? "—" : FP(k.projectIRR),
       T("Annualised return on all capital employed, before the effect of debt.", null)],
@@ -764,7 +886,7 @@ function buildBlocks(ctx) {
 
   /* ---- Fund waterfall, only when the user has modelled one ---- */
   if (waterfall) {
-    sec("06", "Capital Structure and Waterfall", "How proceeds divide between the partners");
+    sec("Capital Structure and Waterfall", "How proceeds divide between the partners");
     /* Per-party totals live under `totals`, not on the waterfall itself.
        Reading them off the wrong level produced three null rows and a section
        page with nothing on it — a silent hole rather than an error. */
@@ -815,8 +937,7 @@ function buildBlocks(ctx) {
   }
 
   /* ---- Risk assessment ---- */
-  const riskNum = waterfall ? "07" : "06";
-  sec(riskNum, "Risk Assessment", "The engine's register of flags raised by these inputs");
+  sec("Risk Assessment", "The engine's register of flags raised by these inputs");
   const risks = result.risks || [];
   const counts = {
     danger: risks.filter(r => r.level === "danger").length,
@@ -837,8 +958,7 @@ function buildBlocks(ctx) {
     });
 
   /* ---- Sensitivity ---- */
-  const sensNum = waterfall ? "08" : "07";
-  sec(sensNum, "Sensitivity Analysis", "What moves the return, and by how much");
+  sec("Sensitivity Analysis", "What moves the return, and by how much");
   if (tornadoIRR && tornadoIRR.length) {
     p(T("Each driver below was flexed ±10% in isolation and the study re-run. The drivers are ordered by the spread they open in equity IRR — the ones at the top are where estimating error costs most.", null));
     B.push({
@@ -873,6 +993,28 @@ function buildBlocks(ctx) {
         head: ["Scenario", "Revenue", "Profit", "Equity IRR", "Equity NPV"],
         align: ["start", "end", "end", "end", "end"], rows,
       });
+
+    /* The spread between the three cases is the point of the section, and it
+       is easier to see as three bars than as three rows of figures. Only
+       drawn when every case turns a profit — HBars scales from zero and
+       cannot render a negative, so a loss-making downside would simply
+       vanish and overstate the picture. */
+    const profits = ["downside", "base", "upside"]
+      .map(kk => scenarios[kk] && scenarios[kk].kpi ? scenarios[kk].kpi.profit : null)
+      .filter(v => v !== null);
+    if (profits.length === 3 && profits.every(v => v > 0))
+      B.push({
+        type: "chart", title: "Profit by scenario", height: 150,
+        note: T("Net profit under each case.", null),
+        render: () => React.createElement(window.Charts.HBars, {
+          height: 150, formatV: FC,
+          data: [
+            { label: T("Downside", null), value: profits[0], color: "var(--ad-danger)" },
+            { label: T("Base", null), value: profits[1], color: "var(--ad-navy-600)" },
+            { label: T("Upside", null), value: profits[2], color: "var(--ad-success)" },
+          ],
+        }),
+      });
   }
   if (mc && mc.trials) {
     table({
@@ -905,8 +1047,7 @@ function buildBlocks(ctx) {
   }
 
   /* ---- Assessment: strengths, weaknesses, opportunities, risks ---- */
-  const assessNum = waterfall ? "09" : "08";
-  sec(assessNum, "Assessment", "Strengths, weaknesses, opportunities and risk factors");
+  sec("Assessment", "Strengths, weaknesses, opportunities and risk factors");
   const strengths = deriveStrengths(m, input, result);
   const weaknesses = deriveWeaknesses(m, input, result);
   const opportunities = deriveOpportunities(m, input, result);
@@ -929,16 +1070,14 @@ function buildBlocks(ctx) {
   else p(T("No risk factor test was triggered on these inputs.", null));
 
   /* ---- Recommendation ---- */
-  const recNum = waterfall ? "10" : "09";
-  sec(recNum, "Recommendation", "The conclusion these numbers support");
+  sec("Recommendation", "The conclusion these numbers support");
   B.push({ type: "verdict", score: m.score.total, rating: m.rating, rec, wide: true });
   p(rec.body);
   h("Conditions");
   list("warn", rec.conditions.map(c => ({ title: null, detail: c })));
 
   /* ---- Appendix ---- */
-  const appNum = waterfall ? "11" : "10";
-  sec(appNum, "Appendix", "Assumptions, formulae and definitions");
+  sec("Appendix", "Assumptions, formulae and definitions");
 
   h("Assumptions and input parameters");
   table({
@@ -1150,8 +1289,12 @@ function TableRow({ b, ri, bi }) {
   const cells = b.rows[ri];
   const lvl = b.levels ? b.levels[ri] : null;
   const em = b.emphasis && b.emphasis.indexOf(ri) !== -1;
+  /* "sub" indents under the subtotal it feeds; "total" rules off above
+     itself; "grand" and "cum" carry the statement's result. */
+  const kind = b.kinds ? b.kinds[ri] : null;
   return (
-    <tr className={[lvl ? "lvl-" + lvl : "", em ? "rp-em" : ""].filter(Boolean).join(" ") || undefined}
+    <tr className={[lvl ? "lvl-" + lvl : "", em ? "rp-em" : "", kind ? "rp-k-" + kind : ""]
+          .filter(Boolean).join(" ") || undefined}
         data-mid={bi + ":r" + ri}>
       {cells.map((c, i) => (
         <td key={i} className={i > 0 ? "tabnum" : undefined}
@@ -1242,6 +1385,31 @@ function BlockView({ b }) {
           {b.title ? <div className="rp-tt-t">{b.title}</div> : null}
           {b.note ? <div className="rp-tt-n">{b.note}</div> : null}
           <div className="rp-chart-body">{b.render()}</div>
+        </div>
+      );
+    /* The ring alone carries no information — Donut draws arcs and nothing
+       else — so it is paired with its own keyed legend, which is where the
+       figures actually live. */
+    case "donut":
+      return (
+        <div className="rp-chart rp-donut">
+          {b.title ? <div className="rp-tt-t">{b.title}</div> : null}
+          {b.note ? <div className="rp-tt-n">{b.note}</div> : null}
+          <div className="rp-donut-body">
+            <div className="rp-donut-ring">
+              {React.createElement(window.Charts.Donut, { data: b.data, size: 150, thickness: 26 })}
+            </div>
+            <ul className="rp-legend">
+              {b.data.map((d, i) => (
+                <li key={i}>
+                  <span className="rp-swatch" style={{ background: d.color }} />
+                  <span className="rp-legend-l">{d.label}</span>
+                  <span className="rp-legend-v tabnum">{money(d.value)}</span>
+                  <span className="rp-legend-p tabnum">{FP(b.total > 0 ? d.value / b.total : 0)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       );
     default: return null;

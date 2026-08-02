@@ -284,6 +284,30 @@
   font-weight: 700; color: var(--ad-navy-900);
   border-top: 1px solid var(--rp-rule);
 }
+
+/* ---------- Statement rows ----------
+   A cash flow statement is read by its shape: components sit indented under
+   the subtotal they feed, subtotals rule off above themselves, and the
+   result of the statement is heavier than either. */
+.rp-table tr.rp-k-sub td:first-child {
+  padding-inline-start: 7mm; color: var(--ad-navy-600); font-weight: 400;
+}
+.rp-table tr.rp-k-sub td { color: var(--ad-navy-600); }
+.rp-table tr.rp-k-total td {
+  font-weight: 700; color: var(--ad-navy-900);
+  border-top: 1px solid var(--ad-navy-300);
+  background: #F4F6FB !important;
+}
+.rp-table tr.rp-k-grand td {
+  font-weight: 700; color: var(--ad-navy-900);
+  border-top: 1.5px solid var(--ad-navy-900);
+  border-bottom: 1px solid var(--ad-navy-300);
+  background: var(--ad-navy-100) !important;
+}
+.rp-table tr.rp-k-cum td {
+  font-weight: 600; color: var(--ad-navy-700);
+  background: transparent !important; font-style: italic;
+}
 .rp-table tr.rp-cont td {
   background: transparent !important; border-bottom: 1px solid var(--rp-rule);
   font-size: 7.2pt; letter-spacing: 0.12em; text-transform: uppercase;
@@ -323,6 +347,22 @@ html[dir="rtl"] .rp-table tr.lvl-success td:first-child { box-shadow: inset -3px
 /* ---------- Charts ---------- */
 .rp-chart { margin: 3mm 0 4mm; border: 1px solid var(--rp-rule); padding: 4mm; }
 .rp-chart-body { margin-top: 3mm; }
+
+/* Ring and legend side by side — the landscape page has the width for it,
+   and the ring carries no figures of its own. */
+.rp-donut-body { display: flex; align-items: center; gap: 10mm; margin-top: 3mm; }
+.rp-donut-ring { flex-shrink: 0; }
+.rp-legend { list-style: none; margin: 0; padding: 0; flex: 1; min-width: 0; }
+.rp-legend li {
+  display: grid; grid-template-columns: 4mm 1fr auto auto;
+  align-items: center; gap: 3mm;
+  padding: 1.6mm 0; border-bottom: 1px solid var(--rp-rule-soft);
+  font-size: 8.6pt;
+}
+.rp-swatch { width: 3mm; height: 3mm; display: block; }
+.rp-legend-l { color: var(--ad-navy-800); min-width: 0; }
+.rp-legend-v { color: var(--ad-navy-900); font-weight: 600; text-align: end; }
+.rp-legend-p { color: var(--ad-navy-500); text-align: end; min-width: 13mm; }
 
 /* ---------- Dialog ---------- */
 .rp-modal-back {
