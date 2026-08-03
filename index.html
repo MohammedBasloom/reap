@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260917"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260917" />
+  <script src="assets/i18n.js?v=20260918"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260918" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -218,13 +218,29 @@
        land as a device. The frame is clipped at the bottom so the screen
        continues past it. */
     .heroArt { position: relative; min-width: 0; perspective: 1600px; }
+    /* The bezel has to read as a separate object from the band behind it.
+       navy-800 on a navy-900 hero is a six-point step — near enough to the
+       backdrop that the frame vanished and the screen looked like it was
+       floating unmounted. It is now a lit metal: a gradient across the brand
+       navies so the top edge catches light and the lower edge falls into
+       shadow, a brighter rim, and a gold hairline round the whole thing to
+       tie it back to the identity rather than reading as generic chrome. */
     .heroShot {
       position: relative; z-index: 1;
-      padding: 9px 9px 0; background: var(--ad-navy-800);
-      border-radius: 14px 14px 0 0; overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.16); border-bottom: none;
-      box-shadow: 0 40px 90px -26px rgba(0,0,0,0.75),
-                  0 -2px 0 rgba(255,255,255,0.06) inset;
+      padding: 10px 10px 0;
+      /* The range stops at navy-600, not navy-800. Running the gradient down
+         to 800 gave the top edge a good 2.7:1 against the band but let the
+         side rails fade back to 1.07 at their lower end — the frame reappeared
+         at the top and dissolved at the bottom. Held between 500 and 600 it
+         keeps at least 1.7:1 everywhere while still catching light along the
+         top. */
+      background: linear-gradient(155deg,
+                  var(--ad-navy-400) 0%, var(--ad-navy-500) 40%, var(--ad-navy-600) 100%);
+      border-radius: 15px 15px 0 0; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.30); border-bottom: none;
+      box-shadow: 0 40px 90px -26px rgba(0,0,0,0.8),
+                  0 0 0 1px rgba(201,168,117,0.30),
+                  0 1px 0 rgba(255,255,255,0.22) inset;
       transform: rotateY(-7deg) rotate(2.5deg) scale(1.02);
       transform-origin: center left;
       transition: transform 460ms var(--ease-out);
@@ -976,7 +992,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260917"></script>
+<script src="assets/mobile-notice.js?v=20260918"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1643,8 +1659,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260917"></script>
-<script src="assets/auth.js?v=20260917"></script>
+<script src="assets/config.js?v=20260918"></script>
+<script src="assets/auth.js?v=20260918"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
