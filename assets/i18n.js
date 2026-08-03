@@ -1350,7 +1350,27 @@
     "Distribution by party": "التوزيع حسب الطرف",
     "Party": "الطرف", "Contributed": "المساهَم به", "Distributed": "الموزَّع",
     "Limited partners": "الشركاء المحدودون",
+    "All partners": "جميع الشركاء",
     "Waterfall tiers": "شرائح الشلال",
+    "Share of distributions": "الحصة من التوزيعات",
+    "Settled": "نسبة السداد",
+    "Measured against": "مقيسة على",
+    "Capital is returned first, then the preferred return accrues and is paid, and only the surplus above both is split. Settled shows how much of each claim the tier actually discharged — the rest is still owed.":
+      "يُعاد رأس المال أولًا، ثم يستحق العائد التفضيلي ويُدفع، ولا يُقسَّم إلا الفائض فوقهما. ويبيّن عمود نسبة السداد مقدار ما سدّدته كل شريحة فعليًا من استحقاقها — والباقي ما يزال مستحقًا.",
+    "Capital called from all partners, {v}": "رأس المال المستدعى من جميع الشركاء، {v}",
+    "Contributed and distributed are net within each month: where a partner is called for capital and paid a fee in the same month, only the difference appears. This affects the general partner, who receives the management fees.":
+      "المساهَم به والموزَّع يُحتسبان بالصافي داخل كل شهر: فحين يُستدعى شريك لرأس مال وتُدفع له رسوم في الشهر نفسه، لا يظهر إلا الفرق. ويسري ذلك على الشريك العام الذي يتقاضى رسوم الإدارة.",
+    "Preferred return earned over the life, {v} — of which {o} remains unpaid":
+      "العائد التفضيلي المستحق خلال عمر الصندوق، {v} — منه {o} ما يزال غير مدفوع",
+    "No preferred return accrued": "لم يستحق أي عائد تفضيلي",
+    "Payable in full — every riyal of preferred return was paid":
+      "مستحقة بالكامل — دُفع كل ريال من العائد التفضيلي",
+    "Not payable — the preferred return was not met in full, so the reserve went to the investors instead":
+      "غير مستحقة — لم يُستوفَ العائد التفضيلي بالكامل، فذهب المخصص إلى المستثمرين بدلًا من ذلك",
+    "The surplus above capital and preferred return — a balance, not a claim to settle":
+      "الفائض فوق رأس المال والعائد التفضيلي — رصيد لا استحقاق يُسدَّد",
+    "Total distributed": "إجمالي الموزَّع",
+    "Total through the waterfall": "الإجمالي عبر الشلال",
     "Capital is returned first, then the preferred return accrues and is paid, and only the surplus above both is split.":
       "يُعاد رأس المال أولًا، ثم يستحق العائد التفضيلي ويُدفع، ولا يُقسَّم إلا الفائض فوقهما.",
     "Tier": "الشريحة",

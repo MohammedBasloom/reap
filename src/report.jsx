@@ -1043,24 +1043,93 @@ function buildBlocks(ctx) {
       wrow(T("Developer", null), wt.dev),
       wrow(T("General partner", null), wt.gp),
     ].filter(Boolean);
-    if (rows.length)
+    if (rows.length) {
+      /* The fund total. Contributed, distributed and profit add up; MOIC and
+         IRR do not. MOIC is restruck on the totals, and the IRR is solved
+         from the three party cashflows summed month by month — the return the
+         partnership earned as one body, which is not the average of the three
+         and cannot be got by adding a column. */
+      const pt = waterfall.party || {};
+      const cSum = (wt.lp ? wt.lp.contributed : 0) + (wt.dev ? wt.dev.contributed : 0) + (wt.gp ? wt.gp.contributed : 0);
+      const dSum = (wt.lp ? wt.lp.distributed : 0) + (wt.dev ? wt.dev.distributed : 0) + (wt.gp ? wt.gp.distributed : 0);
+      let fundIRR = null;
+      try {
+        const flows = [pt.lp, pt.dev, pt.gp].filter(p => p && p.cashflow).map(p => p.cashflow);
+        if (flows.length) {
+          const n = Math.max(...flows.map(f => f.length));
+          const combined = new Array(n).fill(0);
+          flows.forEach(f => f.forEach((v, i) => { combined[i] += v || 0; }));
+          fundIRR = window.Feas.irr(combined);
+        }
+      } catch (e) { fundIRR = null; }
+
       table({
         title: "Distribution by party",
+        /* These columns net within each month before classifying it, so a
+           party that receives a fee in a month it is also called for capital
+           shows the difference rather than both gross figures. On the worked
+           scheme that is the GP alone — 1.02M called against 0.79M net — and
+           it is why the capital figure here does not match the capital called
+           in the tier table below. Both are right; they answer different
+           questions. */
+        note: T("Contributed and distributed are net within each month: where a partner is called for capital and paid a fee in the same month, only the difference appears. This affects the general partner, who receives the management fees.", null),
         head: ["Party", "Contributed", "Distributed", "Profit", "MOIC", "IRR"],
         align: ["start", "end", "end", "end", "end", "end"], rows,
+        foot: [T("All partners", null), money(cSum), money(dSum), money(dSum - cSum),
+               cSum > 0 ? (dSum / cSum).toFixed(2) + "×" : "—",
+               fundIRR === null || fundIRR === undefined ? "—" : FP(fundIRR)],
       });
+    }
 
+    /* A tier's amount says what was paid; it does not say whether that
+       settled the claim. Capital repaid is measured against capital
+       contributed, and preferred return paid against preferred return earned
+       — which is the amount paid plus whatever is still accrued and unpaid.
+       On this scheme the second number is the one that matters: it is why the
+       performance fee is nil. */
     const bk = waterfall.buckets || {};
+    const pty = waterfall.party || {};
+    const contributedTotal = (waterfall.contributions && waterfall.contributions.total) || 0;
+    const prefPaid = bk.preferredReturn || 0;
+    const prefOutstanding = ["lp", "dev", "gp"]
+      .reduce((s, key) => s + ((pty[key] && pty[key].prefAccrued) || 0), 0);
+    const prefEarned = prefPaid + prefOutstanding;
+    const distributedTotal = (bk.returnOfCapital || 0) + prefPaid +
+                             (bk.promoteToGP || 0) + (bk.proRataResidual || 0);
+    const shareOf = (v) => distributedTotal > 0 ? FP(v / distributedTotal) : "—";
+    const hurdleMet = !!(waterfall.config && waterfall.config.promoteHurdleMet);
+
     table({
       title: "Waterfall tiers",
-      note: T("Capital is returned first, then the preferred return accrues and is paid, and only the surplus above both is split.", null),
-      head: ["Tier", "Amount"], align: ["start", "end"],
+      note: T("Capital is returned first, then the preferred return accrues and is paid, and only the surplus above both is split. Settled shows how much of each claim the tier actually discharged — the rest is still owed.", null),
+      head: ["Tier", "Amount", "Share of distributions", "Settled", "Measured against"],
+      align: ["start", "end", "end", "end", "start"],
+      widths: ["18%", "17%", "14%", "11%", "40%"],
       rows: [
-        [T("Return of capital", null), money(bk.returnOfCapital || 0)],
-        [T("Preferred return", null), money(bk.preferredReturn || 0)],
-        [T("Performance fee to GP", null), money(bk.promoteToGP || 0)],
-        [T("Residual, pro rata", null), money(bk.proRataResidual || 0)],
+        [T("Return of capital", null), money(bk.returnOfCapital || 0),
+          shareOf(bk.returnOfCapital || 0),
+          contributedTotal > 0 ? FP((bk.returnOfCapital || 0) / contributedTotal) : "—",
+          T("Capital called from all partners, {v}", { v: money(contributedTotal) })],
+        [T("Preferred return", null), money(prefPaid), shareOf(prefPaid),
+          prefEarned > 0 ? FP(prefPaid / prefEarned) : "—",
+          prefEarned > 0
+            ? T("Preferred return earned over the life, {v} — of which {o} remains unpaid", { v: money(prefEarned), o: money(prefOutstanding) })
+            : T("No preferred return accrued", null)],
+        [T("Performance fee to GP", null), money(bk.promoteToGP || 0),
+          shareOf(bk.promoteToGP || 0), hurdleMet ? FP(1) : FP(0),
+          hurdleMet
+            ? T("Payable in full — every riyal of preferred return was paid", null)
+            : T("Not payable — the preferred return was not met in full, so the reserve went to the investors instead", null)],
+        [T("Residual, pro rata", null), money(bk.proRataResidual || 0),
+          shareOf(bk.proRataResidual || 0), "—",
+          T("The surplus above capital and preferred return — a balance, not a claim to settle", null)],
       ],
+      /* NOT "total distributed" — the tiers are the waterfall only. Fees are
+         paid outside it and show up in the party table, which is why that
+         table's distributed column is larger. The two reconcile exactly:
+         party distributions = these tiers + fees other than the promote, less
+         the same-month netting noted above. */
+      foot: [T("Total through the waterfall", null), money(distributedTotal), "100.0%", "", ""],
     });
 
     const fe = waterfall.fees || {};
