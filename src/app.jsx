@@ -501,7 +501,7 @@ function DashboardEmptyState({ input }) {
     { title: "Tune each component",
       body: "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates." },
     { title: "Set timing & general costs",
-      body: "Pre-design, construction and pre-sales start — then soft costs, contingency, marketing and fees." },
+      body: "Pre-construction, construction and pre-sales start — then soft costs, contingency, marketing and fees." },
     { title: "Set financing & targets",
       body: "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure." },
   ];

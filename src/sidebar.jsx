@@ -159,7 +159,7 @@ function AutoHorizonDisplay({ input }) {
         <span style={{ color: "var(--fg-3)", fontSize: 11 }}>{years.toFixed(1)} yrs</span>
       </div>
       <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>
-        Predesign + construction + hold / sell-down
+        Pre-construction + construction + hold / sell-down
       </div>
     </div>
   );
@@ -1735,7 +1735,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       {/* 04 Timing */}
       <Section title="Project Timing" n="04">
         <Row cols={2}>
-          <Field label="Pre-design" suffix="months" value={input.predesignMonths} onChange={v => upd("predesignMonths", v)} hint="Concept → DD → tender" />
+          <Field label="Pre-construction" suffix="months" value={input.predesignMonths} onChange={v => upd("predesignMonths", v)} hint="Concept → DD → tender" />
           <Field label="Construction" suffix="months" value={input.constructionMonths} onChange={v => upd("constructionMonths", v)} />
           <Field label="Pre-sales start" suffix="month" value={input.preSalesStartMonth} onChange={v => upd("preSalesStartMonth", v)} hint="From kickoff" />
           <AutoHorizonDisplay input={input} />

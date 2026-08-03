@@ -310,7 +310,7 @@ function deriveOpportunities(m, input, result) {
         { pct: FP(input.developablePct || 0) }));
   if (input.preSalesStartMonth > input.predesignMonths)
     add("Pre-sales could start earlier",
-      T("Sales begin in month {m}, after the {p}-month design period. Releasing earlier would pull revenue forward and reduce the peak funding requirement.",
+      T("Sales begin in month {m}, after the {p}-month pre-construction period. Releasing earlier would pull revenue forward and reduce the peak funding requirement.",
         { m: FN(input.preSalesStartMonth), p: FN(input.predesignMonths) }));
   if (!(input.fund && input.fund.enabled))
     add("A fund structure has not been modelled",
@@ -535,7 +535,7 @@ function buildBlocks(ctx) {
     ["Net saleable / leasable area", FN(k.nsa || 0) + " m²"],
     ["Residential units", k.totalUnits ? FN(k.totalUnits) : "—"],
     ["Hotel keys", k.totalKeys ? FN(k.totalKeys) : "—"],
-    ["Pre-design period", T("{n} months", { n: FN(input.predesignMonths || 0) })],
+    ["Pre-construction period", T("{n} months", { n: FN(input.predesignMonths || 0) })],
     ["Construction period", T("{n} months", { n: FN(input.constructionMonths || 0) })],
     ["Sales commence", T("Month {m}", { m: FN(input.preSalesStartMonth || 0) })],
     ["Analysis horizon", T("{n} months", { n: FN(k.horizonMonths || 0) })],
@@ -880,13 +880,12 @@ function buildBlocks(ctx) {
   const cov = cf.coverageTotals || { equity: 0, debt: 0, revenue: 0 };
   const totalSources = cov.equity + cov.debt + cov.revenue;
 
-  table({
-    title: "Uses of funds",
-    head: ["Use", "Amount", "Share"], align: ["start", "end", "end"],
-    rows: usesRows.map(r => [r[0], money(r[1]), FP(totalUses > 0 ? r[1] / totalUses : 0)]),
-    foot: [T("Total uses", null), money(totalUses), "100.0%"],
-  });
-  /* Each chart follows the table it draws, as in the cash flow section. */
+  /* No tables here. The rings carry a keyed legend with the amount and the
+     share on every line and the total in the hole, so a table beside them
+     restated the same figures in the same units — two objects to reconcile
+     where one would do. This is the only section where the chart is complete
+     enough to stand alone; everywhere else the table is still the record and
+     the chart only illustrates it. */
   B.push({
     type: "donut", title: "Uses of funds",
     note: T("Where the money goes, by cost head.", null),
@@ -898,20 +897,9 @@ function buildBlocks(ctx) {
     total: totalUses, totalLabel: T("Total uses", null),
   });
 
-  table({
-    title: "Sources of funds",
-    note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
-    head: ["Source", "Amount", "Share"], align: ["start", "end", "end"],
-    rows: [
-      [T("Revenue applied", null), money(cov.revenue), FP(totalSources > 0 ? cov.revenue / totalSources : 0)],
-      [T("Debt facility", null), money(cov.debt), FP(totalSources > 0 ? cov.debt / totalSources : 0)],
-      [T("Equity injected", null), money(cov.equity), FP(totalSources > 0 ? cov.equity / totalSources : 0)],
-    ],
-    foot: [T("Total sources", null), money(totalSources), "100.0%"],
-  });
   B.push({
     type: "donut", title: "Sources of funds",
-    note: T("What pays for it, by funding stream.", null),
+    note: T("Revenue funds a cost when it arrives in the same month; the facility covers what revenue does not; equity is the residual that covers the rest. The two totals agree by construction.", null),
     data: [
       { label: T("Revenue applied", null), value: cov.revenue, color: "var(--ad-success)" },
       { label: T("Debt facility", null), value: cov.debt, color: "var(--ad-navy-500)" },
