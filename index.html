@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260919"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260919" />
+  <script src="assets/i18n.js?v=20260920"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260920" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -886,35 +886,6 @@
     .modal .guest { margin-top: 16px; text-align: center; font-size: 12px; color: var(--fg-3); }
     .modal .guest a { cursor: pointer; text-decoration: underline; color: var(--fg-2); }
 
-    /* ---------- Google ----------
-       Google's brand guidelines require their own mark on the button, at their
-       own colours, on white or their blue — so this one control does NOT take
-       REAP's palette. It sits above the email form because it is the shorter
-       path, with a rule between them saying the two are alternatives rather
-       than steps. */
-    .modal .oauth {
-      width: 100%; margin-top: 20px; padding: 11px 14px;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      background: #fff; color: #3c4043;
-      border: 1px solid var(--border-2); border-radius: 2px; cursor: pointer;
-      font-family: var(--font-body); font-size: 13px; font-weight: 600;
-      transition: background 160ms var(--ease-out), border-color 160ms var(--ease-out);
-    }
-    .modal .oauth:hover { background: #F7F8FA; border-color: var(--border-strong); }
-    .modal .oauth:disabled { opacity: 0.55; cursor: wait; }
-    .modal .oauth svg { width: 17px; height: 17px; flex-shrink: 0; display: block; }
-    /* A rule with the word set into it. The pseudo-elements are the two halves
-       of the line, so it stays centred whatever the label's length in either
-       language. */
-    .modal .orsep {
-      display: flex; align-items: center; gap: 12px;
-      margin: 18px 0 2px; font-size: 11px; letter-spacing: 0.12em;
-      text-transform: uppercase; color: var(--fg-4);
-    }
-    .modal .orsep::before, .modal .orsep::after {
-      content: ""; flex: 1; height: 1px; background: var(--border-1);
-    }
-
     /* Signed-in avatar + dropdown (matches the platform pages) */
     .userchip { display: none; position: relative; }
     .avatar {
@@ -1021,7 +992,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260919"></script>
+<script src="assets/mobile-notice.js?v=20260920"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1650,12 +1621,6 @@
     <div id="authSignupView">
       <h3 data-ar="أنشئ حسابك">Create your account</h3>
       <div class="sub" data-ar="مجانًا — تُحفظ تحليلاتك في حسابك.">Free — your analyses are saved to your account.</div>
-      <button class="oauth" id="suGoogle">
-        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-        <span data-ar="المتابعة باستخدام Google">Continue with Google</span>
-      </button>
-      <div class="msg" id="suOauthMsg"></div>
-      <div class="orsep" data-ar="أو">or</div>
       <label><span data-ar="الاسم الكامل">Full name</span><input type="text" id="suName" autocomplete="name" /></label>
       <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="suEmail" autocomplete="email" /></label>
       <label><span data-ar="كلمة المرور (٦ أحرف على الأقل)">Password (min 6 characters)</span><input type="password" id="suPassword" autocomplete="new-password" /></label>
@@ -1667,12 +1632,6 @@
     <div id="authLoginView" style="display:none">
       <h3 data-ar="مرحبًا بعودتك">Welcome back</h3>
       <div class="sub" data-ar="سجّل الدخول للوصول إلى تحليلاتك المحفوظة.">Log in to access your saved analyses.</div>
-      <button class="oauth" id="liGoogle">
-        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-        <span data-ar="المتابعة باستخدام Google">Continue with Google</span>
-      </button>
-      <div class="msg" id="liOauthMsg"></div>
-      <div class="orsep" data-ar="أو">or</div>
       <label><span data-ar="البريد الإلكتروني">Email</span><input type="email" id="liEmail" autocomplete="email" /></label>
       <label><span data-ar="كلمة المرور">Password</span><input type="password" id="liPassword" autocomplete="current-password" /></label>
       <div class="alt" style="text-align:start;margin-top:8px;"><a id="toReset" data-ar="نسيت كلمة المرور؟">Forgot password?</a></div>
@@ -1700,8 +1659,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260919"></script>
-<script src="assets/auth.js?v=20260919"></script>
+<script src="assets/config.js?v=20260920"></script>
+<script src="assets/auth.js?v=20260920"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -1864,56 +1823,6 @@
     setTimeout(closeAuth, 1600);
   };
 
-  /* ---------- Google ----------
-     signInWithOAuth navigates away, so every route back through this page is
-     a COLD LOAD: pendingApp, the open modal, the closure this handler lives
-     in — all gone. Anything the return leg needs has to be written to storage
-     before the call. sessionStorage rather than local: the intent belongs to
-     this tab and this attempt, and a stale flag left in localStorage would
-     hijack an unrelated visit weeks later.
-
-     The flag is cleared the moment it is read, whether or not the sign-in
-     worked, so an abandoned attempt cannot fire on the next load. */
-  const OAUTH_PENDING = "reap_oauth_pending";
-
-  async function startGoogle(btn, msgEl) {
-    try { sessionStorage.setItem(OAUTH_PENDING, pendingApp || "1"); } catch (e) {}
-    btn.disabled = true;
-    const { error } = await reapAuth.signInWithGoogle();
-    if (error) {
-      // Still here, so the redirect never happened.
-      try { sessionStorage.removeItem(OAUTH_PENDING); } catch (e) {}
-      btn.disabled = false;
-      msg(msgEl, error.message, "err");
-    }
-  }
-  $("suGoogle").onclick = () => startGoogle($("suGoogle"), $("suOauthMsg"));
-  $("liGoogle").onclick = () => startGoogle($("liGoogle"), $("liOauthMsg"));
-
-  /* Coming back from Google. supabase-js parses the token out of the URL on
-     its own; this only has to pick up where the user left off and tidy up
-     after it. */
-  async function resumeAfterGoogle() {
-    let intent = null;
-    try {
-      intent = sessionStorage.getItem(OAUTH_PENDING);
-      sessionStorage.removeItem(OAUTH_PENDING);
-    } catch (e) {}
-    if (!intent) return false;
-
-    const user = await reapAuth.getUser();
-    if (!user) return false;            // cancelled at Google's screen
-
-    reapAuth.clearGuest();
-    // The token is in the address bar; there is no reason to leave it there.
-    try { history.replaceState(null, "", location.pathname); } catch (e) {}
-    await refreshSessionUI();
-    // "1" means they signed in from the header rather than on the way into a
-    // platform, so there is nowhere in particular to send them.
-    if (intent !== "1") openPlatform(intent);
-    return true;
-  }
-
   // Open the new-password view when the user arrives via the recovery link
   sb.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") openAuth("newpw"); });
   if (location.hash.includes("type=recovery")) openAuth("newpw");
@@ -1978,10 +1887,7 @@
     else $("suSubmit").click();
   });
 
-  /* The return leg runs first: it establishes the session and refreshes the
-     chrome itself, so refreshSessionUI only needs to run when this was an
-     ordinary load. */
-  resumeAfterGoogle().then((resumed) => { if (!resumed) refreshSessionUI(); });
+  refreshSessionUI();
 })();
 </script>
 

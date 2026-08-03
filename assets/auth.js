@@ -56,27 +56,6 @@
       return sb.auth.signInWithPassword({ email, password });
     },
 
-    /* Google. One call for both "sign up" and "log in" — an OAuth provider
-       does not distinguish them: the first return creates the account, every
-       later one signs the same person back in.
-
-       This NAVIGATES AWAY. Nothing after it runs, so any state the page needs
-       on the other side has to be written down before the call, not after —
-       see OAUTH_PENDING in index.html.
-
-       prompt=select_account because the alternative is a silent sign-in as
-       whichever Google account the browser happens to hold, which is the
-       wrong default on a shared or multi-account machine. */
-    async signInWithGoogle(redirectTo) {
-      return sb.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectTo || new URL("index.html", window.location.href).href,
-          queryParams: { prompt: "select_account" },
-        },
-      });
-    },
-
     /* Sends the branded reset email; the link returns the user to the
        landing page with a recovery token, where they set a new password. */
     async resetPassword(email) {
