@@ -410,7 +410,9 @@
 
     /* Sidebar — timing / costs / financing */
     "Project Timing": "الجدول الزمني", "Pre-construction": "ما قبل الإنشاء", "Construction": "الإنشاء",
-    "Pre-sales start": "بدء البيع على الخارطة", "Horizon": "الأفق الزمني", "Auto": "تلقائي",
+    "Sales start": "بدء البيع", "Horizon": "الأفق الزمني", "Auto": "تلقائي",
+    "From project start": "من بداية المشروع",
+    "No component is being sold": "لا يوجد مكوّن معروض للبيع",
     "Pre-construction + construction + hold / sell-down": "ما قبل الإنشاء + الإنشاء + التشغيل / البيع",
     "General Costs": "التكاليف العامة", "Soft costs": "التكاليف غير المباشرة", "Contingency": "الاحتياطي",
     "Marketing": "التسويق", "Sales commission": "عمولة البيع", "Gov / sales fees": "رسوم حكومية / بيع",

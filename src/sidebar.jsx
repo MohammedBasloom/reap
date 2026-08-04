@@ -1321,6 +1321,15 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
   // Declared first: addComp below closes over it, and several land figures
   // depend on it.
   const isLeasehold = (input.landTenure || "own") === "lease";
+  /* Is anything in the programme actually for sale? A mixed-use building holds
+     its purpose on the spaces rather than on itself, so a scheme can be
+     entirely "mixed" at the top level and still be selling — the subs have to
+     be looked at too. Drives whether the sales-start month is live. */
+  const hasSaleComponent = (input.components || []).some((c) => {
+    if (c.enabled === false) return false;
+    if (c.mode === "sale") return true;
+    return Array.isArray(c.subs) && c.subs.some((s) => s.mode === "sale");
+  });
   const upd = (k, v) => setInput({ ...input, [k]: v });
   const updComp = (idx, c) => {
     const arr = input.components.slice();
@@ -1737,7 +1746,21 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
         <Row cols={2}>
           <Field label="Pre-construction" suffix="months" value={input.predesignMonths} onChange={v => upd("predesignMonths", v)} hint="Concept → DD → tender" />
           <Field label="Construction" suffix="months" value={input.constructionMonths} onChange={v => upd("constructionMonths", v)} />
-          <Field label="Pre-sales start" suffix="month" value={input.preSalesStartMonth} onChange={v => upd("preSalesStartMonth", v)} hint="From kickoff" />
+          {/* "Sales start", not "pre-sales": the field sets the month selling
+              BEGINS, and for several components that is after practical
+              completion rather than off-plan. Naming it pre-sales described
+              one case and mislabelled the rest.
+
+              Greyed out when nothing in the programme is for sale — with no
+              components at all, or with a wholly leased scheme, the month
+              selling starts has nothing to act on and the engine ignores it. */}
+          <Field
+            label="Sales start"
+            suffix="month"
+            value={input.preSalesStartMonth}
+            onChange={v => upd("preSalesStartMonth", v)}
+            disabled={!hasSaleComponent}
+            hint={hasSaleComponent ? "From project start" : "No component is being sold"} />
           <AutoHorizonDisplay input={input} />
         </Row>
         <div style={{ padding: "10px 14px", background: "var(--bg-2)", fontSize: 11, color: "var(--fg-3)" }}>
