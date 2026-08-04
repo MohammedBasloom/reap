@@ -227,6 +227,20 @@ function ValApp() {
     const { data } = await sb.from("valuations").select("id,name,updated_at").order("updated_at", { ascending: false }).limit(10);
     setSaved(data || []);
   }
+  /* Printing is how a valuation leaves the session, so it takes the same
+     account gate the modeling report does. A signed-in user never sees the
+     prompt — the gate resolves true and the dialog opens as before. */
+  async function printReport() {
+    if (window.reapGate) {
+      const ok = await window.reapGate.requireAccount({
+        title: I18N.t("Sign in to print your valuation"),
+        body: I18N.t("Printing produces a document that leaves this session, so it needs an account behind it. Your inputs are kept while you sign in, and you are brought straight back here."),
+      });
+      if (!ok) return;
+    }
+    window.print();
+  }
+
   async function saveToCloud() {
     if (!user) return;
     setSaveState("saving");
@@ -538,7 +552,7 @@ function ValApp() {
                   {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved ✓" : "Save to my account"}
                 </button>
                 <button className="btn" onClick={() => { if (confirm(I18N.t("Start a fresh valuation?"))) setInput(defaultInput(input.property.type)); }}>New</button>
-                <button className="btn no-print" onClick={() => window.print()}>Print</button>
+                <button className="btn no-print" onClick={printReport}>Print</button>
               </div>
               {saveState === "error" && <div style={{ fontSize: 11, color: "var(--ad-danger)", marginTop: 8 }}>Could not save — please try again.</div>}
               {saved.length > 0 && (
@@ -560,7 +574,7 @@ function ValApp() {
             <div style={{ fontSize: 12, color: "var(--fg-3)", lineHeight: 1.5 }}>
               You're exploring as a guest — nothing is saved.{" "}
               <a href="index.html" style={{ color: "var(--ad-navy-700)", fontWeight: 600 }}>Create a free account</a> to save valuations.
-              <div style={{ marginTop: 10 }}><button className="btn no-print" onClick={() => window.print()}>Print report</button></div>
+              <div style={{ marginTop: 10 }}><button className="btn no-print" onClick={printReport}>Print report</button></div>
             </div>
           )}
         </div>

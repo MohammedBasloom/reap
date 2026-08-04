@@ -2185,8 +2185,18 @@ function ReportHost({ input, result, scenarios, waterfall }) {
   const [phase, setPhase] = useStateRep("idle"); // idle | form | doc
   const [meta, setMeta] = useStateRep(null);
 
+  /* A guest may build and read the whole study; what needs an account is
+     taking a document away. The gate resolves true for a signed-in user
+     without showing anything, so this costs a signed-in export nothing but
+     one already-resolved promise. */
   useEffectRep(() => {
-    const open = () => setPhase("form");
+    const open = async () => {
+      if (window.reapGate) {
+        const ok = await window.reapGate.requireAccount();
+        if (!ok) return;
+      }
+      setPhase("form");
+    };
     window.addEventListener("feas:export", open);
     return () => window.removeEventListener("feas:export", open);
   }, []);

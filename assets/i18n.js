@@ -1221,6 +1221,18 @@
     "Annual cash flow, years {a}–{b}": "التدفق النقدي السنوي، السنوات {a}–{b}",
     "{t}, years {a}–{b}": "{t}، السنوات {a}–{b}",
 
+    /* Sign-in gate on export / print */
+    "Account required": "يتطلب حسابًا",
+    "Sign in to export your report": "سجّل الدخول لتصدير تقريرك",
+    "Exporting produces a branded document with your company on the cover — so it needs an account behind it. Your work is kept while you sign in, and you are brought straight back here.":
+      "التصدير يُنتج وثيقة تحمل هوية شركتك على الغلاف، ولذلك يتطلب حسابًا. ويُحتفظ بعملك أثناء تسجيل الدخول، ثم تعود إلى هنا مباشرة.",
+    "Sign in to print your valuation": "سجّل الدخول لطباعة تقييمك",
+    "Printing produces a document that leaves this session, so it needs an account behind it. Your inputs are kept while you sign in, and you are brought straight back here.":
+      "الطباعة تُنتج وثيقة تخرج من هذه الجلسة، ولذلك تتطلب حسابًا. ويُحتفظ بمدخلاتك أثناء تسجيل الدخول، ثم تعود إلى هنا مباشرة.",
+    "Create free account": "أنشئ حسابًا مجانيًا",
+    "Sign in": "تسجيل الدخول",
+    "Not now — keep working": "ليس الآن — متابعة العمل",
+
     /* Cost & Revenue sections */
     "Cost": "التكاليف",
     "What the scheme costs to build and carry": "ما يكلّفه المشروع بناءً وحملًا",
