@@ -3,7 +3,7 @@
    1. Project & Land  →  total land cost, transfer fees, total
    2. Components (each: allocation %, FAR, costs, efficiency,
       sale/lease, revenue basis sqm|unit|key, timing, cap rate)
-   3. Project timing (predesign, construction, pre-sales start)
+   3. Project timing (pre-construction, construction, sales start)
    4. General costs (project-level %s)
    5. Financing
    ============================================================= */

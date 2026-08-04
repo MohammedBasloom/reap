@@ -309,7 +309,7 @@ function deriveOpportunities(m, input, result) {
       T("Only {pct} of the gross site is treated as developable. A masterplan that lifts that share would spread the land cost over more saleable area.",
         { pct: FP(input.developablePct || 0) }));
   if (input.preSalesStartMonth > input.predesignMonths)
-    add("Pre-sales could start earlier",
+    add("Sales could start earlier",
       T("Sales begin in month {m}, after the {p}-month pre-construction period. Releasing earlier would pull revenue forward and reduce the peak funding requirement.",
         { m: FN(input.preSalesStartMonth), p: FN(input.predesignMonths) }));
   if (!(input.fund && input.fund.enabled))

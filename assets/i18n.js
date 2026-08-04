@@ -65,8 +65,8 @@
     "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates.":
       "أسلوب البناء وتكلفته والكفاءة، ثم سعر البيع أو الإيجار ومدة البيع أو التشغيل.",
     "Set timing & general costs": "حدّد الجدول الزمني والتكاليف العامة",
-    "Pre-construction, construction and pre-sales start — then soft costs, contingency, marketing and fees.":
-      "ما قبل الإنشاء والإنشاء وبدء البيع على الخارطة — ثم التكاليف غير المباشرة والاحتياطي والتسويق والرسوم.",
+    "Pre-construction, construction and sales start — then soft costs, contingency, marketing and fees.":
+      "ما قبل الإنشاء والإنشاء وبدء البيع — ثم التكاليف غير المباشرة والاحتياطي والتسويق والرسوم.",
     "Set financing & targets": "حدّد التمويل والمستهدفات",
     "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure.":
       "نسبة التمويل إلى التكلفة ومعدل الفائدة، ومعدل العائد المستهدف لصافي القيمة الحالية، واختياريًا هيكل صندوق بين الشريك المحدود والشريك العام.",
@@ -1520,7 +1520,7 @@
     "Developable share could be tested": "يمكن اختبار الحصة القابلة للتطوير",
     "Only {pct} of the gross site is treated as developable. A masterplan that lifts that share would spread the land cost over more saleable area.":
       "يُعامَل {pct} فقط من الموقع الإجمالي كقابل للتطوير. ومخطط رئيسي يرفع هذه الحصة سيوزّع تكلفة الأرض على مساحة قابلة للبيع أكبر.",
-    "Pre-sales could start earlier": "يمكن بدء البيع المسبق مبكرًا",
+    "Sales could start earlier": "يمكن بدء البيع مبكرًا",
     "Sales begin in month {m}, after the {p}-month pre-construction period. Releasing earlier would pull revenue forward and reduce the peak funding requirement.":
       "يبدأ البيع في الشهر {m} بعد فترة ما قبل الإنشاء ومدتها {p} شهرًا. والطرح مبكرًا سيقدّم الإيرادات ويخفض ذروة الاحتياج التمويلي.",
     "A fund structure has not been modelled": "لم يُنمذج هيكل صندوق",
