@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20260925"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20260925" />
+  <script src="assets/i18n.js?v=20260926"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20260926" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -438,87 +438,105 @@
     .how h2 { font-family: var(--font-display); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; }
     .how .lede { font-size: 14.5px; color: var(--fg-2); line-height: 1.7; margin-top: 12px; max-width: 620px; }
 
-    /* ---------- Roadmap ---------- */
-    .road { position: relative; margin-top: 54px; }
+    /* ---------- How it works — pinned cards ----------
+       The shadcn/Tailwind "how-it-works" component, rebuilt in plain CSS
+       because this page ships no React, no npm and no Tailwind. Same idea:
+       index cards pinned to a ruled sheet, staggered left and right, with a
+       dashed line running between them.
 
-    /* The rail the nodes sit on. Spans centre-of-first to centre-of-last, i.e.
-       one sixth in from each edge of a 3-column grid. */
-    .road-track {
-      position: absolute; top: 27px; inset-inline-start: 16.666%; inset-inline-end: 16.666%;
-      height: 2px; background: var(--border-2); overflow: hidden;
-    }
-    .road-fill {
-      position: absolute; inset: 0;
-      background: linear-gradient(90deg, var(--ad-gold-600), var(--ad-gold-400));
-      transform: scaleX(0); transform-origin: left;
-    }
-    html[dir="rtl"] .road-fill { transform-origin: right; }
-    .road.in .road-fill { transition: transform 1700ms var(--ease-out) 120ms; transform: scaleX(1); }
+       Palette is REAP's, not the reference's orange/blue/purple — navy, gold
+       and sand — and the big numeral is set in the display face rather than
+       the reference's Comic Sans, which has no place on a page that sells
+       feasibility studies to banks. */
+    .hiw { position: relative; margin-top: 54px; }
 
-    /* A glow that travels the rail once, like a vehicle on the route. It sits
-       on .road (not .road-track, which clips) so its coordinates mirror the
-       track: centred on the 2px rail, running node-centre to node-centre. */
-    .road-spark {
-      position: absolute; top: 22px; inset-inline-start: 16.666%;
-      width: 46px; height: 10px; margin-inline-start: -23px;
-      border-radius: 50%; opacity: 0; pointer-events: none;
-      background: radial-gradient(ellipse, rgba(224,196,140,0.95) 0%, rgba(224,196,140,0) 70%);
-    }
-    .road.in .road-spark { animation: road-travel 1700ms var(--ease-out) 120ms 1; }
-    @keyframes road-travel {
-      0% { inset-inline-start: 16.666%; opacity: 0; }
-      12% { opacity: 1; }
-      88% { opacity: 1; }
-      100% { inset-inline-start: 83.333%; opacity: 0; }
+    /* The ruled sheet the cards are pinned to. Drawn from the border token so
+       it sits at the same weight as every other rule on the page. */
+    .hiw-sheet {
+      position: absolute; inset: -24px -12px;
+      pointer-events: none; opacity: 0.55;
+      background-image: repeating-linear-gradient(
+        to bottom, var(--border-1) 0 1px, transparent 1px 32px);
+      /* Fades out at both ends so the ruling does not collide with the
+         section's own top border or the band below it. */
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+      mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
     }
 
-    .road-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
-    .rstep { text-align: center; position: relative; }
+    /* Desktop: a fixed-height stage the cards are absolutely placed on. The
+       height is a variable because it is the one number that has to change if
+       a fourth step is ever added. */
+    .hiw-stage { position: relative; --hiw-h: 700px; }
 
-    /* Node: dormant grey until the rail reaches it, then it lights gold. */
-    .rstep .node {
-      position: relative; z-index: 1;
-      width: 56px; height: 56px; margin: 0 auto;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      background: var(--bg-1); border: 2px solid var(--border-2);
-      color: var(--fg-3);
-      transition: border-color 420ms var(--ease-out), color 420ms var(--ease-out),
-                  background 420ms var(--ease-out), transform 420ms var(--ease-out);
+    .hiw-path { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .hiw-path path {
+      fill: none; stroke: var(--ad-navy-300);
+      stroke-width: 2; stroke-linecap: round; stroke-dasharray: 8 6;
+      vector-effect: non-scaling-stroke;
     }
-    .road.in .rstep .node {
-      transition-delay: calc(var(--i) * 520ms + 320ms);
-      background: var(--ad-navy-800); border-color: var(--ad-gold-500);
-      color: var(--ad-gold-400); transform: scale(1.06);
-    }
-    .rstep .node svg { width: 22px; height: 22px; }
-    /* Expanding ring, fired as the node lights up. */
-    .rstep .node::after {
-      content: ""; position: absolute; inset: -2px; border-radius: 50%;
-      border: 2px solid var(--ad-gold-500); opacity: 0;
-    }
-    .road.in .rstep .node::after {
-      animation: road-ping 1100ms var(--ease-out) calc(var(--i) * 520ms + 320ms) 1;
-    }
-    @keyframes road-ping {
-      0% { transform: scale(1); opacity: 0.75; }
-      100% { transform: scale(1.85); opacity: 0; }
-    }
+    /* Marching ants. -140 is a multiple of the 14px dash period, so the loop
+       has no visible seam. */
+    .hiw.in .hiw-path path { animation: hiw-march 3s linear infinite; }
+    @keyframes hiw-march { to { stroke-dashoffset: -140; } }
+    /* The path is drawn in one fixed coordinate space, so it cannot follow the
+       cards when they swap sides under RTL — it is mirrored instead. */
+    html[dir="rtl"] .hiw-path { transform: scaleX(-1); }
 
-    .rstep .n {
-      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
-      color: var(--ad-gold-600); margin-top: 16px;
+    .hiw-card {
+      position: relative; z-index: 1; width: 300px;
+      background: var(--bg-1);
+      border: 1px solid var(--border-1); border-radius: 18px;
+      padding: 8px;
+      box-shadow: 0 14px 30px -18px rgba(10,26,54,0.45);
+      transition: transform 260ms var(--ease-out), box-shadow 260ms var(--ease-out);
+      opacity: 0; transform: translateY(16px);
     }
-    .rstep h4 { font-size: 16px; font-weight: 600; margin-top: 7px; letter-spacing: -0.01em; }
-    .rstep p { font-size: 13px; color: var(--fg-2); line-height: 1.68; margin-top: 8px; }
-    .rstep .body {
-      opacity: 0; transform: translateY(14px);
-    }
-    .road.in .rstep .body {
-      opacity: 1; transform: none;
+    .hiw.in .hiw-card {
+      opacity: 1;
+      transform: rotate(var(--rot, 0deg));
       transition: opacity 620ms var(--ease-out), transform 620ms var(--ease-out);
-      transition-delay: calc(var(--i) * 520ms + 420ms);
+      transition-delay: calc(var(--i) * 220ms);
     }
+    .hiw.in .hiw-card:hover { transform: rotate(0deg) scale(1.04); z-index: 3; }
+    html[dir="rtl"] .hiw.in .hiw-card { transform: rotate(calc(var(--rot, 0deg) * -1)); }
+    html[dir="rtl"] .hiw.in .hiw-card:hover { transform: rotate(0deg) scale(1.04); }
 
+    .hiw-pin { display: block; width: 26px; height: 26px; margin: 6px auto 12px; color: var(--ad-gold-500); }
+
+    .hiw-body { border: 1px solid; border-radius: 12px; padding: 16px 18px 18px; }
+    .hiw-n {
+      display: block; font-family: var(--font-display);
+      font-size: 34px; font-weight: 700; line-height: 1; letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .hiw-card h4 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1); }
+    .hiw-card p { font-size: 13px; line-height: 1.65; color: var(--fg-2); margin-top: 8px; }
+
+    /* Three tones from the brand palette, one per step. */
+    .hiw-card.t-navy .hiw-body { background: var(--ad-navy-50);  border-color: var(--ad-navy-200); }
+    .hiw-card.t-navy .hiw-n    { color: var(--ad-navy-700); }
+    .hiw-card.t-gold .hiw-body { background: color-mix(in oklab, var(--ad-gold-500) 12%, white); border-color: color-mix(in oklab, var(--ad-gold-500) 34%, white); }
+    .hiw-card.t-gold .hiw-n    { color: var(--ad-gold-600); }
+    .hiw-card.t-sand .hiw-body { background: var(--ad-sand-100); border-color: var(--ad-sand-300); }
+    .hiw-card.t-sand .hiw-n    { color: var(--ad-sand-900); }
+
+    /* Desktop placement. Logical insets, so the stagger mirrors under RTL
+       without a second set of rules. */
+    @media (min-width: 901px) {
+      .hiw-stage { height: var(--hiw-h); }
+      .hiw-card { position: absolute; }
+      .hiw-card.p1 { top: 0;     inset-inline-start: 4%; --rot: -2.5deg; }
+      .hiw-card.p2 { top: 232px; inset-inline-end: 4%;   --rot: 2.5deg; }
+      .hiw-card.p3 { top: 464px; inset-inline-start: 4%; --rot: -2deg; }
+    }
+    /* Below that the scatter stops being clever and becomes a column. */
+    @media (max-width: 900px) {
+      .hiw-path { display: none; }
+      .hiw-stage { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+      .hiw-card { width: 100%; max-width: 380px; }
+      .hiw.in .hiw-card, html[dir="rtl"] .hiw.in .hiw-card { transform: none; }
+      .hiw.in .hiw-card:hover, html[dir="rtl"] .hiw.in .hiw-card:hover { transform: none; }
+    }
     /* ---------- Trust strip ----------
        Fixed row at the foot of the hero, under a rule, as in the reference. On
        a dark ground the rule and the type are white at low alpha rather than
@@ -784,13 +802,14 @@
       .cf-grid { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) {
-      /* Roadmap resolves straight to its finished state. */
-      .road-fill, html[dir="rtl"] .road-fill, .road.in .road-fill { transition: none; transform: none; }
-      .road-spark, .road.in .road-spark { display: none; animation: none; }
-      .rstep .node, .road.in .rstep .node { transition: none; transition-delay: 0s; transform: none; }
-      .road.in .rstep .node::after { animation: none; }
-      .rstep::after, .road.in .rstep:not(:last-child)::after { transition: none; transform: none; }
-      .rstep .body, .road.in .rstep .body { opacity: 1; transform: none; transition: none; transition-delay: 0s; }
+      /* The pinned cards resolve straight to their finished state: no fade-in,
+         no tilt settling, and the dashed line stops marching. */
+      .hiw-card, .hiw.in .hiw-card,
+      html[dir="rtl"] .hiw.in .hiw-card {
+        opacity: 1; transform: none; transition: none; transition-delay: 0s;
+      }
+      .hiw.in .hiw-card:hover, html[dir="rtl"] .hiw.in .hiw-card:hover { transform: none; }
+      .hiw.in .hiw-path path { animation: none; }
 
       /* The slider changes slide without animating: the outgoing one is simply
          replaced. The tilt goes too, since it reads as motion even at rest. */
@@ -933,30 +952,9 @@
       .brand .tag { display: none; }
       .topbar .actions { gap: 8px; }
       .topbar .btn-land { padding: 9px 13px; letter-spacing: 0.06em; }
-
-      /* Roadmap turns vertical: rail runs down the node column. */
-      .road { margin-top: 38px; }
-      .road-steps { grid-template-columns: 1fr; gap: 30px; }
-      .rstep { text-align: start; display: grid; grid-template-columns: 56px 1fr; gap: 18px; align-items: start; }
-      .rstep .node { margin: 0; }
-      .rstep .n { margin-top: 2px; }
-      /* One global rail can't know where the last node sits — it would run on
-         past it into the text. Each step draws its own connector instead. */
-      .road-track, .road-spark { display: none; }
-      .rstep:not(:last-child)::before,
-      .rstep:not(:last-child)::after {
-        content: ""; position: absolute; width: 2px;
-        inset-inline-start: 27px; top: 58px; bottom: -32px;
-      }
-      .rstep:not(:last-child)::before { background: var(--border-2); }
-      .rstep:not(:last-child)::after {
-        background: var(--ad-gold-500);
-        transform: scaleY(0); transform-origin: top;
-      }
-      .road.in .rstep:not(:last-child)::after {
-        transition: transform 620ms var(--ease-out) calc(var(--i) * 520ms + 560ms);
-        transform: scaleY(1);
-      }
+      /* The pinned cards already collapse to a single column at 900px; here
+         they only lose the outer margin. */
+      .hiw { margin-top: 38px; }
       .services, .how, .features, .faq { padding-left: 24px; padding-right: 24px; }
       .bento { grid-template-columns: 1fr; }
       .tile.wide { grid-column: span 1; }
@@ -992,7 +990,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20260925"></script>
+<script src="assets/mobile-notice.js?v=20260926"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1418,44 +1416,46 @@
         to reading the final verdict.
       </p>
 
-      <div class="road reveal">
-        <div class="road-track"><span class="road-fill"></span></div>
-        <span class="road-spark" aria-hidden="true"></span>
+      <div class="hiw reveal">
+        <div class="hiw-sheet" aria-hidden="true"></div>
+        <div class="hiw-stage">
+          <!-- Drawn in a fixed 1000x700 space and stretched to the stage. The
+               curves are decorative: they read as a line running between the
+               cards, and are not anchored to their exact corners, so a card
+               that grows a line of text cannot leave the path pointing at
+               nothing. -->
+          <svg class="hiw-path" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M 330 150 C 560 150, 520 300, 700 330 M 690 470 C 520 500, 470 560, 320 590" />
+          </svg>
 
-        <div class="road-steps">
-          <div class="rstep" style="--i:0">
-            <div class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/></svg>
-            </div>
-            <div class="body">
-              <div class="n">01</div>
+          <div class="hiw-card p1 t-navy" style="--i:0">
+            <svg class="hiw-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3a1 1 0 0 1 .117 1.993l-.117 .007v4.764l1.894 3.789a1 1 0 0 1 .1 .331l.006 .116v2a1 1 0 0 1 -.883 .993l-.117 .007h-4v4a1 1 0 0 1 -1.993 .117l-.007 -.117v-4h-4a1 1 0 0 1 -.993 -.883l-.007 -.117v-2a1 1 0 0 1 .06 -.34l.046 -.107l1.894 -3.791v-4.762a1 1 0 0 1 -.117 -1.993l.117 -.007h8z"/></svg>
+            <div class="hiw-body">
+              <span class="hiw-n">01</span>
               <h4 data-ar="أنشئ حسابك المجاني">Create your free account</h4>
               <p data-ar="سجّل ببريدك الإلكتروني — تُحفظ نماذجك وتقييماتك بأمان في حسابك ويمكنك الوصول إليها من أي جهاز.">Sign up with your email — your models and valuations are saved securely to your account, accessible from any device.</p>
             </div>
           </div>
 
-          <div class="rstep" style="--i:1">
-            <div class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-11"/><path d="M12 6V3"/><path d="M20 21v-4"/><path d="M20 13V3"/><path d="M1 14h6"/><path d="M9 6h6"/><path d="M17 17h6"/></svg>
-            </div>
-            <div class="body">
-              <div class="n">02</div>
-              <h4 data-ar="اختر الخدمة واتبع الدليل">Pick a service & follow the guide</h4>
+          <div class="hiw-card p2 t-gold" style="--i:1">
+            <svg class="hiw-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3a1 1 0 0 1 .117 1.993l-.117 .007v4.764l1.894 3.789a1 1 0 0 1 .1 .331l.006 .116v2a1 1 0 0 1 -.883 .993l-.117 .007h-4v4a1 1 0 0 1 -1.993 .117l-.007 -.117v-4h-4a1 1 0 0 1 -.993 -.883l-.007 -.117v-2a1 1 0 0 1 .06 -.34l.046 -.107l1.894 -3.791v-4.762a1 1 0 0 1 -.117 -1.993l.117 -.007h8z"/></svg>
+            <div class="hiw-body">
+              <span class="hiw-n">02</span>
+              <h4 data-ar="اختر الخدمة واتبع الدليل">Pick a service &amp; follow the guide</h4>
               <p data-ar="كل حقل مزوّد بشرح مبسّط وقيم سوقية واقعية، لتُخرج تحليلًا موثوقًا من المحاولة الأولى.">Every field comes with plain-language hints and realistic market defaults, so you can produce a credible analysis on the first try.</p>
             </div>
           </div>
 
-          <div class="rstep" style="--i:2">
-            <div class="node" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
-            </div>
-            <div class="body">
-              <div class="n">03</div>
+          <div class="hiw-card p3 t-sand" style="--i:2">
+            <svg class="hiw-pin" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 3a1 1 0 0 1 .117 1.993l-.117 .007v4.764l1.894 3.789a1 1 0 0 1 .1 .331l.006 .116v2a1 1 0 0 1 -.883 .993l-.117 .007h-4v4a1 1 0 0 1 -1.993 .117l-.007 -.117v-4h-4a1 1 0 0 1 -.993 -.883l-.007 -.117v-2a1 1 0 0 1 .06 -.34l.046 -.107l1.894 -3.791v-4.762a1 1 0 0 1 -.117 -1.993l.117 -.007h8z"/></svg>
+            <div class="hiw-body">
+              <span class="hiw-n">03</span>
               <h4 data-ar="اقرأ النتيجة">Read the verdict</h4>
               <p data-ar="لوحات حيّة تعرض القيمة والعوائد والمخاطر — مع تنبيهات واضحة عندما تبدو الفرضيات غير سليمة. اطبع أو صدّر عند الجاهزية.">Live dashboards show value, returns and risk — with clear flags when assumptions look off. Export or print when you're ready to share.</p>
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -1664,8 +1664,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20260925"></script>
-<script src="assets/auth.js?v=20260925"></script>
+<script src="assets/config.js?v=20260926"></script>
+<script src="assets/auth.js?v=20260926"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
