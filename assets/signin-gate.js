@@ -186,8 +186,15 @@
         if (act === "buy") {
           buy.disabled = true;
           msgEl.textContent = T("Opening checkout…");
-          const { url, error } = await window.reapAuth.startCheckout();
-          if (url) { window.location.href = url; return; }   // leaving the page
+          const { opened, error } = await window.reapAuth.startCheckout();
+          if (opened) {
+            /* Paddle's overlay opens ON this page rather than navigating away,
+               so this modal has to get out from under it. Resolving false is
+               right: the export does not proceed now. Entitlement arrives by
+               webhook, so the user clicks Export again once it lands. */
+            close(false);
+            return;
+          }
           buy.disabled = false;
           msgEl.textContent = error ? error.message : T("Could not start checkout.");
           msgEl.classList.add("err");

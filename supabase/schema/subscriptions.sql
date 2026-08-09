@@ -17,13 +17,13 @@ create table if not exists public.subscriptions (
   -- not an active paid plan as free, so a missing row is safe by default.
   plan                   text not null default 'free',
 
-  -- Mirrors Dodo's own subscription status verbatim rather than a private
+  -- Mirrors Paddle's own subscription status verbatim rather than a private
   -- vocabulary, so a support question can be answered by comparing this row to
-  -- the Dodo dashboard without a translation table in between.
+  -- the Paddle dashboard without a translation table in between.
   status                 text not null default 'inactive',
 
-  dodo_subscription_id   text unique,
-  dodo_customer_id       text,
+  paddle_subscription_id   text unique,
+  paddle_customer_id       text,
 
   -- When access lapses if nothing renews. Null means no end date is known —
   -- the entitlement check treats null as "not expiring", so it must only ever
@@ -43,8 +43,8 @@ create policy "read own subscription"
   for select
   using (auth.uid() = user_id);
 
--- Look-ups the webhook does by Dodo's identifiers rather than by user.
-create index if not exists subscriptions_dodo_sub_idx
-  on public.subscriptions (dodo_subscription_id);
-create index if not exists subscriptions_dodo_cust_idx
-  on public.subscriptions (dodo_customer_id);
+-- Look-ups the webhook does by Paddle's identifiers rather than by user.
+create index if not exists subscriptions_paddle_sub_idx
+  on public.subscriptions (paddle_subscription_id);
+create index if not exists subscriptions_paddle_cust_idx
+  on public.subscriptions (paddle_customer_id);

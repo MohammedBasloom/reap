@@ -1,39 +1,51 @@
-# Payments — setup runbook
+# Payments — setup runbook (Paddle Billing)
 
 Two plans:
 
-| Plan | Price | Build & save models | Export / print |
+| Plan | Price | Build & save | Export / print |
 |---|---|---|---|
 | Free | — | unlimited | ✗ |
 | Pro  | $9.99 / month | unlimited | unlimited |
 
-The code is in place. What remains needs credentials, so it has to be done by
-the account owner.
+The code is written and tested. What remains needs credentials, so it has to
+be done by the account owner.
 
 ---
 
-## 0. Rotate the API key first
+## 0. Rotate the leaked API key — first, and regardless of everything else
 
-A Dodo API key was pasted into a chat transcript during this work. Treat it as
-public: **revoke it in the Dodo dashboard and issue a new one** before doing
-anything below. Nothing in this repository contains it, and nothing should —
-`git log -S` confirms it never entered the history.
+A **live** Paddle API key (`pdl_live_apikey_…`) was pasted into a chat
+transcript. Treat it as public: **revoke it in the Paddle dashboard now.**
 
-The key is a bearer credential for the payments API. Anyone holding it can
-create charges, read customer records and issue refunds against the account.
+Live means real money. Anyone holding that key can charge cards, issue
+refunds, and read customer records on the production account.
+
+Nothing in this repository contains it — `git log -S` confirms it never
+entered the history, and no working file holds it.
+
+**And you do not need to replace it for this feature.** See below.
 
 ---
 
-## 1. Why the key cannot go in the front end
+## 1. The API key is not used anywhere in this integration
 
-REAP is a static site. `index.html`, `model.html`, `valuation.html` and
-everything under `assets/` are served as files and arrive in the browser
-readable — and this repository is public on GitHub, so anything committed is
-readable without even visiting the site.
+This is worth stating plainly, because it is the unusual and welcome part of
+Paddle's model.
 
-So the key lives in Supabase Edge Function secrets, and the browser never
-holds it. The browser can only ask a function to start a checkout, and only
-for the account whose token it presents.
+| Credential | Format | Where it lives | Used here? |
+|---|---|---|---|
+| Client-side token | `live_…` / `test_…` | `assets/config.js`, shipped to browsers | **yes** |
+| Webhook secret | `pdl_ntfset_…` | Supabase secrets | **yes** |
+| **API key** | `pdl_…_apikey_…` | nowhere | **no** |
+
+Paddle's checkout opens from the browser using the client-side token, which
+their documentation states is safe to publish — it can open a checkout and
+preview a price and nothing else. The webhook authenticates with its own
+signing secret. The API key is only needed to call Paddle's REST API, which
+REAP never does.
+
+So: revoke the leaked key and simply do not issue a replacement unless some
+later feature needs one.
 
 ---
 
@@ -41,77 +53,102 @@ for the account whose token it presents.
 
 Run `supabase/schema/subscriptions.sql` in the Supabase SQL editor.
 
-It creates one row per user with RLS on, a select policy for the owner, and
-**no write policy at all** — so no browser can grant itself a plan. Only the
-webhook, which runs with the service role and bypasses RLS, can write.
+One row per user, RLS on, a select policy for the owner, and **no write policy
+at all** — so no browser can grant itself a plan whatever it sends. Only the
+webhook writes, running as the service role, which bypasses RLS.
 
 ---
 
-## 3. Dodo dashboard
+## 3. Paddle dashboard
 
-1. Create a **subscription product** at $9.99/month. Copy its product id.
-2. Add a webhook endpoint pointing at:
-   `https://vysnmyuzkzcickyfgshl.supabase.co/functions/v1/dodo-webhook`
-3. Subscribe it to the `subscription.*` events.
-4. Copy the webhook signing secret (`whsec_…`).
+1. **Catalog → Products** — create a product, then a **recurring price** at
+   **$9.99 / month**. Copy the price id (`pri_…`).
+2. **Developer tools → Authentication** — copy the **client-side token**
+   (`test_…` in sandbox, `live_…` in production). This is *not* the API key.
+3. **Developer tools → Notifications** — add a destination:
+   `https://vysnmyuzkzcickyfgshl.supabase.co/functions/v1/paddle-webhook`
+   Subscribe it to the `subscription.*` events. Copy the signing secret
+   (`pdl_ntfset_…`).
+4. **Checkout → Website approval** — Paddle requires your domain to be
+   approved before a live checkout will open. Add `reapinsights.com`.
+
+Do all of this in **sandbox** first. Paddle keeps sandbox and production
+entirely separate, with different tokens and different dashboards.
 
 ---
 
-## 4. Supabase secrets
+## 4. Fill in the public config
 
-```bash
-supabase secrets set DODO_API_KEY=<the NEW key from step 0>
-supabase secrets set DODO_PRODUCT_ID=<product id from step 3>
-supabase secrets set DODO_WEBHOOK_SECRET=<whsec_... from step 3>
-supabase secrets set DODO_MODE=test
-supabase secrets set SITE_URL=https://www.reapinsights.com
+In `assets/config.js`:
+
+```js
+PADDLE_CLIENT_TOKEN: "test_...",   // or live_... in production
+PADDLE_PRICE_ID:     "pri_...",
+PADDLE_ENV:          "sandbox",    // "production" when live
 ```
 
-`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are
-injected by the platform — do not set them.
-
-Keep `DODO_MODE=test` until a test card has been through the whole flow. Then
-set it to `live` and swap in the live key.
+These are public by design and belong in the repository. **Do not put the API
+key here** — the file is served to every visitor and this repository is
+public.
 
 ---
 
-## 5. Deploy the functions
+## 5. Supabase secret + deploy
 
 ```bash
-supabase functions deploy create-checkout
-supabase functions deploy dodo-webhook --no-verify-jwt
+supabase secrets set PADDLE_WEBHOOK_SECRET=pdl_ntfset_...
 ```
 
-The `--no-verify-jwt` on the webhook is required and is **not** a security
-hole: Dodo calls it without a Supabase token, and the function verifies Dodo's
-own signature instead. Without the flag, Supabase would reject every event
-before the function ran.
+```bash
+supabase functions deploy paddle-webhook --no-verify-jwt
+```
+
+`--no-verify-jwt` is required and is **not** a hole: Paddle calls the endpoint
+without a Supabase token, and the function verifies Paddle's own signature
+instead. Without the flag Supabase would reject every event before the
+function ran.
+
+`SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by the platform —
+do not set them.
 
 ---
 
-## 6. Test before going live
+## 6. Turn the paywall on
 
-- Sign in on a free account, hit Export → the upgrade prompt appears.
-- Click Upgrade → Dodo checkout opens.
-- Pay with a Dodo test card.
-- Check `subscriptions` has a row with `plan = 'pro'`, `status = 'active'`.
-- Reload and hit Export → the report opens.
-- Cancel the subscription in Dodo → the row flips to `free` and Export is
-  blocked again.
+In `assets/signin-gate.js`, inside `requireExport`:
 
-Confirm the webhook rejects a forged request too — POST to the endpoint with
-no `webhook-signature` header and expect **401**. If it returns 200, stop:
-the signing secret is not set and the endpoint is granting plans to anyone.
+```js
+const PAYWALL_ENABLED = true;
+```
+
+That is the whole switch. It is `false` today so that nobody is sent to a
+checkout that cannot complete.
+
+---
+
+## 7. Test before going live
+
+- Free account → Export → upgrade prompt appears.
+- Upgrade → Paddle overlay opens over the page.
+- Pay with a Paddle sandbox card.
+- `subscriptions` gains a row: `plan = 'pro'`, `status = 'active'`.
+- Reload → Export opens the report.
+- **Cancel in Paddle → the row flips to `free` and Export is blocked again.**
+  Granting access is the easy half; withdrawing it is where these leak.
+
+Then confirm the webhook refuses a forgery — POST to it with no
+`Paddle-Signature` header and expect **401**. If it returns 200, stop: the
+signing secret is unset and that URL is granting subscriptions to anyone who
+finds it.
 
 ---
 
 ## What is and is not enforced
 
-The browser check (`reapAuth.getPlan()`) decides what the UI offers. It is
-**not** the security boundary — anyone can change what it returns in their own
-devtools, and what that buys is a report generated in their own browser from
-their own numbers.
+`reapAuth.getPlan()` decides what the UI offers. It is **not** the security
+boundary — anyone can change what it returns in their own devtools, and what
+that buys is a report generated in their own browser from their own numbers.
 
-The boundary that matters is the database: a user cannot write their own plan,
-so they cannot obtain anything a server would honour. If reports ever move
-server-side, the entitlement must be re-checked there.
+The boundary is the database: a user cannot write their own plan, so they
+cannot obtain anything a server would honour. If reports ever move
+server-side, re-check entitlement there.

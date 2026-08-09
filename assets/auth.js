@@ -100,27 +100,47 @@
       }
     },
 
-    /* Starts checkout. The key never touches the browser — the edge function
-       holds it and returns a URL to send the user to. */
+    /* Opens Paddle's checkout overlay.
+
+       NO SERVER CALL, AND NO SECRET. Paddle's checkout runs on the public
+       client-side token — the one prefixed live_ or test_, which their docs
+       state plainly is safe to publish. It can open a checkout and preview a
+       price and nothing else. The API KEY, the value carrying "apikey_" in
+       the middle, is a different credential entirely and must never appear
+       here; it is not needed anywhere in this integration.
+
+       user_id travels as customData. Paddle copies it onto the subscription
+       when one is created, so it survives to every later renewal and
+       cancellation event — it is the only join between a Paddle subscription
+       and a REAP account, and the webhook refuses to guess if it is missing. */
     async startCheckout() {
-      const session = await this.getSession();
-      if (!session) return { error: { message: "Sign in first." } };
-      const url = `${SUPABASE_URL}/functions/v1/create-checkout`;
+      const user = await this.getUser();
+      if (!user) return { error: { message: "Sign in first." } };
+
+      const cfg = window.REAP_CONFIG || {};
+      if (!window.Paddle || !cfg.PADDLE_CLIENT_TOKEN || !cfg.PADDLE_PRICE_ID) {
+        return { error: { message: "Checkout is not configured yet." } };
+      }
+
       try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "content-type": "application/json",
+        if (!this._paddleReady) {
+          if (cfg.PADDLE_ENV === "sandbox") window.Paddle.Environment.set("sandbox");
+          window.Paddle.Initialize({ token: cfg.PADDLE_CLIENT_TOKEN });
+          this._paddleReady = true;
+        }
+        window.Paddle.Checkout.open({
+          items: [{ priceId: cfg.PADDLE_PRICE_ID, quantity: 1 }],
+          customer: { email: user.email },
+          customData: { user_id: user.id },
+          settings: {
+            displayMode: "overlay",
+            locale: (window.I18N && window.I18N.lang === "ar") ? "ar" : "en",
           },
         });
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok || !body.checkout_url) {
-          return { error: { message: body.error || "Could not start checkout." } };
-        }
-        return { url: body.checkout_url };
+        // The overlay opens over this page; nothing navigates away.
+        return { opened: true };
       } catch (e) {
-        return { error: { message: "Could not reach the payment service." } };
+        return { error: { message: "Could not open checkout." } };
       }
     },
 
