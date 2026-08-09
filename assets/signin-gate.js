@@ -217,10 +217,24 @@
 
     /* Two gates in sequence, and the order matters: a guest is asked to sign
        in, not to buy something for an account they do not have yet. Only once
-       there is an account does the question become which plan it is on. */
+       there is an account does the question become which plan it is on.
+
+       THE SECOND GATE IS CURRENTLY OFF. Billing is built but not switched on:
+       the Dodo product, the webhook and the Supabase secrets are not yet
+       configured, so asking anyone to pay would send them to a checkout that
+       cannot complete. Until then export needs an account and nothing more.
+
+       To turn billing on, set this to true — that is the whole switch. Every
+       other piece is already in place and tested: getPlan(), startCheckout(),
+       the upgrade modal below, the subscriptions table and both edge
+       functions. See PAYMENTS.md for what has to be configured first. */
     async requireExport(opts) {
+      const PAYWALL_ENABLED = false;
+
       const ok = await this.requireAccount(opts);
       if (!ok) return false;
+      if (!PAYWALL_ENABLED) return true;
+
       let plan = "free";
       try { plan = await window.reapAuth.getPlan(); } catch (e) { plan = "free"; }
       if (plan === "pro") return true;
