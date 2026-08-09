@@ -72,6 +72,15 @@
   font-family: var(--font-body);
 }
 .rg-cancel:hover { color: var(--fg-1); }
+.rg-price {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-top: 18px; padding: 12px 14px;
+  background: var(--bg-2); border-inline-start: 3px solid var(--ad-gold-500);
+}
+.rg-price b { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--fg-1); }
+.rg-price span { font-size: 12px; color: var(--fg-3); }
+.rg-msg { font-size: 12px; color: var(--fg-3); margin-top: 10px; min-height: 16px; }
+.rg-msg.err { color: var(--ad-danger); }
 @media print { .rg-back { display: none !important; } }
 `;
     document.head.appendChild(s);
@@ -134,6 +143,64 @@
     });
   }
 
+  /* The upgrade prompt. Same shell as the sign-in modal, different question:
+     the user IS signed in, they simply have not paid for the thing they just
+     asked for. */
+  function showUpgrade(opts) {
+    ensureStyle();
+    return new Promise((resolve) => {
+      const back = document.createElement("div");
+      back.className = "rg-back";
+      back.innerHTML = `
+<div class="rg-modal" role="dialog" aria-modal="true">
+  <div class="rg-eyebrow"></div>
+  <h3></h3>
+  <p></p>
+  <div class="rg-price"><b></b><span></span></div>
+  <div class="rg-actions">
+    <button class="rg-btn primary" data-act="buy"></button>
+  </div>
+  <div class="rg-msg" data-role="msg"></div>
+  <button class="rg-cancel" data-act="cancel"></button>
+</div>`;
+      back.querySelector(".rg-eyebrow").textContent = T("Upgrade required");
+      back.querySelector("h3").textContent = opts.title || T("Exporting is a paid feature");
+      back.querySelector("p").textContent = opts.body ||
+        T("Your free account keeps every model and valuation you build, with no limit. Exporting the finished document is part of the paid plan.");
+      back.querySelector(".rg-price b").textContent = "$9.99";
+      back.querySelector(".rg-price span").textContent = T("per month — unlimited exports");
+      const buy = back.querySelector('[data-act="buy"]');
+      buy.textContent = T("Upgrade");
+      back.querySelector('[data-act="cancel"]').textContent = T("Not now — keep working");
+      const msgEl = back.querySelector('[data-role="msg"]');
+
+      const close = (result) => {
+        document.removeEventListener("keydown", onKey);
+        back.remove();
+        resolve(result);
+      };
+      const onKey = (e) => { if (e.key === "Escape") close(false); };
+
+      back.addEventListener("click", async (e) => {
+        const act = e.target.getAttribute && e.target.getAttribute("data-act");
+        if (act === "buy") {
+          buy.disabled = true;
+          msgEl.textContent = T("Opening checkout…");
+          const { url, error } = await window.reapAuth.startCheckout();
+          if (url) { window.location.href = url; return; }   // leaving the page
+          buy.disabled = false;
+          msgEl.textContent = error ? error.message : T("Could not start checkout.");
+          msgEl.classList.add("err");
+          return;
+        }
+        if (act === "cancel" || e.target === back) close(false);
+      });
+      document.addEventListener("keydown", onKey);
+      document.body.appendChild(back);
+      buy.focus();
+    });
+  }
+
   window.reapGate = {
     /* Resolves true when the action may proceed. A signed-in user never sees
        the modal; a guest sees it and gets false unless they leave to sign in,
@@ -146,6 +213,18 @@
         // No session to read is the same answer as no session.
       }
       return showModal(opts || {});
+    },
+
+    /* Two gates in sequence, and the order matters: a guest is asked to sign
+       in, not to buy something for an account they do not have yet. Only once
+       there is an account does the question become which plan it is on. */
+    async requireExport(opts) {
+      const ok = await this.requireAccount(opts);
+      if (!ok) return false;
+      let plan = "free";
+      try { plan = await window.reapAuth.getPlan(); } catch (e) { plan = "free"; }
+      if (plan === "pro") return true;
+      return showUpgrade(opts || {});
     },
   };
 })();

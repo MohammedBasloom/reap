@@ -1234,6 +1234,17 @@
     "Create free account": "أنشئ حسابًا مجانيًا",
     "Sign in": "تسجيل الدخول",
     "Not now — keep working": "ليس الآن — متابعة العمل",
+    "Upgrade required": "يتطلب ترقية",
+    "Exporting is a paid feature": "التصدير ميزة مدفوعة",
+    "Your free account keeps every model and valuation you build, with no limit. Exporting the finished document is part of the paid plan.":
+      "حسابك المجاني يحتفظ بكل نموذج وتقييم تبنيه دون حد. أما تصدير الوثيقة النهائية فهو ضمن الخطة المدفوعة.",
+    "per month — unlimited exports": "شهريًا — تصدير بلا حدود",
+    "Upgrade": "ترقية الاشتراك",
+    "Opening checkout…": "جارٍ فتح صفحة الدفع…",
+    "Could not start checkout.": "تعذّر بدء عملية الدفع.",
+    "Could not reach the payment service.": "تعذّر الوصول إلى خدمة الدفع.",
+    "Sign in first.": "سجّل الدخول أولًا.",
+    "Checkout is not configured yet.": "لم تُهيّأ عملية الدفع بعد.",
 
     /* Cost & Revenue sections */
     "Cost": "التكاليف",

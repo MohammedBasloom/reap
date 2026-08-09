@@ -232,7 +232,7 @@ function ValApp() {
      prompt — the gate resolves true and the dialog opens as before. */
   async function printReport() {
     if (window.reapGate) {
-      const ok = await window.reapGate.requireAccount({
+      const ok = await window.reapGate.requireExport({
         title: I18N.t("Sign in to print your valuation"),
         body: I18N.t("Printing produces a document that leaves this session, so it needs an account behind it. Your inputs are kept while you sign in, and you are brought straight back here."),
       });
