@@ -2192,7 +2192,7 @@ function ReportHost({ input, result, scenarios, waterfall }) {
   useEffectRep(() => {
     const open = async () => {
       if (window.reapGate) {
-        const ok = await window.reapGate.requireExport();
+        const ok = await window.reapGate.requireAccount();
         if (!ok) return;
       }
       setPhase("form");
