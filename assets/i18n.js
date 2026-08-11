@@ -556,6 +556,7 @@
     "interest rolled up": "فوائد مُرسملة",
     "Interest there was no cash to pay, added to the loan balance instead": "فوائد لم يتوفر نقد لسدادها، فأُضيفت إلى رصيد القرض بدلًا من ذلك",
     "Memo — not in the totals": "للعلم فقط — خارج المجاميع",
+    "Debt service runs monthly, interest before principal. A single year can show both a payment and a roll-up because they fell in different months — interest rolls up while there is no cash, and is paid in full as soon as there is.": "تُحتسب خدمة الدين شهريًا، وتُسدّد الفوائد قبل أصل الدين. قد تُظهر السنة الواحدة سدادًا ورسملة معًا لأنهما وقعا في شهرين مختلفين — تُرسمل الفوائد ما دام النقد غير متوفر، وتُسدّد بالكامل فور توفره",
     "Detail only — these columns explain the debt line beside them and are not added into Equity CF or the cumulative.": "تفصيل فقط — يوضّح هذان العمودان بند الدين المجاور ولا يدخلان في احتساب تدفق الملكية ولا التراكمي",
     "unlevered": "قبل التمويل", "levered": "بعد التمويل",
     /* Capital tab */

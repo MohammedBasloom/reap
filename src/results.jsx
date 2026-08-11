@@ -456,6 +456,7 @@ function EquityCashflowTable({ yearly }) {
   const thSpanNum = { ...thStyleNum, verticalAlign: "bottom" };
 
   return (
+    <>
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
       <thead>
         <tr style={{ background: "var(--bg-2)" }}>
@@ -512,6 +513,18 @@ function EquityCashflowTable({ yearly }) {
         })}
       </tbody>
     </table>
+    {/* A year can show interest paid AND interest rolled up, which reads like
+        the waterfall was jumped. It wasn't: service is monthly and interest is
+        always paid before principal, so a month that rolls interest up had no
+        cash and paid no principal either. The two land in one row only because
+        twelve months are aggregated into it. Worth saying out loud, since the
+        row itself cannot show which month is which. */}
+    {anyCapitalised && (
+      <div style={{ fontSize: 10.5, lineHeight: 1.75, color: "var(--fg-3)", fontStyle: "italic", padding: "10px 12px 2px" }}>
+        Debt service runs monthly, interest before principal. A single year can show both a payment and a roll-up because they fell in different months — interest rolls up while there is no cash, and is paid in full as soon as there is.
+      </div>
+    )}
+    </>
   );
 }
 
