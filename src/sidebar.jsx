@@ -1314,6 +1314,47 @@ function SideToggle({ open, onToggle, floating }) {
   );
 }
 
+/* Save the scheme to the account, from the toolbar rather than only from the
+   account menu — the valuation platform already offers it in the open, and a
+   save buried behind an avatar is one most people never find.
+
+   Writes the same row to the same table as UserMenu's save, so the two stay
+   interchangeable; it announces "reap:saved" afterwards so the menu's list
+   picks the new row up without a reload. A guest gets the sign-in gate, since
+   there is no account to save into. */
+function SaveModelButton({ input }) {
+  const [state, setState] = useStateS("");
+
+  async function save() {
+    if (state === "saving") return;
+    const ok = await window.reapGate.requireAccount({
+      title: I18N.t("Sign in to save this model"),
+      body: I18N.t("Saved models live in your account, so you can reopen them from any device. Your work is kept while you sign in, and you are brought straight back here."),
+    });
+    if (!ok) return;
+
+    setState("saving");
+    const user = await window.reapAuth.getUser();
+    if (!user) { setState(""); return; }
+    const { error } = await sb.from("assessments").insert({
+      user_id: user.id,
+      name: input.projectName || "Untitled model",
+      inputs: input,
+      updated_at: new Date().toISOString(),
+    });
+    setState(error ? "error" : "saved");
+    if (!error) window.dispatchEvent(new CustomEvent("reap:saved"));
+    setTimeout(() => setState(""), 2400);
+  }
+
+  return (
+    <button className="btn" onClick={save} disabled={state === "saving"}
+            title="Keep this scheme in your account and reopen it later">
+      {state === "saving" ? "Saving…" : state === "saved" ? "Saved ✓" : state === "error" ? "Could not save — try again." : "Save current model"}
+    </button>
+  );
+}
+
 function Sidebar({ input, setInput, open = true, onToggle }) {
   // Whether the panel has been scrolled far enough that the header — and with
   // it the collapse control — has left the view.
@@ -1816,11 +1857,14 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
 
       <div style={{
         padding: "20px 24px", borderTop: "1px solid var(--border-1)",
-        display: "flex", gap: 8, background: "var(--bg-2)",
+        /* Three buttons now, and the save label is the longest of them —
+           wrap rather than clip if a translation outgrows the panel. */
+        display: "flex", gap: 8, flexWrap: "wrap", background: "var(--bg-2)",
       }}>
         <button className="btn btn-primary" onClick={() => window.dispatchEvent(new CustomEvent("feas:export"))}>
           Export PDF
         </button>
+        <SaveModelButton input={input} />
         <button className="btn" onClick={() => window.dispatchEvent(new CustomEvent("feas:reset"))}>
           Reset
         </button>

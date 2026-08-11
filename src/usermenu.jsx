@@ -31,6 +31,15 @@ function UserMenu({ table, itemNoun, currentName, getCurrent, onLoad }) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  /* The sidebar can save the same row this menu writes. Without this the list
+     here would still show the state from page load, and the row just saved
+     would look like it had not been. */
+  useEffectU(() => {
+    const onSaved = () => { if (user) refreshItems(); };
+    window.addEventListener("reap:saved", onSaved);
+    return () => window.removeEventListener("reap:saved", onSaved);
+  }, [user]);
+
   async function refreshItems() {
     const { data } = await sb.from(table).select("id,name,updated_at").order("updated_at", { ascending: false }).limit(8);
     setItems(data || []);
