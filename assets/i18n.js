@@ -552,7 +552,9 @@
     "Year": "السنة", "Constr.": "الإنشاء", "Cont.": "الاحتياطي", "Sell costs": "تكاليف البيع",
     "Exit": "التخارج", "Project CF": "تدفق المشروع", "Cum.": "التراكمي",
     "+ Debt draw": "+ سحب الدين", "− Debt repay": "− سداد الدين",
-    "of which: interest": "منها: الفوائد", "= Equity CF": "= تدفق الملكية", "Cum. equity": "تراكمي الملكية",
+    "of which: interest": "منها: الفوائد المدفوعة", "= Equity CF": "= تدفق الملكية", "Cum. equity": "تراكمي الملكية",
+    "interest rolled up": "فوائد مُرسملة",
+    "Interest there was no cash to pay, added to the loan balance instead": "فوائد لم يتوفر نقد لسدادها، فأُضيفت إلى رصيد القرض بدلًا من ذلك",
     "unlevered": "قبل التمويل", "levered": "بعد التمويل",
     /* Capital tab */
     "Max balance at any month": "أقصى رصيد في أي شهر",

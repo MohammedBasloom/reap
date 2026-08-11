@@ -258,7 +258,16 @@ function CashflowPanel({ result, input }) {
         exit: slice(cf.exit),
         debtDraw: slice(cf.debtDraw),
         debtRepay: slice(cf.debtRepay),
+        /* THREE DIFFERENT INTEREST NUMBERS, and they are not interchangeable:
+             interest        — accrued this year, whether or not it was paid
+             interestPaid    — settled with the lender in cash
+             intCapitalised  — rolled into the balance for want of cash
+           accrued = paid + capitalised, and repay = paid + principal. Only the
+           PAID figure is a subset of the repayment; using accrued as though it
+           were made the "of which" column exceed the repayment it sat inside. */
         interest: slice(cf.interest),
+        interestPaid: slice(cf.interestPaid || []),
+        intCapitalised: slice(cf.intCapitalised || []),
         net: slice(cf.net),
         // Year-end retained project cash (undistributed surpluses)
         cashEnd: (cf.cashBalance || [])[Math.min((y + 1) * 12 - 1, cf.months.length - 1)] || 0,
@@ -423,6 +432,12 @@ function ProjectCashflowTable({ yearly }) {
 
 function EquityCashflowTable({ yearly }) {
   let cumEquity = 0;
+  /* Interest rolled into the balance is real money owed, but it is not part of
+     any repayment — so it gets its own column rather than being folded into
+     the "of which" figure. Shown only when it happened: on a scheme that
+     always had the cash to service its debt the column would be a row of
+     dashes explaining nothing. */
+  const anyCapitalised = yearly.some((y) => Math.abs(y.intCapitalised || 0) > 0.5);
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
       <thead>
@@ -432,6 +447,7 @@ function EquityCashflowTable({ yearly }) {
           <th style={thStyleNum}><span style={{ color: "var(--ad-success)" }}>+ Debt draw</span></th>
           <th style={thStyleNum}><span style={{ color: "var(--ad-danger)" }}>− Debt repay</span></th>
           <th style={thStyleNum}>of which: interest</th>
+          {anyCapitalised && <th style={thStyleNum}>interest rolled up</th>}
           <th style={thStyleNum}>Retained cash (end)</th>
           <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>= Equity CF</th>
           <th style={thStyleNum}>Cum. equity</th>
@@ -449,7 +465,14 @@ function EquityCashflowTable({ yearly }) {
               <td style={tdNum(project)}>{project === 0 ? "—" : fc(project)}</td>
               <td style={{ ...tdNum(y.debtDraw), color: y.debtDraw > 0 ? "var(--ad-success)" : "var(--fg-4)" }}>{y.debtDraw === 0 ? "—" : `+${fc(y.debtDraw).replace("SAR ", "")}`}</td>
               <td style={tdNum(y.debtRepay)}>{y.debtRepay === 0 ? "—" : fc(y.debtRepay)}</td>
-              <td style={{ ...tdNum(y.interest), color: "var(--ad-gold-600)", fontSize: 11 }}>{y.interest === 0 ? "—" : fc(y.interest)}</td>
+              {/* PAID, not accrued — this sits inside the repayment beside it. */}
+              <td style={{ ...tdNum(y.interestPaid), color: "var(--ad-gold-600)", fontSize: 11 }}>{Math.abs(y.interestPaid) < 0.5 ? "—" : fc(-Math.abs(y.interestPaid))}</td>
+              {anyCapitalised && (
+                <td style={{ ...tdNum(y.intCapitalised), color: "var(--fg-3)", fontSize: 11 }}
+                    title="Interest there was no cash to pay, added to the loan balance instead">
+                  {Math.abs(y.intCapitalised) < 0.5 ? "—" : fc(Math.abs(y.intCapitalised))}
+                </td>
+              )}
               <td style={{ ...tdNum(y.cashEnd), color: "var(--fg-2)", fontSize: 11 }}>{y.cashEnd < 0.5 ? "—" : fc(y.cashEnd)}</td>
               <td style={{ ...tdNum(equity), fontWeight: 600, background: "var(--ad-navy-50)" }}>{fc(equity)}</td>
               <td style={{ ...tdNum(cumEquity), color: cumEquity < 0 ? "var(--ad-danger)" : "var(--ad-success)" }}>{fc(cumEquity)}</td>
