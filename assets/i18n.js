@@ -555,6 +555,8 @@
     "of which: interest": "منها: الفوائد المدفوعة", "= Equity CF": "= تدفق الملكية", "Cum. equity": "تراكمي الملكية",
     "interest rolled up": "فوائد مُرسملة",
     "Interest there was no cash to pay, added to the loan balance instead": "فوائد لم يتوفر نقد لسدادها، فأُضيفت إلى رصيد القرض بدلًا من ذلك",
+    "Memo — not in the totals": "للعلم فقط — خارج المجاميع",
+    "Detail only — these columns explain the debt line beside them and are not added into Equity CF or the cumulative.": "تفصيل فقط — يوضّح هذان العمودان بند الدين المجاور ولا يدخلان في احتساب تدفق الملكية ولا التراكمي",
     "unlevered": "قبل التمويل", "levered": "بعد التمويل",
     /* Capital tab */
     "Max balance at any month": "أقصى رصيد في أي شهر",

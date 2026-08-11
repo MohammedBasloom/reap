@@ -438,19 +438,50 @@ function EquityCashflowTable({ yearly }) {
      always had the cash to service its debt the column would be a row of
      dashes explaining nothing. */
   const anyCapitalised = yearly.some((y) => Math.abs(y.intCapitalised || 0) > 0.5);
+
+  /* Both interest columns are a breakdown, not addends. One says what is
+     already inside "− Debt repay"; the other says what was never paid at all.
+     Neither feeds Equity CF or the cumulative, so rather than sit in line with
+     the columns that do add up, they are banded off behind a dashed rule and
+     grouped under a memo header — the convention a reader of statements
+     already knows. Logical borders (inline-start/end) so the band brackets
+     correctly in Arabic, where the columns run the other way. */
+  const RULE = "1px dashed var(--border-strong)";
+  const memoTd = (first, last) => ({
+    background: "var(--bg-2)", fontStyle: "italic",
+    borderInlineStart: first ? RULE : undefined,
+    borderInlineEnd: last ? RULE : undefined,
+  });
+  const thSpan = { ...thStyle, verticalAlign: "bottom" };
+  const thSpanNum = { ...thStyleNum, verticalAlign: "bottom" };
+
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, fontFamily: "var(--font-mono)" }}>
       <thead>
         <tr style={{ background: "var(--bg-2)" }}>
-          <th style={thStyle}>Year</th>
-          <th style={thStyleNum}>Project CF</th>
-          <th style={thStyleNum}><span style={{ color: "var(--ad-success)" }}>+ Debt draw</span></th>
-          <th style={thStyleNum}><span style={{ color: "var(--ad-danger)" }}>− Debt repay</span></th>
-          <th style={thStyleNum}>of which: interest</th>
-          {anyCapitalised && <th style={thStyleNum}>interest rolled up</th>}
-          <th style={thStyleNum}>Retained cash (end)</th>
-          <th style={{ ...thStyleNum, background: "var(--ad-navy-50)" }}>= Equity CF</th>
-          <th style={thStyleNum}>Cum. equity</th>
+          <th style={thSpan} rowSpan={2}>Year</th>
+          <th style={thSpanNum} rowSpan={2}>Project CF</th>
+          <th style={thSpanNum} rowSpan={2}><span style={{ color: "var(--ad-success)" }}>+ Debt draw</span></th>
+          <th style={thSpanNum} rowSpan={2}><span style={{ color: "var(--ad-danger)" }}>− Debt repay</span></th>
+          <th colSpan={anyCapitalised ? 2 : 1}
+              title="Detail only — these columns explain the debt line beside them and are not added into Equity CF or the cumulative."
+              style={{
+                ...thStyle, textAlign: "center", background: "var(--bg-3)",
+                textTransform: "none", letterSpacing: "0.03em", fontStyle: "italic",
+                fontSize: 9.5, fontWeight: 600, color: "var(--fg-3)", padding: "5px 8px",
+                borderInlineStart: RULE, borderInlineEnd: RULE,
+              }}>
+            Memo — not in the totals
+          </th>
+          <th style={thSpanNum} rowSpan={2}>Retained cash (end)</th>
+          <th style={{ ...thSpanNum, background: "var(--ad-navy-50)" }} rowSpan={2}>= Equity CF</th>
+          <th style={thSpanNum} rowSpan={2}>Cum. equity</th>
+        </tr>
+        <tr style={{ background: "var(--bg-2)" }}>
+          <th style={{ ...thStyleNum, ...memoTd(true, !anyCapitalised), background: "var(--bg-3)", textTransform: "none", fontSize: 9.5 }}>of which: interest</th>
+          {anyCapitalised && (
+            <th style={{ ...thStyleNum, ...memoTd(false, true), background: "var(--bg-3)", textTransform: "none", fontSize: 9.5 }}>interest rolled up</th>
+          )}
         </tr>
       </thead>
       <tbody>
@@ -466,9 +497,9 @@ function EquityCashflowTable({ yearly }) {
               <td style={{ ...tdNum(y.debtDraw), color: y.debtDraw > 0 ? "var(--ad-success)" : "var(--fg-4)" }}>{y.debtDraw === 0 ? "—" : `+${fc(y.debtDraw).replace("SAR ", "")}`}</td>
               <td style={tdNum(y.debtRepay)}>{y.debtRepay === 0 ? "—" : fc(y.debtRepay)}</td>
               {/* PAID, not accrued — this sits inside the repayment beside it. */}
-              <td style={{ ...tdNum(y.interestPaid), color: "var(--ad-gold-600)", fontSize: 11 }}>{Math.abs(y.interestPaid) < 0.5 ? "—" : fc(-Math.abs(y.interestPaid))}</td>
+              <td style={{ ...tdNum(y.interestPaid), ...memoTd(true, !anyCapitalised), color: "var(--ad-gold-600)", fontSize: 11 }}>{Math.abs(y.interestPaid) < 0.5 ? "—" : fc(-Math.abs(y.interestPaid))}</td>
               {anyCapitalised && (
-                <td style={{ ...tdNum(y.intCapitalised), color: "var(--fg-3)", fontSize: 11 }}
+                <td style={{ ...tdNum(y.intCapitalised), ...memoTd(false, true), color: "var(--fg-3)", fontSize: 11 }}
                     title="Interest there was no cash to pay, added to the loan balance instead">
                   {Math.abs(y.intCapitalised) < 0.5 ? "—" : fc(Math.abs(y.intCapitalised))}
                 </td>
