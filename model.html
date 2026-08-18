@@ -31,10 +31,10 @@
 
   <!-- Auth gate: session or guest access required, else back to landing -->
   <script src="vendor/supabase.js"></script>
-  <script src="assets/config.js?v=20261005"></script>
-  <script src="assets/auth.js?v=20261005"></script>
-  <script src="assets/i18n.js?v=20261005"></script>
-  <script src="assets/signin-gate.js?v=20261005"></script>
+  <script src="assets/config.js?v=20261006"></script>
+  <script src="assets/auth.js?v=20261006"></script>
+  <script src="assets/i18n.js?v=20261006"></script>
+  <script src="assets/signin-gate.js?v=20261006"></script>
   <script>
     document.documentElement.style.visibility = "hidden";
     reapAuth.requireAuth().then(() => { document.documentElement.style.visibility = ""; });
@@ -66,8 +66,8 @@
       console.warn  = function(...a){ if (a[0] && String(a[0]).indexOf(RO) !== -1) return; return cw.apply(console, a); };
     })();
   </script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261005" />
-  <link rel="stylesheet" href="assets/report.css?v=20261005" />
+  <link rel="stylesheet" href="assets/tokens.css?v=20261006" />
+  <link rel="stylesheet" href="assets/report.css?v=20261006" />
   <style>
     body { background: var(--bg-2); overflow: hidden; }
     #root { height: 100vh; }
@@ -89,7 +89,7 @@
   </style>
 </head>
 <body>
-  <script src="assets/mobile-notice.js?v=20261005"></script>
+  <script src="assets/mobile-notice.js?v=20261006"></script>
   <div id="root"></div>
 
   <template id="__bundler_thumbnail" data-bg-color="#0f2a22">
@@ -122,15 +122,15 @@
   <script src="vendor/babel.min.js"></script>
 
   <!-- Calc engine (plain JS, no JSX) -->
-  <script src="src/calc.js?v=20261005"></script>
+  <script src="src/calc.js?v=20261006"></script>
 
   <!-- Components (JSX) -->
-  <script type="text/babel" src="src/usermenu.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/charts.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/sidebar.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/results.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/fund.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/report.jsx?v=20261005"></script>
-  <script type="text/babel" src="src/app.jsx?v=20261005"></script>
+  <script type="text/babel" src="src/usermenu.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/charts.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/sidebar.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/results.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/fund.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/report.jsx?v=20261006"></script>
+  <script type="text/babel" src="src/app.jsx?v=20261006"></script>
 </body>
 </html>

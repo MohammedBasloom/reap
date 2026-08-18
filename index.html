@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261005"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261005" />
+  <script src="assets/i18n.js?v=20261006"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261006" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -1059,7 +1059,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261005"></script>
+<script src="assets/mobile-notice.js?v=20261006"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1733,8 +1733,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261005"></script>
-<script src="assets/auth.js?v=20261005"></script>
+<script src="assets/config.js?v=20261006"></script>
+<script src="assets/auth.js?v=20261006"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -2018,6 +2018,30 @@
     const covers = layers.map((el, i) => layers[i + 1] || document.querySelector(".footer"));
     let ticking = false;
 
+    /* A section taller than the window cannot pin at top:0 — it would fasten
+       there the instant its top arrived and its lower part would never come
+       into view, which is exactly what happened to "How it works" and its
+       third card. Such a section pins by its bottom edge instead: top goes
+       negative by the overflow, so it scrolls normally until all of it has
+       been seen and only then holds. Measured rather than assumed, because it
+       depends on the window and on content that changes height — an open FAQ
+       answer can push a section past the window on its own.
+
+       Such a section also pins at the very instant it finishes revealing, so
+       its last line would be complete and covered in the same frame. The
+       trailing margin buys it a beat of scrolling to be read in before the
+       next section starts to rise; one that already fits the window has its
+       own height as that beat and needs none. offsetHeight excludes margin,
+       so the measurement does not chase the value it just set. */
+    const fit = () => {
+      const vh = window.innerHeight;
+      layers.forEach((el) => {
+        const over = el.offsetHeight - vh;
+        el.style.top = (over > 0 ? -over : 0) + "px";
+        el.style.marginBottom = over > 0 ? Math.round(vh * 0.3) + "px" : "";
+      });
+    };
+
     const paint = () => {
       ticking = false;
       const vh = window.innerHeight;
@@ -2034,9 +2058,16 @@
       ticking = true;
       requestAnimationFrame(paint);
     };
+    const remeasure = () => { fit(); onScroll(); };
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    paint();
+    window.addEventListener("resize", remeasure);
+    /* Sections change height without the window doing anything — an FAQ
+       answer opening is the common one. */
+    if ("ResizeObserver" in window) {
+      const ro = new ResizeObserver(remeasure);
+      layers.forEach((el) => ro.observe(el));
+    }
+    remeasure();
   })();
 
   /* Reveal on scroll. Without IntersectionObserver, show everything at once. */
