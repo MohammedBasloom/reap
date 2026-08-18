@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261015"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261015" />
+  <script src="assets/i18n.js?v=20261016"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261016" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -589,21 +589,6 @@
       margin-top: 18px; letter-spacing: -0.005em;
     }
     .why-card p { font-size: 13px; color: var(--fg-2); line-height: 1.7; margin-top: 8px; }
-    /* ---------- FAQ ---------- */
-    .faq { background: var(--bg-1); color: var(--fg-1); padding: 64px 40px 80px; border-top: 1px solid var(--border-1); }
-    .faq .inner { max-width: 820px; margin: 0 auto; }
-    .faq .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
-    .faq h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; }
-    .faq details { border: 1px solid var(--border-1); background: var(--bg-2); margin-top: 10px; }
-    .faq details:first-of-type { margin-top: 26px; }
-    .faq summary {
-      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
-      padding: 16px 20px; font-size: 14px; font-weight: 600;
-    }
-    .faq summary::-webkit-details-marker { display: none; }
-    .faq summary::after { content: "+"; font-size: 20px; line-height: 1; color: var(--ad-gold-600); font-weight: 400; transition: transform 160ms var(--ease-out); flex-shrink: 0; }
-    .faq details[open] summary::after { transform: rotate(45deg); }
-    .faq .a { padding: 0 20px 18px; font-size: 13px; line-height: 1.7; color: var(--fg-2); }
 
     /* ---------- Contact ---------- */
     .contact {
@@ -1001,14 +986,14 @@
        Guarded three ways: the html.rv class (script adds it, ?reveal=off
        withholds it), desktop widths only, and reduced-motion below. */
     @media (min-width: 901px) {
-      /* .shell wraps only the first four sections — faq, contact and the
-         footer are its siblings, not its children. That split is invisible in
-         normal flow but fatal to a sticky stack: a sticky box may only travel
-         inside its own parent, so .how (shell's last child) had nowhere to go
-         and never pinned at all, while the sections above it came unstuck the
-         moment shell ended. Taking .shell out of the box tree puts all six on
-         the same parent without touching the markup, and it reverts with the
-         class like everything else here. */
+      /* .shell wraps only the first four sections — contact and the footer are
+         its siblings, not its children. That split is invisible in normal flow
+         but fatal to a sticky stack: a sticky box may only travel inside its
+         own parent, so .how (shell's last child) had nowhere to go and never
+         pinned at all, while the sections above it came unstuck the moment
+         shell ended. Taking .shell out of the box tree puts them all on the
+         same parent without touching the markup, and it reverts with the class
+         like everything else here. */
       html.rv .shell { display: contents; }
 
       html.rv .services,
@@ -1016,7 +1001,6 @@
       html.rv .features,
       html.rv .sectors,
       html.rv .how,
-      html.rv .faq,
       html.rv .contact { position: sticky; top: 0; }
 
       /* Later in the document sits higher, so each section covers the one
@@ -1026,14 +1010,13 @@
       html.rv .features { z-index: 3; }
       html.rv .sectors  { z-index: 4; }
       html.rv .how      { z-index: 5; }
-      html.rv .faq      { z-index: 6; }
       /* Deliberately NOT a layer. It pins its own card stack against its own
          scroll, and a section pinned by the stack cannot scroll internally —
-         the two mechanisms would cancel. It sits between faq and contact in
-         the document, so it has to clear faq and be cleared by contact. */
-      html.rv .voices   { position: relative; z-index: 7; }
-      html.rv .contact  { z-index: 8; }
-      html.rv .footer   { position: relative; z-index: 9; }
+         the two mechanisms would cancel. It sits between .how and contact in
+         the document, so it has to clear .how and be cleared by contact. */
+      html.rv .voices   { position: relative; z-index: 6; }
+      html.rv .contact  { z-index: 7; }
+      html.rv .footer   { position: relative; z-index: 8; }
 
       /* The transform goes on .inner, never on the sticky element itself —
          transforming a sticky box makes it a containing block and invites
@@ -1043,7 +1026,6 @@
       html.rv .features > .inner,
       html.rv .sectors > .inner,
       html.rv .how > .inner,
-      html.rv .faq > .inner,
       html.rv .contact > .inner {
         transform: scale(calc(1 - 0.055 * var(--rv, 0)));
         opacity: calc(1 - 0.5 * var(--rv, 0));
@@ -1098,10 +1080,10 @@
          .contact goes back to relative, not static: it positions its own
          decoration against itself and static would set that loose. */
       html.rv .services, html.rv .shots, html.rv .features,
-      html.rv .sectors, html.rv .how, html.rv .faq { position: static; }
+      html.rv .sectors, html.rv .how { position: static; }
       html.rv .contact { position: relative; }
       html.rv .services > .inner, html.rv .shots > .inner, html.rv .features > .inner,
-      html.rv .sectors > .inner, html.rv .how > .inner, html.rv .faq > .inner,
+      html.rv .sectors > .inner, html.rv .how > .inner,
       html.rv .contact > .inner {
         transform: none; opacity: 1; will-change: auto;
       }
@@ -1226,7 +1208,7 @@
       /* The pinned cards already collapse to a single column at 900px; here
          they only lose the outer margin. */
       .hiw { margin-top: 38px; }
-      .services, .how, .features, .faq { padding-left: 24px; padding-right: 24px; }
+      .services, .how, .features { padding-left: 24px; padding-right: 24px; }
       /* Three columns cannot survive a phone; the row stacks and the number
          sits inline above the claim. */
       /* The claim block stacks above the grid, and four across two columns
@@ -1269,7 +1251,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261015"></script>
+<script src="assets/mobile-notice.js?v=20261016"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1817,30 +1799,6 @@
     </div>
   </div>
 
-  <!-- ============ FAQ ============ -->
-  <div class="faq">
-    <div class="inner">
-      <div class="eyebrow" data-ar="أسئلة شائعة">FAQ</div>
-      <h2 data-ar="الأسئلة المتكررة">Frequently asked questions</h2>
-      <details>
-        <summary data-ar="هل أحتاج خلفية مالية أو عقارية؟">Do I need a finance or real-estate background?</summary>
-        <div class="a" data-ar="لا. كل حقل مزوّد بشرح مبسّط وقيم افتراضية سوقية واقعية، والمنصة تنبّهك عندما تبدو الفرضيات غير سليمة — صُمّمت REAP لغير المتخصصين أولًا.">No. Every field comes with plain-language hints and realistic market defaults, and the platform flags assumptions that look off. REAP is designed for non-specialists first.</div>
-      </details>
-      <details>
-        <summary data-ar="هل المنصة مجانية؟">Is REAP free to use?</summary>
-        <div class="a" data-ar="نعم — أنشئ حسابك مجانًا وتُحفظ تحليلاتك فيه، أو جرّب المنصة كضيف دون تسجيل (لن يُحفظ شيء في وضع الضيف).">Yes — sign up free and your analyses are saved to your account, or explore as a guest without registering (nothing is saved in guest mode).</div>
-      </details>
-      <details>
-        <summary data-ar="ما الأساليب التي يعتمدها التقييم العقاري؟">What methods does the valuation platform use?</summary>
-        <div class="a" data-ar="الأساليب الثلاثة المتوافقة مع معايير التقييم الدولية IVS: المقارنات السوقية مع التسويات، ورسملة الدخل، والتكلفة الاستبدالية المهلكة — ثم تُرجّح في قيمة واحدة بنطاق ثقة.">The three IVS-aligned approaches: sales comparison with adjustments, income capitalisation, and depreciated replacement cost — reconciled into a single value with a confidence range.</div>
-      </details>
-      <details>
-        <summary data-ar="هل يمكنني تصدير النتائج ومشاركتها؟">Can I export and share my results?</summary>
-        <div class="a" data-ar="نعم — يمكنك تصدير تقرير ملخّص جاهز للطباعة بصيغة PDF من كلتا المنصتين، بالعربية أو الإنجليزية.">Yes — both platforms export a print-ready summary report as PDF, in Arabic or English.</div>
-      </details>
-    </div>
-  </div>
-
   <!-- ============ TESTIMONIALS ============
        A scroll-driven stack: cards start fanned and rotated, then straighten
        and slide away one at a time as the track scrolls past.
@@ -2122,8 +2080,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261015"></script>
-<script src="assets/auth.js?v=20261015"></script>
+<script src="assets/config.js?v=20261016"></script>
+<script src="assets/auth.js?v=20261016"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -2410,19 +2368,19 @@
     start();
 
     function start() {
-    const layers = ["services", "shots", "features", "sectors", "how", "faq", "contact"]
+    const layers = ["services", "shots", "features", "sectors", "how", "contact"]
       .map((c) => document.querySelector("." + c))
       .filter(Boolean);
     if (layers.length < 2) return;
     document.documentElement.classList.add("rv");
 
     /* Each layer recedes as the thing that COVERS it rises, which is not
-       always the next layer: .voices sits between faq and contact and is not
-       a layer itself, but it is what actually comes up over faq. Measuring
-       faq against contact instead would leave it flat for the whole length of
-       the card track. The last one is measured against the footer, otherwise
-       contact would never recede at all. */
-    const chain = ["services", "shots", "features", "sectors", "how", "faq", "voices", "contact"]
+       always the next layer: .voices sits between .how and contact and is not
+       a layer itself, but it is what actually comes up over .how. Measuring
+       .how against contact instead would leave it flat for the whole length
+       of the card track. The last one is measured against the footer,
+       otherwise contact would never recede at all. */
+    const chain = ["services", "shots", "features", "sectors", "how", "voices", "contact"]
       .map((c) => document.querySelector("." + c))
       .filter(Boolean);
     const covers = layers.map((el) => {
@@ -2437,8 +2395,8 @@
        third card. Such a section pins by its bottom edge instead: top goes
        negative by the overflow, so it scrolls normally until all of it has
        been seen and only then holds. Measured rather than assumed, because it
-       depends on the window and on content that changes height — an open FAQ
-       answer can push a section past the window on its own.
+       depends on the window and on content that settles late — a webfont
+       swapping in can push a section past the window on its own.
 
        Such a section also pins at the very instant it finishes revealing, so
        its last line would be complete and covered in the same frame. The
@@ -2474,8 +2432,8 @@
     const remeasure = () => { fit(); onScroll(); };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", remeasure);
-    /* Sections change height without the window doing anything — an FAQ
-       answer opening is the common one. */
+    /* Sections change height without the window doing anything — a late
+       webfont or a sector photograph landing are the common ones. */
     if ("ResizeObserver" in window) {
       const ro = new ResizeObserver(remeasure);
       layers.forEach((el) => ro.observe(el));
