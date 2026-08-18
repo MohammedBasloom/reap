@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261012"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261012" />
+  <script src="assets/i18n.js?v=20261013"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261013" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -912,7 +912,7 @@
     .vstack-cards { position: relative; width: 360px; height: 400px; }
     .vcard {
       position: absolute; inset: 0;
-      display: flex; flex-direction: column; justify-content: center; gap: 12px;
+      display: flex; flex-direction: column; justify-content: flex-start; gap: 16px;
       padding: 34px 34px 38px; border-radius: 18px;
       /* Opaque, not translucent: a fanned stack of glass cards on a light
          ground turns into muddy overlapping greys. Solid paper keeps the
@@ -926,12 +926,27 @@
         translateY(var(--y, 0%))
         rotate(var(--rot, 0deg));
     }
-    .vcard-role { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1); line-height: 1.3; }
-    .vcard-where {
-      font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-      letter-spacing: 0.16em; text-transform: uppercase; color: var(--ad-gold-600);
+    .vcard-stars { color: var(--ad-gold-500); font-size: 15px; letter-spacing: 0.18em; }
+    .vcard blockquote {
+      font-family: var(--font-display); font-size: 17.5px; font-weight: 500;
+      line-height: 1.65; color: var(--fg-1); margin: 0;
     }
-    .vcard p { font-size: 14px; line-height: 1.8; color: var(--fg-2); }
+    /* Attribution sits apart from the quote, above a hairline — the reader
+       should be able to tell at a glance who is speaking and who is not. */
+    .vcard-by {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: auto; padding-top: 18px; border-top: 1px solid var(--border-1);
+    }
+    .vcard-avatar {
+      width: 40px; height: 40px; flex: 0 0 40px; border-radius: 50%;
+      background: var(--ad-navy-50); border: 1px solid var(--border-1);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 16px; font-weight: 600;
+      color: var(--ad-navy-700);
+    }
+    .vcard-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .vcard-name { font-family: var(--font-display); font-size: 15.5px; font-weight: 600; color: var(--fg-1); }
+    .vcard-title { font-size: 12px; color: var(--fg-3); line-height: 1.5; }
 
     @media (max-width: 900px) {
       .voices { padding: 60px 24px 0; }
@@ -1236,7 +1251,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261012"></script>
+<script src="assets/mobile-notice.js?v=20261013"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1816,54 +1831,97 @@
     </div>
   </div>
 
-  <!-- ============ BUILT FOR ============
+  <!-- ============ TESTIMONIALS ============
        A scroll-driven stack: cards start fanned and rotated, then straighten
        and slide away one at a time as the track scrolls past.
 
-       These are roles, not testimonials. Inventing named people and putting
-       praise in their mouths would be a fabricated endorsement, and this is a
-       product people make funding decisions on. When there are real quotes to
-       run, each card takes one without any change to the markup — a line of
-       speech, a name and a title in place of the role and the note. -->
+       THE QUOTES BELOW ARE PLACEHOLDERS AND MUST BE REPLACED BEFORE THIS PAGE
+       IS PROMOTED. They are deliberately written as visible template text
+       rather than invented praise from invented people: a made-up endorsement
+       on a page where visitors decide where to commit development capital is
+       a deception aimed at them, and it is the kind of claim consumer-
+       protection and advertising rules treat as actionable.
+
+       Three strings per card — quote, name, title — in both the English text
+       and the data-ar attribute. Everything else is already in place. -->
   <div class="voices">
     <div class="inner">
-      <div class="eyebrow" data-ar="لمن صُممت">Built for</div>
-      <h2 data-ar="خمسة أدوار، وسؤال واحد يسبق التوقيع">Five roles, one question that comes before the signature</h2>
-      <p class="lede" data-ar="الأرقام التي تحتاجها تختلف باختلاف موقعك من الصفقة — من يشتري الأرض، ومن يموّلها، ومن يوقّع على قيمتها. المنصة تُخرج ما يخصّ كلًّا منهم من النموذج نفسه.">The numbers you need change with where you sit in the deal — whoever buys the land, whoever funds it, whoever signs off on its value. The platform produces each of them from the same model.</p>
+      <div class="eyebrow" data-ar="آراء المستخدمين">Testimonials</div>
+      <h2 data-ar="ما يقوله من استخدم المنصة">What the people who use it say</h2>
+      <p class="lede" data-ar="ملاحظات من مطوّرين ومقيّمين ومديري استثمار استخدموا المنصة في صفقات حقيقية.">Notes from developers, valuers and investment managers who have used the platform on live deals.</p>
     </div>
 
     <div class="vstack" id="vstack">
       <div class="vstack-pin">
         <div class="vstack-cards">
 
+          <!-- ONE CARD = ONE TESTIMONIAL. Replace the three marked strings per
+               card with a real quote, a real name and that person's real title,
+               in both the English text and the data-ar attribute. Nothing else
+               needs touching: stars, avatar letter and layout are already set.
+               Delete a card you have no quote for — the stack reads any count. -->
+
           <article class="vcard">
-            <div class="vcard-role" data-ar="مطوّر عقاري">Real-estate developer</div>
-            <div class="vcard-where" data-ar="الرياض">Riyadh</div>
-            <p data-ar="قبل شراء الأرض: هل يحتمل الموقع البرنامج المطلوب، وهل يبقى العائد قائمًا إذا تأخّر البيع سنة كاملة؟">Before buying the land: does the site carry the intended program, and does the return survive a full year of delayed sales?</p>
+            <div class="vcard-stars" aria-hidden="true">★★★★★</div>
+            <!-- QUOTE -->
+            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-by">
+              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-id">
+                <!-- NAME -->
+                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
+                <!-- TITLE — role only, no company -->
+                <span class="vcard-title" data-ar="المسمى الوظيفي — الرياض">Job title — Riyadh</span>
+              </span>
+            </div>
           </article>
 
           <article class="vcard">
-            <div class="vcard-role" data-ar="مدير استثمار">Investment manager</div>
-            <div class="vcard-where" data-ar="جدة">Jeddah</div>
-            <p data-ar="مقارنة عدة فرص على أساس واحد، وتوزيع العائد بين الشريك المحدود والمطوّر ومدير الصندوق قبل الالتزام بأي منها.">Comparing several opportunities on one basis, and splitting the return between limited partner, developer and fund manager before committing to any of them.</p>
+            <div class="vcard-stars" aria-hidden="true">★★★★★</div>
+            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-by">
+              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-id">
+                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
+                <span class="vcard-title" data-ar="المسمى الوظيفي — جدة">Job title — Jeddah</span>
+              </span>
+            </div>
           </article>
 
           <article class="vcard">
-            <div class="vcard-role" data-ar="مقيّم معتمد">Certified valuer</div>
-            <div class="vcard-where" data-ar="الدمام">Dammam</div>
-            <p data-ar="قيمة واحدة يمكن الدفاع عنها، مع بيان كيف رُجّحت المقاربات وما الذي يحرّك النطاق صعودًا أو هبوطًا.">One defensible value, with a statement of how the approaches were weighted and what moves the range up or down.</p>
+            <div class="vcard-stars" aria-hidden="true">★★★★★</div>
+            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-by">
+              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-id">
+                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
+                <span class="vcard-title" data-ar="المسمى الوظيفي — الدمام">Job title — Dammam</span>
+              </span>
+            </div>
           </article>
 
           <article class="vcard">
-            <div class="vcard-role" data-ar="محلل ائتمان تمويل عقاري">Development finance analyst</div>
-            <div class="vcard-where" data-ar="دبي">Dubai</div>
-            <p data-ar="هل يخدم التسهيل نفسه من التدفق النقدي للمشروع، وفي أي شهر يبلغ الرصيد ذروته؟">Does the facility service itself out of project cash flow, and in which month does the balance peak?</p>
+            <div class="vcard-stars" aria-hidden="true">★★★★★</div>
+            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-by">
+              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-id">
+                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
+                <span class="vcard-title" data-ar="المسمى الوظيفي — دبي">Job title — Dubai</span>
+              </span>
+            </div>
           </article>
 
           <article class="vcard">
-            <div class="vcard-role" data-ar="مكتب عائلي">Family office</div>
-            <div class="vcard-where" data-ar="لندن">London</div>
-            <p data-ar="قراءة جدوى وصلت من مطوّر، والتحقق من افتراضاتها دون الحاجة إلى بنائها من جديد.">Reading a feasibility that arrived from a developer, and testing its assumptions without having to rebuild it.</p>
+            <div class="vcard-stars" aria-hidden="true">★★★★★</div>
+            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-by">
+              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-id">
+                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
+                <span class="vcard-title" data-ar="المسمى الوظيفي — لندن">Job title — London</span>
+              </span>
+            </div>
           </article>
 
         </div>
@@ -2051,8 +2109,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261012"></script>
-<script src="assets/auth.js?v=20261012"></script>
+<script src="assets/config.js?v=20261013"></script>
+<script src="assets/auth.js?v=20261013"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
