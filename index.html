@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261013"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261013" />
+  <script src="assets/i18n.js?v=20261014"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261014" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -909,7 +909,9 @@
       display: flex; align-items: center; justify-content: center;
       perspective: 1000px;
     }
-    .vstack-cards { position: relative; width: 360px; height: 400px; }
+    /* Sized to the longest quote, not to the shortest: every card is the same
+       box, so one card that overflows breaks the whole fan. */
+    .vstack-cards { position: relative; width: 420px; height: 530px; }
     .vcard {
       position: absolute; inset: 0;
       display: flex; flex-direction: column; justify-content: flex-start; gap: 16px;
@@ -926,10 +928,15 @@
         translateY(var(--y, 0%))
         rotate(var(--rot, 0deg));
     }
-    .vcard-stars { color: var(--ad-gold-500); font-size: 15px; letter-spacing: 0.18em; }
+    .vcard-stars { color: var(--ad-gold-500); font-size: 14px; letter-spacing: 0.16em; }
+    .vcard-kind {
+      font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--fg-3);
+      margin-top: -6px;
+    }
     .vcard blockquote {
-      font-family: var(--font-display); font-size: 17.5px; font-weight: 500;
-      line-height: 1.65; color: var(--fg-1); margin: 0;
+      font-family: var(--font-display); font-size: 15.5px; font-weight: 500;
+      line-height: 1.7; color: var(--fg-1); margin: 0;
     }
     /* Attribution sits apart from the quote, above a hairline — the reader
        should be able to tell at a glance who is speaking and who is not. */
@@ -951,9 +958,9 @@
     @media (max-width: 900px) {
       .voices { padding: 60px 24px 0; }
       .voices h2 { font-size: 25px; }
-      .vstack-cards { width: min(320px, 86vw); height: 400px; }
-      .vcard { padding: 28px 26px 30px; }
-      .vcard-role { font-size: 20px; }
+      .vstack-cards { width: min(340px, 90vw); height: 560px; }
+      .vcard { padding: 26px 24px 26px; gap: 13px; }
+      .vcard blockquote { font-size: 14.5px; line-height: 1.65; }
     }
 
     /* Reduced motion gets the same content as a plain column — no fan, no
@@ -1251,7 +1258,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261013"></script>
+<script src="assets/mobile-notice.js?v=20261014"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1855,71 +1862,74 @@
       <div class="vstack-pin">
         <div class="vstack-cards">
 
-          <!-- ONE CARD = ONE TESTIMONIAL. Replace the three marked strings per
-               card with a real quote, a real name and that person's real title,
-               in both the English text and the data-ar attribute. Nothing else
-               needs touching: stars, avatar letter and layout are already set.
-               Delete a card you have no quote for — the stack reads any count. -->
+          <!-- Quotes, names and titles supplied by the site owner and used as
+               written. Two carry product claims the engine does not support —
+               "escrow release logic" below and "tax treatment" on the last
+               card. Neither exists anywhere in src/calc.js. Left in place
+               because these are attributed to named people and are not mine to
+               reword; flagged so the decision is a deliberate one. -->
 
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
-            <!-- QUOTE -->
-            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-kind" data-ar="مطوّر / مالك أرض">Developer / Land owner</div>
+            <blockquote data-ar="كنّا ندرس أرضًا متعددة الاستخدامات على جدول بيانات تناوب عليه ثلاثة أشخاص خلال سنتين، ولم يكن أحد يثق بآلية الإفراج عن الضمان. أعادت المنصة بناء النموذج كاملًا في فترة واحدة، وأخيرًا تطابق التدفق النقدي مع ما توقّعه البنك. أغلقنا التمويل قبل الموعد بأربعة أسابيع.">We were underwriting a mixed-use plot on a spreadsheet that three people had touched over two years. Nobody trusted the escrow release logic. REAP rebuilt the whole thing in an afternoon and the cash flow finally matched what the bank was expecting. We closed the financing four weeks earlier than planned.</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-avatar" aria-hidden="true" data-ar="ف">F</span>
               <span class="vcard-id">
-                <!-- NAME -->
-                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
-                <!-- TITLE — role only, no company -->
-                <span class="vcard-title" data-ar="المسمى الوظيفي — الرياض">Job title — Riyadh</span>
+                <span class="vcard-name" data-ar="فهد العتيبي">Fahad Al-Otaibi</span>
+                <span class="vcard-title" data-ar="مدير التطوير">Development Director</span>
               </span>
             </div>
           </article>
 
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
-            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-kind" data-ar="مدير صندوق">Fund manager</div>
+            <blockquote data-ar="وحدة شلال التوزيعات هي سبب اقتنائنا للمنصة. ندير ثلاثة صناديق بهياكل عوائد مختلفة وآليات لحاق متباينة، وكان كل سؤال عن توزيعات الشركاء يعني إعادة بناء تستغرق يومين. الآن أنمذج السيناريو مباشرةً داخل اجتماع لجنة الاستثمار، وقد غيّر ذلك مسار النقاش نفسه.">The waterfall module is the reason we bought it. We run three funds with different hurdle structures and catch-up mechanics, and previously every LP distribution question meant a two-day rebuild. Now I model the scenario live in the IC meeting. It has changed how the conversation goes.</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-avatar" aria-hidden="true" data-ar="س">S</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
-                <span class="vcard-title" data-ar="المسمى الوظيفي — جدة">Job title — Jeddah</span>
+                <span class="vcard-name" data-ar="سارة ويتمور">Sarah Whitmore</span>
+                <span class="vcard-title" data-ar="رئيسة الاستثمارات العقارية">Head of Real Estate Investments</span>
               </span>
             </div>
           </article>
 
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
-            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-kind" data-ar="مكتب عائلي">Family office</div>
+            <blockquote data-ar="ندرس نحو أربعين فرصة سنويًا ونشتري اثنتين. ما كنا نحتاجه ليس نموذجًا أكثر تعقيدًا، بل «لا» أسرع. توصلنا المنصة إلى رقم فرز يمكن الدفاع عنه في أقل من ساعة، بافتراضات نستطيع تبريرها فعلًا أمام الملّاك.">We look at maybe forty opportunities a year and buy two. What we needed wasn't a more sophisticated model, it was a faster no. REAP gets us to a defensible screening number in under an hour, with assumptions we can actually defend to the principals.</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-avatar" aria-hidden="true" data-ar="ع">A</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
-                <span class="vcard-title" data-ar="المسمى الوظيفي — الدمام">Job title — Dammam</span>
+                <span class="vcard-name" data-ar="عبدالعزيز بن صالح">Abdulaziz Bin Saleh</span>
+                <span class="vcard-title" data-ar="مدير استثمار رئيسي">Investment Principal</span>
               </span>
             </div>
           </article>
 
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
-            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-kind" data-ar="استشارات">Advisory</div>
+            <blockquote data-ar="كنت أقضي أول ثلاثة أيام من كل تكليف في إعادة بناء نموذج من الصفر. صارت اليوم أول ثلاث ساعات، ويذهب باقي الوقت إلى الافتراضات التي تحرّك معدل العائد فعلًا. عملائي يلاحظون الفرق — المخرجات تبدو وكأنها صادرة عن بنك.">I used to spend the first three days of every mandate rebuilding a proforma from scratch. Now that's the first three hours, and the rest goes into the assumptions that actually move the IRR. My clients notice — the output looks like it came out of a bank.</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-avatar" aria-hidden="true" data-ar="د">D</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
-                <span class="vcard-title" data-ar="المسمى الوظيفي — دبي">Job title — Dubai</span>
+                <span class="vcard-name" data-ar="دانيال أوكونكو">Daniel Okonkwo</span>
+                <span class="vcard-title" data-ar="الشريك الإداري">Managing Partner</span>
               </span>
             </div>
           </article>
 
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
-            <blockquote data-ar="ضع هنا اقتباس العميل — بكلماته هو، جملتان تكفيان.">Client quote goes here — in their own words, two sentences is plenty.</blockquote>
+            <div class="vcard-kind" data-ar="ائتمان / مؤسسات">Credit / Institutional</div>
+            <blockquote data-ar="ما أقدّره هو إمكانية التتبّع. كل رقم يعود إلى مدخل، وجداول الحساسية ليست قيمًا ثابتة، والمعالجة الضريبية صحيحة دون أن أضطر لمراجعتها. تبدو النقطة الأخيرة بسيطة، لكنها ليست كذلك — أغلب النماذج التي تصلنا تخطئ فيها.">What I appreciate is the audit trail. Every number traces back to an input, the sensitivity tables aren't hardcoded, and the tax treatment is correct without me having to check. That last part sounds small. It isn't — most models we receive get it wrong.</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true">•</span>
+              <span class="vcard-avatar" aria-hidden="true" data-ar="ب">P</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="اسم العميل">Client name</span>
-                <span class="vcard-title" data-ar="المسمى الوظيفي — لندن">Job title — London</span>
+                <span class="vcard-name" data-ar="بريا راغافان">Priya Raghavan</span>
+                <span class="vcard-title" data-ar="محللة ائتمان أولى">Senior Credit Analyst</span>
               </span>
             </div>
           </article>
@@ -2109,8 +2119,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261013"></script>
-<script src="assets/auth.js?v=20261013"></script>
+<script src="assets/config.js?v=20261014"></script>
+<script src="assets/auth.js?v=20261014"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
