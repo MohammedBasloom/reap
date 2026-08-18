@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261009"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261009" />
+  <script src="assets/i18n.js?v=20261010"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261010" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -554,19 +554,34 @@
     .features .inner { max-width: 1180px; margin: 0 auto; }
     .features .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
     .features h2 { font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; }
-    .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 34px; }
-    .tile {
-      border: 1px solid var(--border-1); background: var(--bg-1); padding: 22px 24px; position: relative;
-      transition: box-shadow 200ms var(--ease-out), transform 200ms var(--ease-out);
+    /* A vertical ledger rather than a grid of tiles: these are reasons to use
+       the platform, and reasons are read in order, one after another. A grid
+       invites skimming and makes every claim look equally weighted. Each row
+       is claim on the left, substance on the right. */
+    .features .lede { font-size: 14.5px; color: var(--fg-2); line-height: 1.7; margin-top: 12px; max-width: 660px; }
+    .vlist { margin-top: 40px; border-top: 1px solid var(--border-1); }
+    .vrow {
+      display: grid; grid-template-columns: 46px minmax(0, 250px) 1fr; gap: 28px;
+      padding: 26px 4px; border-bottom: 1px solid var(--border-1); align-items: start;
     }
-    .tile:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-    .tile.wide { grid-column: span 2; }
-    .tile .ticon {
-      width: 34px; height: 34px; border: 1px solid var(--border-1); background: var(--ad-navy-50);
-      display: flex; align-items: center; justify-content: center; color: var(--ad-navy-700);
+    .vnum {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: 0.1em;
+      color: var(--ad-gold-600); padding-top: 5px;
     }
-    .tile h4 { font-size: 15px; font-weight: 600; margin-top: 14px; }
-    .tile p { font-size: 12.5px; color: var(--fg-2); line-height: 1.65; margin-top: 6px; max-width: 520px; }
+    .vrow h4 {
+      font-family: var(--font-display); font-size: 19px; font-weight: 600;
+      letter-spacing: -0.01em; color: var(--fg-1); line-height: 1.35;
+    }
+    .vrow p { font-size: 13.5px; color: var(--fg-2); line-height: 1.75; }
+    /* The payoff line sits BESIDE the paragraph, never inside it: applyDom
+       swaps a data-ar element's whole innerHTML, so a translated child nested
+       in a translated parent is destroyed the moment Arabic loads — which is
+       every visit, Arabic being the default. */
+    .vrow .vgain {
+      display: block; margin-top: 9px; font-size: 12px; font-weight: 600;
+      color: var(--ad-navy-700);
+    }
+    .vrow .vgain::before { content: "→"; color: var(--ad-gold-600); margin-inline-end: 7px; }
 
     /* ---------- FAQ ---------- */
     .faq { background: var(--bg-1); color: var(--fg-1); padding: 64px 40px 80px; border-top: 1px solid var(--border-1); }
@@ -1117,8 +1132,11 @@
          they only lose the outer margin. */
       .hiw { margin-top: 38px; }
       .services, .how, .features, .faq { padding-left: 24px; padding-right: 24px; }
-      .bento { grid-template-columns: 1fr; }
-      .tile.wide { grid-column: span 1; }
+      /* Three columns cannot survive a phone; the row stacks and the number
+         sits inline above the claim. */
+      .vrow { grid-template-columns: 1fr; gap: 8px; padding: 20px 0; }
+      .vnum { padding-top: 0; }
+      .vrow h4 { font-size: 17px; }
       .trust .inner { padding: 14px 24px; justify-content: flex-start; }
     }
 
@@ -1151,7 +1169,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261009"></script>
+<script src="assets/mobile-notice.js?v=20261010"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1536,32 +1554,53 @@
   <div class="features">
     <div class="inner">
       <div class="eyebrow" data-ar="لماذا REAP">Why REAP</div>
-      <h2 data-ar="تحليل بمستوى احترافي — دون تعقيد.">Professional-grade analysis — without the complexity.</h2>
-      <div class="bento">
-        <div class="tile wide">
-          <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg></div>
-          <h4 data-ar="لوحات نتائج حيّة">Live dashboards</h4>
-          <p data-ar="التدفقات النقدية والعوائد والحساسية والمخاطر — تتحدّث جميعها فور تعديل أي مدخل، دون إعادة حساب يدوية.">Cashflow, returns, sensitivity and risk — everything recalculates the moment you change an input. No manual re-runs.</p>
+      <h2 data-ar="قرار أسرع، بافتراضات أقل، وأخطاء أقل">A faster decision, on fewer assumptions, with fewer mistakes</h2>
+      <p class="lede" data-ar="الفرق ليس في المعادلات — كلها معروفة. الفرق في الوقت الذي لا تقضيه في بنائها، والخطأ الذي لا تكتشفه بعد فوات الأوان.">The difference isn't the formulas — those are well known. It's the time you don't spend building them, and the error you don't discover too late.</p>
+
+      <div class="vlist">
+        <div class="vrow">
+          <div class="vnum" aria-hidden="true">01</div>
+          <h4 data-ar="وقت أقل قبل أن تعرف الإجابة">Less time before you know the answer</h4>
+          <div class="vbody">
+            <p data-ar="الجدوى التي تُبنى في جدول بيانات عبر أيام تكتمل هنا خلال دقائق. تُدخل ما تعرفه فعلًا — المساحة، السعر، المدة — ويُحتسب الباقي في اللحظة نفسها.">A feasibility that takes days to build in a spreadsheet is finished here in minutes. You enter what you actually know — area, price, duration — and the rest is computed as you type.</p>
+            <span class="vgain" data-ar="لا إعادة حساب يدوية عند كل تعديل">No manual re-run after every change</span>
+          </div>
         </div>
-        <div class="tile">
-          <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3,20 C8,20 8,5 12,5 S16,20 21,20"/><line x1="3" y1="20" x2="21" y2="20"/></svg></div>
-          <h4 data-ar="مخاطر مونت كارلو">Monte Carlo risk</h4>
-          <p data-ar="محاكاة بآلاف التجارب تكشف احتمالية الخسارة وتوزيع النتائج المتوقعة لمشروعك.">Thousands of simulation runs reveal your probability of loss and the full distribution of outcomes.</p>
+
+        <div class="vrow">
+          <div class="vnum" aria-hidden="true">02</div>
+          <h4 data-ar="أخطاء لا يمكن أن تحدث أصلًا">Mistakes that cannot happen in the first place</h4>
+          <div class="vbody">
+            <p data-ar="لا صيغة مكسورة، ولا مرجع دائري، ولا خلية نُسي تحديثها. السحب والفوائد والسداد والتوزيعات مترابطة داخل محرّك واحد، فلا يمكن لرقم أن يناقض الآخر.">No broken formula, no circular reference, no cell someone forgot to drag down. Drawdown, interest, repayment and distributions are bound inside one engine, so no figure can contradict another.</p>
+            <span class="vgain" data-ar="التعارض الحسابي مستبعد بالبناء، لا بالمراجعة">Inconsistency ruled out by construction, not by review</span>
+          </div>
         </div>
-        <div class="tile">
-          <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3,5 h6 v5 h6 v5 h6 v4"/><path d="M3,19 h18"/></svg></div>
-          <h4 data-ar="شلال توزيعات الصناديق">Fund waterfalls</h4>
-          <p data-ar="شلال أوروبي كامل — عائد مفضّل، لحاق، وحوافز أداء — موزّعًا بين LP والمطوّر وGP.">A full European waterfall — preferred return, catch-up and promote — split across LP, Developer and GP.</p>
+
+        <div class="vrow">
+          <div class="vnum" aria-hidden="true">03</div>
+          <h4 data-ar="افتراضات أقل تُطلب منك">Fewer assumptions asked of you</h4>
+          <div class="vbody">
+            <p data-ar="بدل تقدير عشرات المدخلات، تُدخل الأساسيات فقط ويُشتق ما بقي — جداول الإنفاق، توقيت الإيرادات، رسملة الفوائد — من منهجية معلنة يمكنك مراجعتها وتعديلها متى أردت.">Instead of estimating dozens of inputs, you enter the essentials and the rest is derived — spend curves, revenue timing, interest capitalisation — from a stated methodology you can inspect and override.</p>
+            <span class="vgain" data-ar="كل قيمة مشتقّة ظاهرة، وليست مخفيّة في صيغة">Every derived value is visible, not buried in a formula</span>
+          </div>
         </div>
-        <div class="tile">
-          <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5,20 V11"/><path d="M12,20 V5"/><path d="M19,20 V14"/><path d="M3,20 h18"/></svg></div>
-          <h4 data-ar="أساليب التقييم الثلاثة">Three valuation approaches</h4>
-          <p data-ar="المقارنات السوقية والدخل والتكلفة — وفق المعايير الدولية IVS — مرجّحة في قيمة واحدة بنطاق ثقة.">Sales comparison, income and cost — per international standards — reconciled into one value with a confidence range.</p>
+
+        <div class="vrow">
+          <div class="vnum" aria-hidden="true">04</div>
+          <h4 data-ar="مخرجات تفصيلية، لا رقم واحد">Detailed output, not a single number</h4>
+          <div class="vbody">
+            <p data-ar="تدفق نقدي شهريًا وسنويًا، عوائد قبل التمويل وبعده، حساسية للمتغيرات، وقراءة للمخاطر — وكل رقم يمكن تتبّعه رجوعًا إلى المدخل الذي أنتجه.">Monthly and annual cash flow, levered and unlevered returns, sensitivity across the variables that move the answer, and a risk read — with every figure traceable back to the input that produced it.</p>
+            <span class="vgain" data-ar="تعرف لماذا تغيّر الرقم، لا أنه تغيّر فقط">You see why a number moved, not just that it did</span>
+          </div>
         </div>
-        <div class="tile">
-          <div class="ticon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12,3 v10"/><path d="M8,9 l4,4 4,-4"/><path d="M4,17 v3 h16 v-3"/></svg></div>
-          <h4 data-ar="تصدير وحفظ">Export &amp; save</h4>
-          <p data-ar="تقارير PDF جاهزة للطباعة والمشاركة، وتحليلاتك محفوظة في حسابك للوصول من أي جهاز.">Print-ready PDF reports, and every analysis saved to your account — accessible from any device.</p>
+
+        <div class="vrow">
+          <div class="vnum" aria-hidden="true">05</div>
+          <h4 data-ar="مستند جاهز لمن سيقرأه">A document ready for whoever reads it next</h4>
+          <div class="vbody">
+            <p data-ar="تقرير كامل بغلافك واسم جهتك، يحمل الأرقام نفسها التي على الشاشة — دون نسخها يدويًا إلى عرض تقديمي، ودون خطر أن تتأخر نسخة عن أخرى.">A complete report under your own cover and company, carrying the same numbers that are on screen — with no retyping into a deck, and no risk of one copy drifting from another.</p>
+            <span class="vgain" data-ar="محفوظ في حسابك ويمكن فتحه من أي جهاز">Saved to your account, reopened from any device</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1890,8 +1929,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261009"></script>
-<script src="assets/auth.js?v=20261009"></script>
+<script src="assets/config.js?v=20261010"></script>
+<script src="assets/auth.js?v=20261010"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -2238,6 +2277,13 @@
       const ro = new ResizeObserver(remeasure);
       layers.forEach((el) => ro.observe(el));
     }
+    /* Two settle points the observer alone was missing. A webfont swapping in
+       reflows the text and changes a section's height after the first
+       measurement, and the observer coalesced that with its initial callback —
+       leaving one section pinned to a height it no longer had, which opened a
+       strip of bare page background beneath it. Both are cheap and idempotent. */
+    window.addEventListener("load", remeasure);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
     remeasure();
     }
   })();
