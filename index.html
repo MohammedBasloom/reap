@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261011"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261011" />
+  <script src="assets/i18n.js?v=20261012"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261012" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -897,11 +897,11 @@
 
        The track is what gets scrolled, the pin is what stays still. Card
        heights are fixed rather than content-driven so the fan stays even. */
-    .voices { background: var(--ad-navy-900); color: white; padding: 78px 40px 0; border-top: 1px solid rgba(255,255,255,0.08); }
+    .voices { background: var(--bg-2); color: var(--fg-1); padding: 78px 40px 0; border-top: 1px solid var(--border-1); }
     .voices .inner { max-width: 1180px; margin: 0 auto; }
-    .voices .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ad-gold-400); font-weight: 600; }
-    .voices h2 { font-family: var(--font-display); font-size: 31px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; color: white; }
-    .voices .lede { font-size: 14.5px; color: rgba(255,255,255,0.72); line-height: 1.75; margin-top: 12px; max-width: 660px; }
+    .voices .eyebrow { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-3); font-weight: 600; }
+    .voices h2 { font-family: var(--font-display); font-size: 31px; font-weight: 600; letter-spacing: -0.02em; margin-top: 10px; color: var(--fg-1); }
+    .voices .lede { font-size: 14.5px; color: var(--fg-2); line-height: 1.75; margin-top: 12px; max-width: 660px; }
 
     .vstack { position: relative; height: 300vh; }
     .vstack-pin {
@@ -914,22 +914,24 @@
       position: absolute; inset: 0;
       display: flex; flex-direction: column; justify-content: center; gap: 12px;
       padding: 34px 34px 38px; border-radius: 18px;
-      background: rgba(255,255,255,0.055);
-      border: 1px solid rgba(255,255,255,0.16);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 18px 44px -18px rgba(0,0,0,0.75);
+      /* Opaque, not translucent: a fanned stack of glass cards on a light
+         ground turns into muddy overlapping greys. Solid paper keeps the
+         card in front legible and the ones behind reading as depth. */
+      background: var(--bg-1);
+      border: 1px solid var(--border-1);
+      box-shadow: 0 20px 46px -22px rgba(10,26,54,0.42), 0 2px 8px -3px rgba(10,26,54,0.14);
       backface-visibility: hidden; will-change: transform;
       transform:
         translateZ(calc(var(--i, 0) * 10px))
         translateY(var(--y, 0%))
         rotate(var(--rot, 0deg));
     }
-    .vcard-role { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: -0.01em; color: white; line-height: 1.3; }
+    .vcard-role { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: -0.01em; color: var(--fg-1); line-height: 1.3; }
     .vcard-where {
       font-family: var(--font-mono); font-size: 11px; font-weight: 600;
-      letter-spacing: 0.16em; text-transform: uppercase; color: var(--ad-gold-400);
+      letter-spacing: 0.16em; text-transform: uppercase; color: var(--ad-gold-600);
     }
-    .vcard p { font-size: 14px; line-height: 1.8; color: rgba(255,255,255,0.8); }
+    .vcard p { font-size: 14px; line-height: 1.8; color: var(--fg-2); }
 
     @media (max-width: 900px) {
       .voices { padding: 60px 24px 0; }
@@ -997,11 +999,12 @@
       html.rv .sectors  { z-index: 4; }
       html.rv .how      { z-index: 5; }
       html.rv .faq      { z-index: 6; }
-      html.rv .contact  { z-index: 7; }
       /* Deliberately NOT a layer. It pins its own card stack against its own
          scroll, and a section pinned by the stack cannot scroll internally —
-         the two mechanisms would cancel. It rides over contact instead. */
-      html.rv .voices   { position: relative; z-index: 8; }
+         the two mechanisms would cancel. It sits between faq and contact in
+         the document, so it has to clear faq and be cleared by contact. */
+      html.rv .voices   { position: relative; z-index: 7; }
+      html.rv .contact  { z-index: 8; }
       html.rv .footer   { position: relative; z-index: 9; }
 
       /* The transform goes on .inner, never on the sticky element itself —
@@ -1233,7 +1236,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261011"></script>
+<script src="assets/mobile-notice.js?v=20261012"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1813,6 +1816,61 @@
     </div>
   </div>
 
+  <!-- ============ BUILT FOR ============
+       A scroll-driven stack: cards start fanned and rotated, then straighten
+       and slide away one at a time as the track scrolls past.
+
+       These are roles, not testimonials. Inventing named people and putting
+       praise in their mouths would be a fabricated endorsement, and this is a
+       product people make funding decisions on. When there are real quotes to
+       run, each card takes one without any change to the markup — a line of
+       speech, a name and a title in place of the role and the note. -->
+  <div class="voices">
+    <div class="inner">
+      <div class="eyebrow" data-ar="لمن صُممت">Built for</div>
+      <h2 data-ar="خمسة أدوار، وسؤال واحد يسبق التوقيع">Five roles, one question that comes before the signature</h2>
+      <p class="lede" data-ar="الأرقام التي تحتاجها تختلف باختلاف موقعك من الصفقة — من يشتري الأرض، ومن يموّلها، ومن يوقّع على قيمتها. المنصة تُخرج ما يخصّ كلًّا منهم من النموذج نفسه.">The numbers you need change with where you sit in the deal — whoever buys the land, whoever funds it, whoever signs off on its value. The platform produces each of them from the same model.</p>
+    </div>
+
+    <div class="vstack" id="vstack">
+      <div class="vstack-pin">
+        <div class="vstack-cards">
+
+          <article class="vcard">
+            <div class="vcard-role" data-ar="مطوّر عقاري">Real-estate developer</div>
+            <div class="vcard-where" data-ar="الرياض">Riyadh</div>
+            <p data-ar="قبل شراء الأرض: هل يحتمل الموقع البرنامج المطلوب، وهل يبقى العائد قائمًا إذا تأخّر البيع سنة كاملة؟">Before buying the land: does the site carry the intended program, and does the return survive a full year of delayed sales?</p>
+          </article>
+
+          <article class="vcard">
+            <div class="vcard-role" data-ar="مدير استثمار">Investment manager</div>
+            <div class="vcard-where" data-ar="جدة">Jeddah</div>
+            <p data-ar="مقارنة عدة فرص على أساس واحد، وتوزيع العائد بين الشريك المحدود والمطوّر ومدير الصندوق قبل الالتزام بأي منها.">Comparing several opportunities on one basis, and splitting the return between limited partner, developer and fund manager before committing to any of them.</p>
+          </article>
+
+          <article class="vcard">
+            <div class="vcard-role" data-ar="مقيّم معتمد">Certified valuer</div>
+            <div class="vcard-where" data-ar="الدمام">Dammam</div>
+            <p data-ar="قيمة واحدة يمكن الدفاع عنها، مع بيان كيف رُجّحت المقاربات وما الذي يحرّك النطاق صعودًا أو هبوطًا.">One defensible value, with a statement of how the approaches were weighted and what moves the range up or down.</p>
+          </article>
+
+          <article class="vcard">
+            <div class="vcard-role" data-ar="محلل ائتمان تمويل عقاري">Development finance analyst</div>
+            <div class="vcard-where" data-ar="دبي">Dubai</div>
+            <p data-ar="هل يخدم التسهيل نفسه من التدفق النقدي للمشروع، وفي أي شهر يبلغ الرصيد ذروته؟">Does the facility service itself out of project cash flow, and in which month does the balance peak?</p>
+          </article>
+
+          <article class="vcard">
+            <div class="vcard-role" data-ar="مكتب عائلي">Family office</div>
+            <div class="vcard-where" data-ar="لندن">London</div>
+            <p data-ar="قراءة جدوى وصلت من مطوّر، والتحقق من افتراضاتها دون الحاجة إلى بنائها من جديد.">Reading a feasibility that arrived from a developer, and testing its assumptions without having to rebuild it.</p>
+          </article>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ CONTACT ============ -->
   <div class="contact" id="contact">
     <div class="inner">
@@ -1893,61 +1951,6 @@
         </div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- ============ BUILT FOR ============
-       A scroll-driven stack: cards start fanned and rotated, then straighten
-       and slide away one at a time as the track scrolls past.
-
-       These are roles, not testimonials. Inventing named people and putting
-       praise in their mouths would be a fabricated endorsement, and this is a
-       product people make funding decisions on. When there are real quotes to
-       run, each card takes one without any change to the markup — a line of
-       speech, a name and a title in place of the role and the note. -->
-  <div class="voices">
-    <div class="inner">
-      <div class="eyebrow" data-ar="لمن صُممت">Built for</div>
-      <h2 data-ar="خمسة أدوار، وسؤال واحد يسبق التوقيع">Five roles, one question that comes before the signature</h2>
-      <p class="lede" data-ar="الأرقام التي تحتاجها تختلف باختلاف موقعك من الصفقة — من يشتري الأرض، ومن يموّلها، ومن يوقّع على قيمتها. المنصة تُخرج ما يخصّ كلًّا منهم من النموذج نفسه.">The numbers you need change with where you sit in the deal — whoever buys the land, whoever funds it, whoever signs off on its value. The platform produces each of them from the same model.</p>
-    </div>
-
-    <div class="vstack" id="vstack">
-      <div class="vstack-pin">
-        <div class="vstack-cards">
-
-          <article class="vcard">
-            <div class="vcard-role" data-ar="مطوّر عقاري">Real-estate developer</div>
-            <div class="vcard-where" data-ar="الرياض">Riyadh</div>
-            <p data-ar="قبل شراء الأرض: هل يحتمل الموقع البرنامج المطلوب، وهل يبقى العائد قائمًا إذا تأخّر البيع سنة كاملة؟">Before buying the land: does the site carry the intended program, and does the return survive a full year of delayed sales?</p>
-          </article>
-
-          <article class="vcard">
-            <div class="vcard-role" data-ar="مدير استثمار">Investment manager</div>
-            <div class="vcard-where" data-ar="جدة">Jeddah</div>
-            <p data-ar="مقارنة عدة فرص على أساس واحد، وتوزيع العائد بين الشريك المحدود والمطوّر ومدير الصندوق قبل الالتزام بأي منها.">Comparing several opportunities on one basis, and splitting the return between limited partner, developer and fund manager before committing to any of them.</p>
-          </article>
-
-          <article class="vcard">
-            <div class="vcard-role" data-ar="مقيّم معتمد">Certified valuer</div>
-            <div class="vcard-where" data-ar="الدمام">Dammam</div>
-            <p data-ar="قيمة واحدة يمكن الدفاع عنها، مع بيان كيف رُجّحت المقاربات وما الذي يحرّك النطاق صعودًا أو هبوطًا.">One defensible value, with a statement of how the approaches were weighted and what moves the range up or down.</p>
-          </article>
-
-          <article class="vcard">
-            <div class="vcard-role" data-ar="محلل ائتمان تمويل عقاري">Development finance analyst</div>
-            <div class="vcard-where" data-ar="دبي">Dubai</div>
-            <p data-ar="هل يخدم التسهيل نفسه من التدفق النقدي للمشروع، وفي أي شهر يبلغ الرصيد ذروته؟">Does the facility service itself out of project cash flow, and in which month does the balance peak?</p>
-          </article>
-
-          <article class="vcard">
-            <div class="vcard-role" data-ar="مكتب عائلي">Family office</div>
-            <div class="vcard-where" data-ar="لندن">London</div>
-            <p data-ar="قراءة جدوى وصلت من مطوّر، والتحقق من افتراضاتها دون الحاجة إلى بنائها من جديد.">Reading a feasibility that arrived from a developer, and testing its assumptions without having to rebuild it.</p>
-          </article>
-
-        </div>
-      </div>
     </div>
   </div>
 
@@ -2048,8 +2051,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261011"></script>
-<script src="assets/auth.js?v=20261011"></script>
+<script src="assets/config.js?v=20261012"></script>
+<script src="assets/auth.js?v=20261012"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -2342,9 +2345,19 @@
     if (layers.length < 2) return;
     document.documentElement.classList.add("rv");
 
-    /* Each layer recedes as the NEXT one covers it, so the last layer is
-       measured against the footer — otherwise contact would never recede. */
-    const covers = layers.map((el, i) => layers[i + 1] || document.querySelector(".footer"));
+    /* Each layer recedes as the thing that COVERS it rises, which is not
+       always the next layer: .voices sits between faq and contact and is not
+       a layer itself, but it is what actually comes up over faq. Measuring
+       faq against contact instead would leave it flat for the whole length of
+       the card track. The last one is measured against the footer, otherwise
+       contact would never recede at all. */
+    const chain = ["services", "shots", "features", "sectors", "how", "faq", "voices", "contact"]
+      .map((c) => document.querySelector("." + c))
+      .filter(Boolean);
+    const covers = layers.map((el) => {
+      const i = chain.indexOf(el);
+      return (i >= 0 && chain[i + 1]) || document.querySelector(".footer");
+    });
     let ticking = false;
 
     /* A section taller than the window cannot pin at top:0 — it would fasten
