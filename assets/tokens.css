@@ -278,6 +278,26 @@ html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
 .reap-step.is-current .reap-dot { animation: reap-dot-pulse 2.4s ease-in-out infinite; }
 .reap-step .reap-line-fill { transform-origin: top; animation: reap-fill-in 520ms var(--ease-out) both; }
 .reap-step .reap-body { transition: color var(--t-base) var(--ease-out); }
+
+/* Remove control on an allocation row. Sized to the 44px touch guidance via
+   padding rather than a large glyph, and kept grey until the row is hovered
+   so it does not read as a warning sitting beside every component. It turns
+   red only when the pointer is on it, which is the moment the meaning
+   matters. Never hidden outright — a control that appears only on hover is
+   unreachable by touch and invisible to anyone tabbing through. */
+.alloc-x {
+  flex-shrink: 0; margin-inline-start: 2px;
+  width: 22px; height: 22px; padding: 0; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 4px;
+  background: transparent; color: var(--fg-4);
+  font-size: 15px; font-family: inherit; cursor: pointer;
+  transition: color var(--t-fast) var(--ease-out),
+              background var(--t-fast) var(--ease-out),
+              border-color var(--t-fast) var(--ease-out);
+}
+.alloc-x:hover { color: var(--ad-danger); background: rgba(192, 57, 43, 0.08); border-color: rgba(192, 57, 43, 0.28); }
+.alloc-x:focus-visible { outline: 2px solid var(--ad-gold-500); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   .reap-step, .reap-step .reap-line-fill { animation: none; }
   .reap-step.is-current .reap-dot { animation: none; }

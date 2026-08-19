@@ -1062,7 +1062,7 @@ function ComponentEmptyState() {
 /* ---------- Land allocation panel — sits right under the program tiles so
    allocating the site is the first thing asked after picking a component. --- */
 
-function AllocationPanel({ components, totalLand, onChange }) {
+function AllocationPanel({ components, totalLand, onChange, onRemove }) {
   if (!components.length) return null;
   return (
     <div style={{
@@ -1107,6 +1107,25 @@ function AllocationPanel({ components, totalLand, onChange }) {
               <span className="tabnum" style={{ fontSize: 11, color: "var(--ad-navy-900)", fontWeight: 600, flexShrink: 0, width: 78, textAlign: "end" }}>
                 {Feas.formatNumber(area)} m²
               </span>
+              {/* Dropping a component was only possible from its editor further
+                  down the panel. This is the row where someone realises they
+                  picked the wrong tile, so it is the row that should let them
+                  undo it. Quiet until hovered — a delete control sitting bright
+                  next to a number invites the wrong click. */}
+              {onRemove && (
+                <button
+                  type="button"
+                  className="alloc-x"
+                  onClick={() => onRemove(i)}
+                  /* title goes through the dictionary as a plain key; the
+                     aria-label is built with the component's name so several
+                     of these in a row are told apart by a screen reader, and
+                     is translated by hand because a composed string is not a
+                     key the dictionary can hold. */
+                  title="Remove component"
+                  aria-label={`${window.I18N ? I18N.t("Remove component") : "Remove component"} — ${c.name}`}
+                >×</button>
+              )}
             </div>
           );
         })}
@@ -1914,6 +1933,12 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
               components={input.components}
               totalLand={netDevelopableArea}
               onChange={(i, pct) => updComp(i, { ...input.components[i], allocationPct: pct })}
+              /* Same removeComp the component editor uses, so a component
+                 dropped from here hands its land back exactly as one dropped
+                 from below does. */
+              onRemove={(i) => {
+                if (confirm(I18N.t("Remove this component from the program?"))) removeComp(i);
+              }}
             />
             <AllocationAlarm
               totalPct={totalAllocationPct}

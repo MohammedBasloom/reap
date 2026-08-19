@@ -217,6 +217,8 @@
     "No spaces yet. Add the spaces this building holds — you can add several of either kind, so leased retail and leased offices sit side by side.":
       "لا توجد مساحات بعد. أضِف المساحات التي يضمّها المبنى — ويمكنك إضافة أكثر من مساحة من النوع نفسه، فتظهر تجزئة للتأجير ومكاتب للتأجير جنبًا إلى جنب.",
     "Remove this use": "حذف هذه المساحة",
+    "Remove component": "حذف المكوّن",
+    "Remove this component from the program?": "هل تريد حذف هذا المكوّن من البرنامج؟",
     "Share of GFA": "الحصة من إجمالي المسطحات",
     "of the building's GFA": "من إجمالي مسطحات المبنى",
     "How much of this building's total floor area this use takes. All the uses together should come to 100%.":

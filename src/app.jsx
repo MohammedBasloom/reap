@@ -490,7 +490,14 @@ function App() {
         </div>
 
         <div>
-          {!input.showResults ?
+          {/* Pressing "show the result" is remembered, but it does not survive
+              the model ceasing to be complete. Removing the last component
+              from the allocation panel used to leave the dashboards up,
+              computing a whole feasibility from nothing and reporting zeros as
+              though they were an answer. The walk reappears at the step that
+              came undone, and the results return on their own once it is
+              answered again — no second press. */}
+          {!(input.showResults && guide.allDone) ?
           <BuildGuide input={input} guide={guide} onUseDefaults={applyStepDefaults} onMark={markStep}
                       onShowResults={() => setInput((p) => Object.assign({}, p, { showResults: true }))} /> :
 
