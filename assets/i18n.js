@@ -77,6 +77,9 @@
     "Optional. Split the equity between LP, developer and GP, set the preferred return and the promote.":
       "اختياري. وزّع الملكية بين الشريك المحدود والمطوّر والشريك العام، وحدّد العائد المفضّل وحوافز الأداء.",
     "Use default inputs": "استخدم المدخلات الافتراضية",
+    "Show the result": "اعرض النتيجة",
+    "Every step is answered — open the dashboards.": "تمت الإجابة على كل الخطوات — افتح اللوحات.",
+    "still to answer": "خطوة متبقّية",
     "Skip — no fund structure": "تخطَّ — بلا هيكل صندوق",
     "Optional": "اختياري",
     "Building your model": "جارٍ بناء نموذجك",

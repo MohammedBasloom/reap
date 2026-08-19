@@ -22,25 +22,33 @@ const SAMPLE_INPUT = {
   developablePct: 0.70, // raw only: share of gross land the program can build on
   landInfraCostPerSqm: 0, // SAR/m² on gross land — roads, utilities (raw or net)
 
+  /* Timing, loadings and financing all start blank. They used to arrive
+     pre-filled, which meant a feasibility could be produced without anyone
+     having looked at the schedule or the gearing — the numbers were there, so
+     nobody went to check them. They are written by "use default inputs" on
+     their step, or typed. Safe to leave empty because the dashboards are
+     gated behind the walk: by the time anything is displayed every one of
+     these has a value, and the engine coerces a null to zero rather than
+     throwing on the way there. */
   // Timing (project-level)
-  predesignMonths: 12,
-  constructionMonths: 36,
-  preSalesStartMonth: 14,
-  horizonMonths: 120,
+  predesignMonths: null,
+  constructionMonths: null,
+  preSalesStartMonth: null,
+  horizonMonths: null,
 
   // General costs (project-level %s)
-  softCostsPct: 0.10,
-  contingencyPct: 0.05,
-  marketingPct: 0.025,
-  salesCommissionPct: 0.025,
-  govFeesPct: 0.025,
+  softCostsPct: null,
+  contingencyPct: null,
+  marketingPct: null,
+  salesCommissionPct: null,
+  govFeesPct: null,
 
   // Financing
-  ltc: 0.55,
-  interestRate: 0.075,
+  ltc: null,
+  interestRate: null,
 
   // Valuation
-  discountRate: 0.10,
+  discountRate: null,
 
   // Fund structure (optional — disabled by default)
   fund: {
@@ -114,7 +122,10 @@ const STEP_DEFAULTS = {
 const STEP_LIST = [
   { key: "land",      required: true,  cta: false, title: "Set the land",
     body: "Area, price per m², transfer fees — and whether the site is serviced or raw." },
-  { key: "program",   required: true,  cta: true,  title: "Choose your program",
+  /* No shortcut here on purpose. What gets built is the one thing the platform
+     cannot guess for you, and a default program would put a scheme on the
+     site that nobody chose. */
+  { key: "program",   required: true,  cta: false, title: "Choose your program",
     body: "Pick component tiles — villas, townhouses, apartments, retail, office, hotel." },
   { key: "allocate",  required: true,  cta: true,  title: "Allocate the land",
     body: "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site." },
@@ -147,14 +158,17 @@ function stepDone(input, key) {
     default:         return !!seen[key];
   }
 }
+/* "Optional" describes the fund structure, not the step. Running one is a
+   choice; being asked is not — skipping is an answer and it closes the step
+   like any other, so the walk cannot be finished by leaving the last question
+   unread. Every step counts toward the total for that reason. */
 function guideState(input) {
   const steps = STEP_LIST.map((s) => Object.assign({}, s, { done: stepDone(input, s.key) }));
-  const required = steps.filter((s) => s.required);
   return {
     steps,
-    doneCount: required.filter((s) => s.done).length,
-    total: required.length,
-    allDone: required.every((s) => s.done),
+    doneCount: steps.filter((s) => s.done).length,
+    total: steps.length,
+    allDone: steps.every((s) => s.done),
     currentIdx: steps.findIndex((s) => !s.done),
   };
 }
@@ -462,8 +476,9 @@ function App() {
         </div>
 
         <div>
-          {!guide.allDone ?
-          <BuildGuide input={input} guide={guide} onUseDefaults={applyStepDefaults} onMark={markStep} /> :
+          {!input.showResults ?
+          <BuildGuide input={input} guide={guide} onUseDefaults={applyStepDefaults} onMark={markStep}
+                      onShowResults={() => setInput((p) => Object.assign({}, p, { showResults: true }))} /> :
 
           <>
               {tab === "summary" && <Panels.SummaryPanel result={result} input={input} scenarios={scenarios} />}
@@ -598,7 +613,7 @@ function AppFooter() {
   );
 }
 
-function BuildGuide({ input, guide, onUseDefaults, onMark }) {
+function BuildGuide({ input, guide, onUseDefaults, onMark, onShowResults }) {
   const landArea = +input.landArea || 0;
   const landPrice = +input.landPricePerSqm || 0;
   const isLeasehold = (input.landTenure || "own") === "lease";
@@ -691,6 +706,35 @@ function BuildGuide({ input, guide, onUseDefaults, onMark }) {
             />
           ))}
         </div>
+      </div>
+
+      {/* The results are opened deliberately, not sprung the instant the last
+          step closes. Until every step is answered the button says which one
+          is still outstanding rather than just refusing — a disabled control
+          with no reason attached is the most annoying thing on a form. */}
+      <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <button
+          className="btn btn-primary"
+          onClick={onShowResults}
+          disabled={!guide.allDone}
+          style={{ padding: "12px 26px", fontSize: 12.5, opacity: guide.allDone ? 1 : 0.45,
+                   cursor: guide.allDone ? "pointer" : "not-allowed" }}>
+          Show the result
+        </button>
+        {/* The count is kept out of the sentence: an interpolated string is
+            one key the dictionary can never match, so it would sit in English
+            on an Arabic page. */}
+        <span style={{ fontSize: 12, color: "var(--fg-3)" }}>
+          {guide.allDone
+            ? <span>Every step is answered — open the dashboards.</span>
+            : <>
+                <span className="tabnum" style={{ fontWeight: 600, color: "var(--fg-2)" }}>
+                  {guide.total - guide.doneCount}
+                </span>
+                {" "}
+                <span>still to answer</span>
+              </>}
+        </span>
       </div>
     </div>);
 
