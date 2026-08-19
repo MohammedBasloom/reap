@@ -154,7 +154,11 @@ function stepDone(input, key) {
           : (+input.landPricePerSqm || 0) > 0
       );
     case "program":  return comps.length > 0;
-    case "allocate": return comps.length > 0 && comps.reduce((s, c) => s + (+c.allocationPct || 0), 0) > 0;
+    /* Every component, not the total. A scheme where one building holds the
+       whole site and a second holds nothing sums to 100% and is still an
+       unanswered question — the second one would just contribute nothing and
+       say so nowhere. */
+    case "allocate": return comps.length > 0 && comps.every((c) => (+c.allocationPct || 0) > 0);
     default:         return !!seen[key];
   }
 }

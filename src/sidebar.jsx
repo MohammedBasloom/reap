@@ -1420,10 +1420,15 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
     setInput(next);
   };
   /* Removing a component hands its land back to the others in proportion, so
-     the split still comes to 100% without the user having to go and repair it. */
+     the split still comes to 100% without the user having to go and repair it
+     — but only where there is a split to preserve. If the shares have not
+     been set yet they stay unset; refitting a row of blanks would invent the
+     very numbers the allocation step is asking for. */
   const removeComp = (idx) => {
     const arr = input.components.slice();
     arr.splice(idx, 1);
+    const anyAllocated = arr.some((c) => (+c.allocationPct || 0) > 0);
+    if (!anyAllocated) { upd("components", arr); return; }
     const share = Feas.fitShares(arr.map(c => +c.allocationPct || 0), 1);
     upd("components", arr.map((c, i) => Object.assign({}, c, { allocationPct: share[i] })));
   };
@@ -1501,20 +1506,18 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
         name: (window.I18N ? I18N.t(s.name) : s.name),
       }));
     }
-    /* The land refits itself to 100%. The newcomer takes an equal share of the
-       new total and the existing components scale down to make room, keeping
-       whatever ratio the user had set between them — so one component is 100%,
-       a second makes it 50/50, and a deliberate 30/70 becomes 20/46.7 plus
-       33.3 rather than being flattened to equal thirds. Every share stays
-       editable afterwards; nothing refits again until a component is added or
-       removed. */
-    const existing = input.components;
-    const fitted = Feas.fitSharesAdding(existing.map(c => +c.allocationPct || 0));
-    newComp.allocationPct = fitted[fitted.length - 1];
-    upd("components", [
-      ...existing.map((c, i) => Object.assign({}, c, { allocationPct: fitted[i] })),
-      newComp,
-    ]);
+    /* The share arrives empty like every other assumption. The land used to
+       refit itself to 100% on every add — one component became 100%, a second
+       made it 50/50 — which meant dividing the site was a decision the app
+       made and the user only ever reviewed. It is the allocation step's
+       question now: typed per component, or split evenly by that step's "use
+       default inputs".
+
+       Existing shares are left exactly as they are. Rescaling them to make
+       room would rewrite numbers the user had already chosen, which is the
+       same silent-decision problem in a quieter place. */
+    newComp.allocationPct = null;
+    upd("components", [...input.components, newComp]);
   };
 
   /* The guided build's two shortcuts that cannot be a plain patch: a program
