@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261021"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261021" />
+  <script src="assets/i18n.js?v=20261022"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261022" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -1251,7 +1251,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261021"></script>
+<script src="assets/mobile-notice.js?v=20261022"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1278,6 +1278,10 @@
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm7.93 9h-3.02a15.9 15.9 0 0 0-1.4-5.02A8.01 8.01 0 0 1 19.93 11zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14A8.1 8.1 0 0 1 4 12c0-.69.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2s.06 1.34.14 2H4.26zm.82 2h3.02c.35 1.77 1.03 3.5 1.4 5.02A8.01 8.01 0 0 1 5.08 16zm3.02-8H5.08a8.01 8.01 0 0 1 4.42-5.02A15.9 15.9 0 0 0 8.1 8zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2s.07-1.35.16-2h4.68c.09.65.16 1.32.16 2s-.07 1.34-.16 2zm.25 7.02c.37-1.52 1.05-3.25 1.4-5.02h3.02a8.01 8.01 0 0 1-4.42 5.02zM16.36 14c.08-.66.14-1.32.14-2s-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z" />
         </svg>
       </button>
+      <!-- Goes to the two platform cards rather than picking a platform. From
+           the top bar there is no way to know which one someone came for, and
+           choosing for them would be wrong half the time. -->
+      <button class="btn-land" id="btnToPlatform" data-ar="انتقل للمنصة">Go to the platform</button>
       <button class="btn-land" id="btnLogin" data-ar="تسجيل الدخول">Log in</button>
       <button class="btn-land primary" id="btnSignup" data-ar="سجّل مجانًا">Sign up free</button>
     </div>
@@ -1312,19 +1316,12 @@
                 flow, returns, sensitivity and fund waterfall redraw as you type.
               </p>
               <div class="cta">
-                <button class="btn-flow primary heroSignup" type="button">
+                <button class="btn-flow primary heroOpen" data-app="model.html" type="button">
                   <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+                  <span class="lbl" data-ar="افتح النمذجة المالية">Open financial modeling</span>
                   <span class="circ" aria-hidden="true"></span>
                   <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
-                <button class="btn-flow heroGuest" type="button">
-                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
-                  <span class="circ" aria-hidden="true"></span>
-                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
-              </div>
             </div>
             <div class="heroArt">
               <div class="heroShot">
@@ -1405,19 +1402,12 @@
                 confidence range — and quality checks that warn you when the methods disagree.
               </p>
               <div class="cta">
-                <button class="btn-flow primary heroSignup" type="button">
+                <button class="btn-flow primary heroOpen" data-app="valuation.html" type="button">
                   <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <span class="lbl" data-ar="سجّل مجانًا">Sign up free</span>
+                  <span class="lbl" data-ar="افتح التقييم العقاري">Open property valuation</span>
                   <span class="circ" aria-hidden="true"></span>
                   <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </button>
-                <button class="btn-flow heroGuest" type="button">
-                  <svg class="fa fa-lead" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                  <span class="lbl" data-ar="استكشف كضيف">Explore as guest</span>
-                  <span class="circ" aria-hidden="true"></span>
-                  <svg class="fa fa-trail" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </button>
-              </div>
             </div>
             <div class="heroArt">
               <div class="heroShot">
@@ -2048,7 +2038,6 @@
       <button class="submit" id="suSubmit" data-ar="إنشاء الحساب">Create account</button>
       <div class="msg" id="suMsg"></div>
       <div class="alt" data-ar='لديك حساب بالفعل؟ <a id="toLogin">تسجيل الدخول</a>'>Already have an account? <a id="toLogin">Log in</a></div>
-      <div class="guest"><a id="guestLink1" data-ar="أو تابع كضيف (لن يُحفظ شيء)">or continue as guest (nothing is saved)</a></div>
     </div>
     <div id="authLoginView" style="display:none">
       <h3 data-ar="مرحبًا بعودتك">Welcome back</h3>
@@ -2059,7 +2048,6 @@
       <button class="submit" id="liSubmit" data-ar="تسجيل الدخول">Log in</button>
       <div class="msg" id="liMsg"></div>
       <div class="alt" data-ar='جديد على REAP؟ <a id="toSignup">سجّل مجانًا</a>'>New to REAP? <a id="toSignup">Sign up free</a></div>
-      <div class="guest"><a id="guestLink2" data-ar="أو تابع كضيف (لن يُحفظ شيء)">or continue as guest (nothing is saved)</a></div>
     </div>
     <div id="authResetView" style="display:none">
       <h3 data-ar="إعادة تعيين كلمة المرور">Reset your password</h3>
@@ -2080,8 +2068,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261021"></script>
-<script src="assets/auth.js?v=20261021"></script>
+<script src="assets/config.js?v=20261022"></script>
+<script src="assets/auth.js?v=20261022"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
@@ -2170,10 +2158,14 @@
     return true;
   }
 
+  /* An account is now the only way in. Guest access let someone reach a
+     workspace that saves nothing and exports nothing, which read as the
+     product being broken rather than as a trial — and every route through
+     here is the same door, so removing it here closes it everywhere. */
   async function launch(app) {
     if (isSmallScreen()) { openPlatform(app); return; }
     const user = await reapAuth.getUser();
-    if (user || reapAuth.isGuest()) { openPlatform(app); return; }
+    if (user) { openPlatform(app); return; }
     openAuth("signup", app);
   }
 
@@ -2193,22 +2185,20 @@
   // Wire up
   $("btnLogin").onclick = () => openAuth("login");
   $("btnSignup").onclick = () => openAuth("signup");
-  /* Both heroes carry the same pair, so these are wired by class — an id
-     would only reach the first of them.
-
-     Sign up opens the registration overlay, exactly as the top bar's button
-     does. Explore as guest takes the visitor to the two service cards to
-     choose a platform, rather than picking one for them: the heroes each
-     describe a single product, but the guest route should still let them
-     decide which to open. */
-  document.querySelectorAll(".heroSignup").forEach((b) => {
-    b.onclick = () => openAuth("signup");
-  });
-  document.querySelectorAll(".heroGuest").forEach((b) => {
-    b.onclick = () => { reapAuth.enterGuest(); toServices(); };
+  /* The top bar cannot know which platform someone came for, so it takes them
+     to the two cards and lets them say. */
+  const btnToPlatform = $("btnToPlatform");
+  if (btnToPlatform) btnToPlatform.onclick = toServices;
+  /* Each hero opens the platform it is describing — wired by class because
+     both slides carry one and an id would only reach the first. launch()
+     handles the rest: signed in goes straight through, everyone else gets the
+     registration overlay with that platform held as pending, so they land
+     where they were headed once the account exists. */
+  document.querySelectorAll(".heroOpen").forEach((b) => {
+    b.onclick = () => launch(b.dataset.app);
   });
   const btnStart = $("btnStart");
-  if (btnStart) btnStart.onclick = () => { reapAuth.clearGuest(); toServices(); };
+  if (btnStart) btnStart.onclick = toServices;
   $("btnLogout").onclick = () => reapAuth.signOut();
   $("authClose").onclick = closeAuth;
   overlay.addEventListener("click", (e) => { if (e.target === overlay) closeAuth(); });
@@ -2265,12 +2255,9 @@
   // Open the new-password view when the user arrives via the recovery link
   sb.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY") openAuth("newpw"); });
   if (location.hash.includes("type=recovery")) openAuth("newpw");
-  $("guestLink1").onclick = $("guestLink2").onclick = () => {
-    reapAuth.enterGuest();
-    if (pendingApp) { openPlatform(pendingApp); }
-    else { closeAuth(); toServices(); }
-  };
-  // Service cards launch their platform through the auth-aware flow
+  /* Service cards go through the same door as the heroes: signed in opens the
+     platform, everyone else gets the registration overlay holding that
+     platform as pending. */
   document.querySelectorAll("[data-app]").forEach((b) => {
     b.onclick = () => launch(b.dataset.app);
   });
@@ -2288,7 +2275,6 @@
     $("suSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
     if (data.session) {
-      reapAuth.clearGuest();
       msg(m, L("Account created — taking you in…", "تم إنشاء الحساب — جارٍ الدخول…"), "ok");
       /* A signup on a phone still creates the account and signs the user in —
          it just stops at the door rather than dropping them into a workspace
@@ -2313,7 +2299,6 @@
     const { error } = await reapAuth.signIn(email, pw);
     $("liSubmit").disabled = false;
     if (error) return msg(m, error.message, "err");
-    reapAuth.clearGuest();
     if (pendingApp) { openPlatform(pendingApp); return; }
     closeAuth();
     await refreshSessionUI();

@@ -29,12 +29,19 @@
       return session ? session.user : null;
     },
 
-    /* Gate an app page: resolves with { user } or { guest: true },
-       otherwise redirects to the landing page. */
+    /* Gate an app page: resolves with { user }, otherwise sends the visitor
+       back to the landing page to sign in.
+
+       A guest used to be let through here. That put someone inside a
+       workspace that saves nothing and exports nothing, which reads as the
+       product being broken rather than as a trial — and it was reachable by
+       typing the URL, so the landing page could not close it on its own. Any
+       stale guest flag left in a browser is cleared on the way past, or those
+       sessions would keep their access after the door was shut. */
     async requireAuth() {
       const session = await this.getSession();
       if (session) return { user: session.user };
-      if (this.isGuest()) return { guest: true };
+      this.clearGuest();
       window.location.href = "index.html";
       return new Promise(() => {}); // halt caller while redirecting
     },
