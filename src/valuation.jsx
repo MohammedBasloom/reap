@@ -30,21 +30,28 @@ const blankComp = () => ({ price: "", area: "", monthsAgo: 0, locationAdj: 0, co
    typing it or by taking its default, and the value is not shown until they
    have all been passed. */
 function defaultInput(type = "apartment") {
+  /* Land carries no building, so neither the income nor the cost approach can
+     be run on it — comparable sales is the only method left. A weighting with
+     one method in it is 100% by arithmetic, not by judgement, so it is set
+     here rather than asked for. */
+  const landOnly = !!V.PROPERTY_TYPES[type].landOnly;
   return {
     name: (window.I18N && I18N.lang === "ar") ? "تقييم جديد" : "New Valuation",
     property: { type, city: "", district: "", landArea: null, builtArea: null, age: null, condition: "good" },
     sales: { comps: [blankComp(), blankComp(), blankComp()], marketTrendPctYr: null },
     income: { rentBasis: "perSqm", rentPerSqmYr: null, annualRent: null, vacancyPct: null, opexPct: null, capRate: null },
     cost: { landPricePerSqm: null, buildCostPerSqm: null, economicLifeYrs: null, obsolescencePct: null },
-    weights: { sales: null, income: null, cost: null },
+    weights: landOnly ? { sales: 1, income: 0, cost: 0 } : { sales: null, income: null, cost: null },
     stepsDone: {},
   };
 }
 
 /* ---------- The guided valuation ----------
-   Land is valued on comparables and weighting alone — there is no building to
-   rent out or rebuild — so the income and cost steps drop out of the walk
-   entirely rather than sitting there unanswerable. */
+   Land is valued on comparables alone — there is no building to rent out or
+   rebuild — so income and cost drop out of the walk rather than sitting there
+   unanswerable, and weighting goes with them: asking someone to weight a
+   single method is asking them to confirm that one equals one. Land is a
+   two-step walk. */
 function valSteps(input) {
   const isLand = !!V.PROPERTY_TYPES[input.property.type].landOnly;
   const all = [
@@ -62,7 +69,9 @@ function valSteps(input) {
     { key: "weights", cta: true, title: "Weight the approaches",
       body: "How much comparable sales, income and cost each count toward the final figure." },
   ];
-  return isLand ? all.filter((s) => s.key !== "income" && s.key !== "cost") : all;
+  return isLand
+    ? all.filter((s) => s.key !== "income" && s.key !== "cost" && s.key !== "weights")
+    : all;
 }
 
 function valStepDone(input, key) {
@@ -662,16 +671,37 @@ function ValApp() {
         )}
 
         {/* --- Weights --- */}
-        <Section n={isLand ? "03" : "05"} sec="weights" title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
+        {/* On land the section states the weighting instead of asking for it.
+            There is one method available, so the only valid answer is 100% —
+            an editable field there would invite a number that cannot be right
+            and would have to be corrected back. */}
+        {isLand ? (
+          <Section n="03" title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
+            <div style={{ fontSize: 11.5, color: "var(--fg-2)", lineHeight: 1.6 }}>
+              Land carries no building to rent out or rebuild, so comparable sales is the only
+              approach available — it takes the full weight.
+            </div>
+            <div style={{
+              marginTop: 10, padding: "10px 12px", background: "var(--bg-2)",
+              border: "1px solid var(--border-1)", display: "flex",
+              alignItems: "center", justifyContent: "space-between",
+            }}>
+              <span style={{ fontSize: 12, color: "var(--fg-1)", fontWeight: 600 }}>Comparable sales</span>
+              <span className="tabnum" style={{ fontSize: 13, fontWeight: 700, color: "var(--ad-navy-700)" }}>100%</span>
+            </div>
+          </Section>
+        ) : (
+        <Section n="05" sec="weights" title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
           <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 8 }}>
             We pre-weight by property type following professional practice ({typeDef.label.toLowerCase()}s lean on {typeDef.weights.sales >= 0.5 ? "comparable sales" : "income"}). Adjust if you trust one approach more.
           </div>
           <Row cols={3}>
             <Field label="Sales comp." suffix="%"><PctInput value={input.weights.sales} onChange={(v) => upd("weights.sales", v)} /></Field>
-            {!isLand && <Field label="Income" suffix="%"><PctInput value={input.weights.income} onChange={(v) => upd("weights.income", v)} /></Field>}
-            {!isLand && <Field label="Cost" suffix="%"><PctInput value={input.weights.cost} onChange={(v) => upd("weights.cost", v)} /></Field>}
+            <Field label="Income" suffix="%"><PctInput value={input.weights.income} onChange={(v) => upd("weights.income", v)} /></Field>
+            <Field label="Cost" suffix="%"><PctInput value={input.weights.cost} onChange={(v) => upd("weights.cost", v)} /></Field>
           </Row>
         </Section>
+        )}
 
         {/* --- Save / account --- */}
         <div style={{ borderTop: "1px solid var(--border-1)", padding: "18px 24px 28px" }}>

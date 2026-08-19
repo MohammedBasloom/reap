@@ -100,6 +100,9 @@
     "Land rate and build cost per m², the economic life, and any obsolescence.":
       "سعر الأرض وتكلفة البناء للمتر، والعمر الاقتصادي، وأي تقادم.",
     "Weight the approaches": "رجّح الأساليب",
+    "Land carries no building to rent out or rebuild, so comparable sales is the only approach available — it takes the full weight.":
+      "الأرض لا تحمل مبنى يُؤجَّر أو يُعاد بناؤه، فتبقى المقارنات السوقية الأسلوب الوحيد المتاح — ويأخذ الوزن كاملًا.",
+    "Comparable sales": "المقارنات السوقية",
     "How much comparable sales, income and cost each count toward the final figure.":
       "كم يزن كل من المقارنات السوقية والدخل والتكلفة في الرقم النهائي.",
     "Open financial modeling": "افتح النمذجة المالية",
