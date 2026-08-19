@@ -845,13 +845,20 @@ function buildBlocks(ctx) {
     T("The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.", null),
     equityRows);
 
+  /* The project's own cash flow is the first bar, not just a row in the table
+     above. Without it the chart showed a facility drawn and serviced against a
+     cumulative line the bars could not account for — the spend that made the
+     draw necessary was missing, so the equity position appeared to come out of
+     the debt alone. All three sum exactly to the line: gross + drawn + service
+     is the engine's own definition of net, to the riyal. */
   B.push({
     type: "chart", title: "Equity cash flow", height: 215,
     total: (cf.net || []).reduce((a, b2) => a + b2, 0), totalLabel: T("Net equity cash flow, whole term", null),
-    note: T("The facility drawn and serviced, with the cumulative equity position drawn over it.", null),
+    note: T("The project's own cash flow, the facility drawn against it and the cost of servicing that facility — the three together give the cumulative equity position drawn over them.", null),
     render: () => React.createElement(window.Charts.StackedBars, {
       months: cf.months, height: 215, bucket: 12,
       series: [
+        { label: T("Net project cash flow", null), color: "var(--ad-gold-600)", values: cf.gross || [] },
         { label: T("Debt drawn", null), color: "var(--ad-navy-400)", values: cf.debtDraw || [] },
         { label: T("Debt service", null), color: "var(--ad-danger)", opacity: 0.75, values: cf.debtRepay || [] },
       ],

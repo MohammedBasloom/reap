@@ -1359,8 +1359,8 @@
       "غير مرفوع: الإيرادات ناقص تكلفة التطوير، قبل أي تمويل. والأرقام مقرّبة لأغراض العرض، والمبالغ الكاملة في النظرة المالية العامة.",
     "The project result after the facility is applied. Debt service carries both principal and interest — the interest sits inside it rather than on a line of its own, and showing it again would count it twice.":
       "نتيجة المشروع بعد تطبيق التسهيل. وخدمة الدين تحمل الأصل والفائدة معًا — فالفائدة داخلها لا في بند مستقل، وإظهارها مرة أخرى يعني احتسابها مرتين.",
-    "The facility drawn and serviced, with the cumulative equity position drawn over it.":
-      "التسهيل مسحوبًا ومخدومًا، مع المركز التراكمي لحقوق الملكية مرسومًا فوقه.",
+    "The project's own cash flow, the facility drawn against it and the cost of servicing that facility — the three together give the cumulative equity position drawn over them.":
+      "التدفق النقدي للمشروع نفسه، والتسهيل المسحوب مقابله، وتكلفة خدمة ذلك التسهيل — وتجتمع الثلاثة لتعطي المركز التراكمي لحقوق الملكية المرسوم فوقها.",
 
     /* Added charts */
     "Cost structure": "هيكل التكاليف",
