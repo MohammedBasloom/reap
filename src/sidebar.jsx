@@ -165,10 +165,15 @@ function AutoHorizonDisplay({ input }) {
   );
 }
 
-function Section({ title, n, children, defaultOpen = true, alarm }) {
+/* `sec` names the guided-build step this section answers. It is only ever read
+   off the DOM — the guide walks the panel to the section for the step it is
+   on, and needs to know whether the section is already open before it clicks
+   anything, or it would close the one it meant to reveal. */
+function Section({ title, n, children, defaultOpen = true, alarm, sec }) {
   const [open, setOpen] = useStateS(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border-strong)" }}>
+    <div data-sec={sec || undefined} data-open={open ? "1" : "0"}
+         style={{ borderTop: "1px solid var(--border-strong)" }}>
       {/* Section header reads as a distinct band: tinted background, gold
           accent when open, numbered badge and a full-size title. */}
       <button
@@ -1177,6 +1182,7 @@ function FundStructureSection({ input, upd }) {
     <Section
       title="Fund Structure"
       n="08"
+      sec="fund"
       defaultOpen={enabled}
       alarm={enabled && eqOver ? "EQUITY ≠ 100%" : null}
     >
@@ -1570,6 +1576,53 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
     };
   });
 
+  /* ---------- Walk the panel to the step ----------
+     The guide names the question; the panel should already be showing where
+     it gets answered, so nobody has to hunt for the section that matches the
+     row they are reading.
+
+     It moves ONCE per step, keyed on which step is current — not on every
+     render and not on scroll. Re-running it continuously would fight anyone
+     who scrolled away to look at something else, which is the usual reason
+     this kind of help becomes an irritation. Between step changes the panel
+     is entirely theirs.
+
+     Sections open by default, so the click is a fallback for one the user
+     collapsed; data-open says which state it is in, since clicking blind
+     would shut the section we came to reveal. */
+  const currentStepKey = (() => {
+    const g = window.REAP_GUIDE && window.REAP_GUIDE.guideState;
+    if (!g || input.showResults) return null;
+    const s = g(input).steps.find((x) => !x.done);
+    return s ? s.key : null;
+  })();
+  useEffectS(() => {
+    if (!currentStepKey || !open) return;
+    const target = document.querySelector(`[data-sec="${currentStepKey}"]`);
+    if (!target) return;
+    const scroller = target.closest("aside");
+    if (!scroller) return;
+
+    /* Expand first if the user had collapsed it, then scroll on a later frame
+       — the section's height only exists after React has re-rendered it, and
+       measuring before that lands short. */
+    if (target.getAttribute("data-open") === "0") {
+      const header = target.querySelector("button");
+      if (header) header.click();
+    }
+    /* Scrolling the container by a computed offset rather than calling
+       scrollIntoView: that stopped 186px short on the last section, leaving
+       66px of it showing at the very bottom edge. This asks for an exact
+       position and lets the browser clamp it, so a section near the end goes
+       as far as the panel can actually travel. */
+    const id = window.setTimeout(() => {
+      const top = scroller.scrollTop
+        + (target.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
+      scroller.scrollTo({ top: Math.max(0, top - 8), behavior: "smooth" });
+    }, 140);
+    return () => window.clearTimeout(id);
+  }, [currentStepKey, open]);
+
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const hasComponents = input.components.filter(c => c.enabled).length > 0;
   // Tenure (isLeasehold declared at the top of Sidebar): bought outright, or
@@ -1714,7 +1767,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       </div>
 
       {/* 02 Land */}
-      <Section title="Land" n="02">
+      <Section title="Land" n="02" sec="land">
         <Row cols={2}>
           <Field label="Land area" suffix="m²" value={input.landArea} onChange={v => upd("landArea", v)} step={1000} />
           <div />
@@ -1821,6 +1874,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       <Section
         title="Program — Components"
         n="03"
+        sec="program"
         alarm={totalAllocationPct > 1.001 ? "OVERALLOCATED" : null}
       >
         {/* Nothing can be sold on land the project only leases, so anything
@@ -1851,6 +1905,11 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
 
         {hasComponents ? (
           <>
+            {/* Anchors for the guided build. Allocation and tuning are both
+                inside section 03, so they need their own targets — walking to
+                the section header would leave the user at the tiles for a
+                question that is answered further down. */}
+            <div data-sec="allocate">
             <AllocationPanel
               components={input.components}
               totalLand={netDevelopableArea}
@@ -1862,6 +1921,12 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
               hasComponents={hasComponents}
               isRawLand={isRawLand}
             />
+            </div>
+            {/* The anchor wraps the heading AND the editors. On the heading
+                alone it was a 16px-tall target — the panel arrived in the
+                right place, but nothing about the element said the editors
+                below it were the point. */}
+            <div data-sec="tune">
             <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", margin: "16px 0 8px" }}>
               {/* Whole words, not a split "component"+"s" — the trailing
                   suffix can't be translated on its own. */}
@@ -1880,6 +1945,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
                 />
               ))}
             </div>
+            </div>
           </>
         ) : (
           <ComponentEmptyState />
@@ -1887,7 +1953,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       </Section>
 
       {/* 04 Timing */}
-      <Section title="Project Timing" n="04">
+      <Section title="Project Timing" n="04" sec="timing">
         <Row cols={2}>
           <Field label="Pre-construction" suffix="months" value={input.predesignMonths} onChange={v => upd("predesignMonths", v)} hint="Concept → DD → tender" />
           <Field label="Construction" suffix="months" value={input.constructionMonths} onChange={v => upd("constructionMonths", v)} />
@@ -1914,7 +1980,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       </Section>
 
       {/* 05 General Costs */}
-      <Section title="General Costs" n="05">
+      <Section title="General Costs" n="05" sec="costs">
         <Row cols={2}>
           <PctField label="Soft costs" value={input.softCostsPct} onChange={v => upd("softCostsPct", v)} hint="Of construction + site" tip="Everything that is not physical construction: design and engineering fees, project management, permits, surveys and legal. Usually 10–15% of construction." />
           <PctField label="Contingency" value={input.contingencyPct} onChange={v => upd("contingencyPct", v)} hint="Of construction + soft" tip="A reserve for the unknowns — variations, overruns and surprises on site. 5% is a normal minimum on a well-defined scheme." />
@@ -1925,7 +1991,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       </Section>
 
       {/* 06 Financing */}
-      <Section title="Financing" n="06">
+      <Section title="Financing" n="06" sec="finance">
         <Row cols={2}>
           <PctField label="LTC" value={input.ltc} onChange={v => upd("ltc", v)} hint="Loan to cost" tip="Loan to Cost — how much of total project cost the lender funds. 60% LTC means debt covers 60% and equity must fund the remaining 40%." />
           <PctField label="Interest" value={input.interestRate} onChange={v => upd("interestRate", v)} hint="Annual" />
@@ -1941,7 +2007,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       </Section>
 
       {/* 07 Valuation */}
-      <Section title="Valuation" n="07">
+      <Section title="Valuation" n="07" sec="valuation">
         <Row cols={2}>
           <PctField
             label="Hurdle / discount rate"
