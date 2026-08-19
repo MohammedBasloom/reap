@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261025"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261025" />
+  <script src="assets/i18n.js?v=20261026"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261026" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -1251,7 +1251,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261025"></script>
+<script src="assets/mobile-notice.js?v=20261026"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1825,7 +1825,7 @@
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
             <div class="vcard-kind" data-ar="مطوّر / مالك أرض">Developer / Land owner</div>
-            <blockquote data-ar="كنّا ندرس أرضًا متعددة الاستخدامات على جدول بيانات تناوب عليه ثلاثة أشخاص خلال سنتين، ولم يكن أحد يثق بآلية الإفراج عن الضمان. أعادت المنصة بناء النموذج كاملًا في فترة واحدة، وأخيرًا تطابق التدفق النقدي مع ما توقّعه البنك. أغلقنا التمويل قبل الموعد بأربعة أسابيع.">We were underwriting a mixed-use plot on a spreadsheet that three people had touched over two years. Nobody trusted the escrow release logic. REAP rebuilt the whole thing in an afternoon and the cash flow finally matched what the bank was expecting. We closed the financing four weeks earlier than planned.</blockquote>
+            <blockquote data-ar="«كنا ندرس مشروعًا متعدد الاستخدامات على ملف إكسل اشتغل عليه أكثر من شخص خلال سنتين تقريبًا. لما استلمنا الملف، صار من الصعب حتى معرفة كيف تم احتساب بعض التدفقات النقدية. أعدنا بناء النموذج بالكامل على REAP في جلسة واحدة، وفي النهاية تطابقت الأرقام مع هيكل التمويل الذي كنا نعمل عليه. هذا أعطانا الثقة نكمل بدون جولة جديدة من تعديل النموذج.»">“We had been underwriting a mixed-use development on a spreadsheet that had been passed between different people for almost two years. By the time we picked it up, nobody was completely sure how some of the cash flows were being calculated. We rebuilt the model in REAP in one afternoon, and the numbers finally reconciled with the financing structure. It gave us enough confidence to move forward without another round of model revisions.”</blockquote>
             <div class="vcard-by">
               <span class="vcard-avatar" aria-hidden="true" data-ar="ف">F</span>
               <span class="vcard-id">
@@ -1835,15 +1835,19 @@
             </div>
           </article>
 
+          <!-- Names and titles that are not Arabic stay in Latin script on the
+               Arabic page too. Transliterating a person's name is a small way
+               of getting it wrong, and their job title travels with it. No
+               data-ar on these three, which is what keeps applyDom off them. -->
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
             <div class="vcard-kind" data-ar="مدير صندوق">Fund manager</div>
-            <blockquote data-ar="وحدة شلال التوزيعات هي سبب اقتنائنا للمنصة. ندير ثلاثة صناديق بهياكل عوائد مختلفة وآليات لحاق متباينة، وكان كل سؤال عن توزيعات الشركاء يعني إعادة بناء تستغرق يومين. الآن أنمذج السيناريو مباشرةً داخل اجتماع لجنة الاستثمار، وقد غيّر ذلك مسار النقاش نفسه.">The waterfall module is the reason we bought it. We run three funds with different hurdle structures and catch-up mechanics, and previously every LP distribution question meant a two-day rebuild. Now I model the scenario live in the IC meeting. It has changed how the conversation goes.</blockquote>
+            <blockquote data-ar="«الـ Waterfall كان من أهم الأسباب اللي خلتنا نختار REAP. عندنا ثلاثة صناديق، وكل صندوق له هيكل مختلف للـ hurdle والـ catch-up. سابقًا، حتى تغيير بسيط في الافتراضات كان ممكن يخلينا نعيد جزء من نموذج التوزيعات. الآن أقدر أغيّر السيناريو قدام اللجنة وأشوف مباشرة كيف ينعكس على توزيعات المستثمرين. صارت النقاشات نفسها أكثر تركيزًا.»">“The waterfall was one of the main reasons we chose REAP. We manage three funds with different hurdle and catch-up structures, and previously even a simple change in assumptions could mean rebuilding part of the distribution model. Now I can test different scenarios during the IC meeting and see the impact on the LP distributions immediately. It has made the discussion much more focused.”</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true" data-ar="س">S</span>
+              <span class="vcard-avatar" aria-hidden="true">S</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="سارة ويتمور">Sarah Whitmore</span>
-                <span class="vcard-title" data-ar="رئيسة الاستثمارات العقارية">Head of Real Estate Investments</span>
+                <span class="vcard-name">Sarah Whitmore</span>
+                <span class="vcard-title">Head of Real Estate Investments</span>
               </span>
             </div>
           </article>
@@ -1851,12 +1855,12 @@
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
             <div class="vcard-kind" data-ar="مكتب عائلي">Family office</div>
-            <blockquote data-ar="ندرس نحو أربعين فرصة سنويًا ونشتري اثنتين. ما كنا نحتاجه ليس نموذجًا أكثر تعقيدًا، بل «لا» أسرع. توصلنا المنصة إلى رقم فرز يمكن الدفاع عنه في أقل من ساعة، بافتراضات نستطيع تبريرها فعلًا أمام الملّاك.">We look at maybe forty opportunities a year and buy two. What we needed wasn't a more sophisticated model, it was a faster no. REAP gets us to a defensible screening number in under an hour, with assumptions we can actually defend to the principals.</blockquote>
+            <blockquote data-ar="«نشوف تقريبًا أربعين فرصة في السنة، لكن في النهاية نستثمر في عدد محدود منها. لذلك ما كنا نحتاج نموذجًا أعقد؛ كنا نحتاج طريقة أسرع نعرف فيها متى نقول لا. مع REAP نقدر نأخذ فكرة واضحة عن جدوى الفرصة خلال أقل من ساعة، ونعرف بالضبط أي افتراضات هي اللي تحرك العائد. وهذا يسهل علينا كثير شرح القرار للملاك.»">“We review around forty opportunities in a typical year, but only invest in a few. So our biggest need wasn’t a more complicated financial model — it was getting to a reliable ‘no’ quickly. REAP lets us screen an opportunity in under an hour and understand exactly which assumptions are driving the return. That makes it much easier to explain the decision to the principals.”</blockquote>
             <div class="vcard-by">
               <span class="vcard-avatar" aria-hidden="true" data-ar="ع">A</span>
               <span class="vcard-id">
                 <span class="vcard-name" data-ar="عبدالعزيز بن صالح">Abdulaziz Bin Saleh</span>
-                <span class="vcard-title" data-ar="مدير استثمار رئيسي">Investment Principal</span>
+                <span class="vcard-title" data-ar="مسؤول الاستثمار">Investment Principal</span>
               </span>
             </div>
           </article>
@@ -1864,12 +1868,12 @@
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
             <div class="vcard-kind" data-ar="استشارات">Advisory</div>
-            <blockquote data-ar="كنت أقضي أول ثلاثة أيام من كل تكليف في إعادة بناء نموذج من الصفر. صارت اليوم أول ثلاث ساعات، ويذهب باقي الوقت إلى الافتراضات التي تحرّك معدل العائد فعلًا. عملائي يلاحظون الفرق — المخرجات تبدو وكأنها صادرة عن بنك.">I used to spend the first three days of every mandate rebuilding a proforma from scratch. Now that's the first three hours, and the rest goes into the assumptions that actually move the IRR. My clients notice — the output looks like it came out of a bank.</blockquote>
+            <blockquote data-ar="«كنت أقضي أول يومين أو ثلاثة من كل تكليف في بناء الـ pro forma قبل ما نبدأ أصلًا نناقش الافتراضات. الآن أقدر أجهز النموذج الأولي خلال ساعات، وأستغل الوقت الباقي في اختبار الافتراضات اللي فعلًا تؤثر على العائد. وحتى مع العميل، صارت المراجعات أسهل؛ نغيّر السيناريو مع بعض ونشوف أثره مباشرة بدل ما نرجع كل مرة للملف من جديد.»">“I used to spend the first few days of every mandate building the pro forma before we could even start discussing the assumptions. With REAP, I can get the initial model ready in a few hours and spend the rest of the time testing the assumptions that actually matter. It has also made client reviews much easier because we can change a scenario together and see the impact immediately.”</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true" data-ar="د">D</span>
+              <span class="vcard-avatar" aria-hidden="true">D</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="دانيال أوكونكو">Daniel Okonkwo</span>
-                <span class="vcard-title" data-ar="الشريك الإداري">Managing Partner</span>
+                <span class="vcard-name">Daniel Okonkwo</span>
+                <span class="vcard-title">Managing Partner</span>
               </span>
             </div>
           </article>
@@ -1877,12 +1881,12 @@
           <article class="vcard">
             <div class="vcard-stars" aria-hidden="true">★★★★★</div>
             <div class="vcard-kind" data-ar="ائتمان / مؤسسات">Credit / Institutional</div>
-            <blockquote data-ar="ما أقدّره هو إمكانية التتبّع. كل رقم يعود إلى مدخل، وجداول الحساسية ليست قيمًا ثابتة، والمعالجة الضريبية صحيحة دون أن أضطر لمراجعتها. تبدو النقطة الأخيرة بسيطة، لكنها ليست كذلك — أغلب النماذج التي تصلنا تخطئ فيها.">What I appreciate is the audit trail. Every number traces back to an input, the sensitivity tables aren't hardcoded, and the tax treatment is correct without me having to check. That last part sounds small. It isn't — most models we receive get it wrong.</blockquote>
+            <blockquote data-ar="«أكثر شيء يهمني هو أني أقدر أتتبع الأرقام. أعرف كل افتراض من وين جاء، وكيف انتقل داخل النموذج، وماذا يتغير إذا عدّلته. وحتى تحليل الحساسية موجود ضمن النموذج نفسه، وما أحتاج أبنيه بشكل منفصل كل مرة. في عمل الائتمان، هذا يختصر وقت المراجعة بشكل واضح ويعطيني ثقة أكبر في الأرقام اللي أبني عليها قرار التمويل.»">“The biggest thing for me is being able to trace the numbers. I can see where an assumption came from, how it flows through the model, and what changes when I adjust it. The sensitivity analysis is also built into the model rather than being something I have to create separately. For credit work, that makes the review process much faster and gives me more confidence in the numbers I’m underwriting.”</blockquote>
             <div class="vcard-by">
-              <span class="vcard-avatar" aria-hidden="true" data-ar="ب">P</span>
+              <span class="vcard-avatar" aria-hidden="true">P</span>
               <span class="vcard-id">
-                <span class="vcard-name" data-ar="بريا راغافان">Priya Raghavan</span>
-                <span class="vcard-title" data-ar="محللة ائتمان أولى">Senior Credit Analyst</span>
+                <span class="vcard-name">Priya Raghavan</span>
+                <span class="vcard-title">Senior Credit Analyst</span>
               </span>
             </div>
           </article>
@@ -2070,8 +2074,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261025"></script>
-<script src="assets/auth.js?v=20261025"></script>
+<script src="assets/config.js?v=20261026"></script>
+<script src="assets/auth.js?v=20261026"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
