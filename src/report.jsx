@@ -1180,21 +1180,62 @@ function buildBlocks(ctx) {
   /* ---- Sensitivity ---- */
   sec("Sensitivity Analysis", "What moves the return, and by how much");
   if (tornadoIRR && tornadoIRR.length) {
-    p(T("Each driver below was flexed ±10% in isolation and the study re-run. The drivers are ordered by the spread they open in equity IRR — the ones at the top are where estimating error costs most.", null));
-    B.push({
-      type: "chart", title: "Equity IRR sensitivity", height: Math.max(180, Math.min(10, tornadoIRR.length) * 26 + 60),
-      render: () => React.createElement(window.Charts.Tornado, {
-        data: tornadoIRR.slice(0, 10), height: Math.max(180, Math.min(10, tornadoIRR.length) * 26 + 60),
-      }),
-    });
-    table({
-      title: "Driver sensitivity, ±10%",
-      head: ["Driver", "IRR at −10%", "Base IRR", "IRR at +10%", "Spread"],
-      align: ["start", "end", "end", "end", "end"],
-      rows: tornadoIRR.slice(0, 10).map(d => [
-        d.label, FP(d.irrLo), FP(d.baseIRR), FP(d.irrHi), FP(d.delta),
-      ]),
-    });
+    /* On a study whose equity IRR has no solution the engine's irrLo/irrHi
+       collapse to zero, and an IRR table would state that ten drivers each
+       move the return by 0.0% — a far stronger claim than "we cannot solve
+       it", and one that reads as "nothing here matters". The profit swings on
+       those same studies are real and large, so measure on profit instead. */
+    const irrBase = tornadoIRR[0].irrBaseRaw;
+    const useIRR = irrBase !== null && irrBase !== undefined;
+    const top = (useIRR ? tornadoIRR : tornadoIRR.slice().sort((a, b) => b.deltaProfit - a.deltaProfit)).slice(0, 10);
+    const height = Math.max(180, top.length * 26 + 60);
+    const pct = (v) => (v === null || v === undefined ? "—" : FP(v));
+
+    if (useIRR) {
+      p(T("Each driver below was flexed ±10% in isolation and the study re-run. The drivers are ordered by the spread they open in equity IRR — the ones at the top are where estimating error costs most.", null));
+      B.push({
+        type: "chart", title: "Equity IRR sensitivity", height,
+        render: () => React.createElement(window.Charts.Tornado, { data: top, height }),
+      });
+      table({
+        title: "Driver sensitivity, ±10%",
+        head: ["Driver", "IRR at −10%", "Base IRR", "IRR at +10%", "Spread"],
+        align: ["start", "end", "end", "end", "end"],
+        rows: top.map(d => [
+          d.label, pct(d.irrLoRaw), pct(d.irrBaseRaw), pct(d.irrHiRaw),
+          /* A spread against a shock that has no solution is not a number. */
+          (d.irrLoRaw === null || d.irrHiRaw === null) ? "—" : FP(d.delta),
+        ]),
+      });
+    } else {
+      p(T("The equity IRR has no solution on this study, so the drivers are measured against profit instead. Each was flexed ±10% in isolation and the study re-run; the ones at the top are where estimating error costs most.", null));
+      B.push({
+        type: "chart", title: "Profit sensitivity", height,
+        render: () => React.createElement(window.Charts.Tornado, {
+          data: top, height,
+          loKey: "profitLo", hiKey: "profitHi", baseKey: "baseProfit",
+          format: FC,
+          /* Bars use a compact, symbol-free number: currency strings carry
+             bidi isolate marks that scramble inside the LTR-forced SVG. */
+          formatBar: (v) => {
+            const a = Math.abs(v), sign = v < 0 ? "-" : "";
+            if (a >= 1e9) return `${sign}${(a / 1e9).toFixed(2)}B`;
+            if (a >= 1e6) return `${sign}${(a / 1e6).toFixed(1)}M`;
+            if (a >= 1e3) return `${sign}${(a / 1e3).toFixed(0)}K`;
+            return `${sign}${a.toFixed(0)}`;
+          },
+          baseLabel: T("Base profit", null),
+        }),
+      });
+      table({
+        title: "Driver sensitivity, ±10%",
+        head: ["Driver", "Profit at −10%", "Base profit", "Profit at +10%", "Spread"],
+        align: ["start", "end", "end", "end", "end"],
+        rows: top.map(d => [
+          d.label, money(d.profitLo), money(d.baseProfit), money(d.profitHi), money(d.deltaProfit),
+        ]),
+      });
+    }
   }
   if (scenarios) {
     const sc = (r) => r && r.kpi ? r.kpi : null;

@@ -1715,6 +1715,14 @@ function tornado(input, drivers, deltaPct = 0.10) {
       key, label,
       baseIRR, irrLo, irrHi, delta: Math.abs(irrHi - irrLo),
       baseProfit, profitLo, profitHi, deltaProfit: Math.abs(profitHi - profitLo),
+      /* The coerced fields above keep the chart geometry and the sort simple,
+         but they erase the difference between "the IRR is zero" and "the IRR
+         has no solution" — on a loss-making study every one of them collapses
+         to zero. Carry the unrounded truth alongside so a reader is never told
+         a driver has no effect when the return simply cannot be solved. */
+      irrBaseRaw: base.kpi.equityIRR ?? null,
+      irrLoRaw: resLo.kpi.equityIRR ?? null,
+      irrHiRaw: resHi.kpi.equityIRR ?? null,
     };
   }).sort((a, b) => b.delta - a.delta);
 }

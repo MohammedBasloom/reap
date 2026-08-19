@@ -1473,6 +1473,9 @@
     "Driver sensitivity, ±10%": "حساسية المحرّكات، ±١٠٪",
     "Driver": "المحرّك",
     "IRR at −10%": "العائد عند −١٠٪", "Base IRR": "العائد الأساس", "IRR at +10%": "العائد عند +١٠٪",
+    "The equity IRR has no solution on this study, so the drivers are measured against profit instead. Each was flexed ±10% in isolation and the study re-run; the ones at the top are where estimating error costs most.":
+      "لا يوجد حل لمعدل العائد على الملكية في هذه الدراسة، لذا تُقاس المحرّكات مقابل الربح بدلاً منه. جرى تحريك كل محرّك بنسبة ±١٠٪ على حدة وأُعيد تشغيل الدراسة؛ والأعلى هي التي يكلّف الخطأ في تقديرها أكثر.",
+    "Profit at −10%": "الربح عند −١٠٪", "Profit at +10%": "الربح عند +١٠٪",
     "Spread": "الفارق",
     "Downside": "السيناريو المتشائم", "Base": "الأساس", "Upside": "السيناريو المتفائل",
     "Downside applies a 10% fall in price, a 5% rise in cost, a 3% fall in occupancy and a three-month delay. Upside mirrors it. Base is the study as modelled.":
