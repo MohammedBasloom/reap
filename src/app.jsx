@@ -282,6 +282,16 @@ function App() {
   const applyStepDefaults = (key) => {
     if (key === "program") { window.dispatchEvent(new CustomEvent("feas:defaultProgram")); return; }
     if (key === "allocate") { window.dispatchEvent(new CustomEvent("feas:evenAllocation")); return; }
+    /* The component assumptions live on the components, so filling them has to
+       happen where the presets are. Marking the step is still done here — the
+       sidebar's own edit-marking would catch it anyway, but only if the patch
+       actually changed something, and a scheme already tuned by hand would
+       leave the step open forever. */
+    if (key === "tune") {
+      window.dispatchEvent(new CustomEvent("feas:defaultComponents"));
+      markStep("tune");
+      return;
+    }
     /* Taking the default on the fund step means running one, so it switches
        the structure on as well as filling it — otherwise the button would
        claim to set up a waterfall and leave it disabled. */

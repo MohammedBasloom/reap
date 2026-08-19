@@ -260,6 +260,20 @@ function Segmented({ value, onChange, options }) {
 
 /* ---------- Component presets ---------- */
 
+/* The numbers a preset carries, as opposed to the identity it carries. These
+   are blanked when a component is created and written back by the tuning
+   step's "use default inputs". Everything NOT on this list — kind, mode,
+   revenueBasis, massingMode, name — is what the tile actually chose, and
+   must survive, or the editor would not know which fields to show. */
+const PRESET_ASSUMPTIONS = [
+  "far", "landCoveragePct", "maxFloors", "upperFloorCoveragePct", "lastFloorPct",
+  "basementCostPerSqm", "costPerSqmGFA", "siteWorkPct", "efficiency",
+  "avgUnitSize", "keys", "pricePerSqm", "pricePerUnit", "pricePerKey",
+  "rentPerSqmYr", "rentPerUnitYr", "adr", "occupancy",
+  "initialOccupancy", "yearsToStabilization", "opexPct", "exitCapRate",
+  "salesPeriodMonths", "operatingPeriodMonths",
+];
+
 const COMPONENT_PRESETS = {
   "villa":     { mode: "sale",  label: "Villa",            blurb: "Detached homes for sale", icon: "▱", basis: "unit", far: 1.6,  landCoveragePct: 0.45, maxFloors: 2, upperFloorCoveragePct: 0.30, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.85, avgUnitSize: 380, pricePerUnit: 2500000, salesPeriodMonths: 48 },
   "townhouse": { mode: "sale",  label: "Townhouse",        blurb: "Attached homes for sale", icon: "▤", basis: "unit", far: 0.9,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.82, avgUnitSize: 260, pricePerUnit: 1850000, salesPeriodMonths: 42 },
@@ -1468,6 +1482,15 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       Object.assign(newComp, Feas.modeDefaults(newComp, "lease"));
     }
 
+    /* The preset says what KIND of thing this is — sale or lease, priced per
+       unit or per m², whether it has keys. It does not get to say what the
+       numbers are. Picking "Villa" used to arrive costed at 2,500/m² and
+       priced at 2.5M a unit, which is the whole assumption set of the scheme
+       decided by choosing a tile. Those are the tuning step's questions, and
+       they stay empty until that step is answered — by hand, or by its "use
+       default inputs", which puts these very values back. */
+    PRESET_ASSUMPTIONS.forEach((f) => { if (f in newComp) newComp[f] = null; });
+
     // Mixed use: deep-copy the preset's sub-components and give each a fresh
     // id. Sharing the preset array by reference would make every mixed-use
     // building on the project edit the same subs.
@@ -1510,11 +1533,37 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       const share = Feas.fitShares(arr.map(() => 1), 1);
       upd("components", arr.map((c, i) => Object.assign({}, c, { allocationPct: share[i] })));
     };
+    /* Puts the preset's numbers back into every component that is still
+       waiting for them, leaving anything already typed alone — pressing this
+       after tuning one component by hand must not undo that work. */
+    const onDefaultComponents = () => {
+      const arr = input.components;
+      if (!arr.length) return;
+      upd("components", arr.map((c) => {
+        const preset = COMPONENT_PRESETS[c.kind] || {};
+        const patch = {};
+        PRESET_ASSUMPTIONS.forEach((f) => {
+          if ((c[f] === null || c[f] === undefined) && preset[f] !== undefined) patch[f] = preset[f];
+        });
+        /* Two fields the preset does not carry but the editor expects. */
+        if (c.initialOccupancy === null) patch.initialOccupancy = preset.initialOccupancy ?? 0.30;
+        if (c.yearsToStabilization === null) patch.yearsToStabilization = preset.yearsToStabilization ?? 1;
+        const next = Object.assign({}, c, patch);
+        /* A sale preset on leased land came in as leasable; its lease fields
+           are the ones to fill, not the sale ones it no longer uses. */
+        if (isLeasehold && preset.mode === "sale" && next.mode === "lease") {
+          Object.assign(next, Feas.modeDefaults(next, "lease"));
+        }
+        return next;
+      }));
+    };
     window.addEventListener("feas:defaultProgram", onDefaultProgram);
     window.addEventListener("feas:evenAllocation", onEvenAllocation);
+    window.addEventListener("feas:defaultComponents", onDefaultComponents);
     return () => {
       window.removeEventListener("feas:defaultProgram", onDefaultProgram);
       window.removeEventListener("feas:evenAllocation", onEvenAllocation);
+      window.removeEventListener("feas:defaultComponents", onDefaultComponents);
     };
   });
 
