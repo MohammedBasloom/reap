@@ -1634,7 +1634,10 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
         });
         /* Two fields the preset does not carry but the editor expects. */
         if (c.initialOccupancy === null) patch.initialOccupancy = preset.initialOccupancy ?? 0.30;
-        if (c.yearsToStabilization === null) patch.yearsToStabilization = preset.yearsToStabilization ?? 1;
+        // Three years to stabilise, not one: a building of any size lets up
+        // over several years, and a one-year ramp flattered early income on
+        // every leased scheme that took the defaults.
+        if (c.yearsToStabilization === null) patch.yearsToStabilization = preset.yearsToStabilization ?? 3;
         const next = Object.assign({}, c, patch);
         /* A sale preset on leased land came in as leasable; its lease fields
            are the ones to fill, not the sale ones it no longer uses. */

@@ -280,7 +280,9 @@ function modeDefaults(u, mode) {
     need("opexPct", 0.30);
     need("exitCapRate", 0.075);
     need("initialOccupancy", 0.30);
-    need("yearsToStabilization", 1);
+    // Matches what "use default inputs" writes, so a space created here and a
+    // component filled by the button stabilise over the same three years.
+    need("yearsToStabilization", 3);
     if (basis === "sqm")  need("rentPerSqmYr", 1200);
     if (basis === "unit") need("rentPerUnitYr", 85000);
     if (basis === "key")  need("adr", 1050);
