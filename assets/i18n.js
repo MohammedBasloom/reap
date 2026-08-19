@@ -70,6 +70,19 @@
     "Set financing & targets": "حدّد التمويل والمستهدفات",
     "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure.":
       "نسبة التمويل إلى التكلفة ومعدل الفائدة، ومعدل العائد المستهدف لصافي القيمة الحالية، واختياريًا هيكل صندوق بين الشريك المحدود والشريك العام.",
+    /* Guided build */
+    "Loan-to-cost and interest rate, and the hurdle rate the equity IRR is judged against.":
+      "نسبة التمويل إلى التكلفة ومعدل الفائدة، ومعدل العائد المستهدف الذي يُقاس عليه عائد الملكية.",
+    "Fund structure": "هيكل الصندوق",
+    "Optional. Split the equity between LP, developer and GP, set the preferred return and the promote.":
+      "اختياري. وزّع الملكية بين الشريك المحدود والمطوّر والشريك العام، وحدّد العائد المفضّل وحوافز الأداء.",
+    "Use default inputs": "استخدم المدخلات الافتراضية",
+    "Skip — no fund structure": "تخطَّ — بلا هيكل صندوق",
+    "Optional": "اختياري",
+    "Building your model": "جارٍ بناء نموذجك",
+    "Keep going — the results open when the walk is done.": "واصل — تُفتح النتائج عند إتمام الخطوات.",
+    "Every step below is a driver of the answer. Set it yourself in the panel, or take the default and move on — either way you will have seen it once. Nothing is calculated until the last required step is passed.":
+      "كل خطوة أدناه محرّك من محرّكات النتيجة. اضبطها بنفسك من اللوحة، أو خذ الافتراضي وامضِ — في الحالتين تكون قد اطّلعت عليها. لا يُحتسب شيء حتى تُنجز آخر خطوة مطلوبة.",
     "Select your program components to model the deal.": "اختر مكوّنات برنامجك العقاري لبدء نمذجة الصفقة.",
     "Land is set. Now pick from the program tiles in the sidebar — villas, apartments, retail, hotel —\n        and the cashflow, cost stack, sensitivity and risk views will populate from your selection.":
       "الأرض جاهزة. اختر الآن من بطاقات البرنامج في القائمة الجانبية — فلل، شقق، تجزئة، فندق — وستمتلئ لوحات التدفقات النقدية والتكاليف والحساسية والمخاطر تلقائيًا.",

@@ -7,7 +7,7 @@
    4. General costs (project-level %s)
    5. Financing
    ============================================================= */
-const { useState: useStateS } = React;
+const { useState: useStateS, useEffect: useEffectS } = React;
 
 /* ---------- Display helpers ---------- */
 const fmtPct = (v) => `${Math.round(((+v) || 0) * 100)}%`;
@@ -1371,11 +1371,39 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
     if (c.mode === "sale") return true;
     return Array.isArray(c.subs) && c.subs.some((s) => s.mode === "sale");
   });
-  const upd = (k, v) => setInput({ ...input, [k]: v });
+  /* Editing a field is the other way to pass its step. The guided build should
+     not demand a button press from someone who has already set the value by
+     hand — the point is that the driver was looked at, not which route was
+     taken to look at it. Marking only ever adds, so nothing sends a user back
+     to the guide once they are past it. */
+  const markStepFor = (obj, key) => {
+    const step = (window.REAP_FIELD_STEP || {})[key];
+    if (!step || (obj.stepsDone || {})[step]) return obj;
+    return Object.assign({}, obj, { stepsDone: Object.assign({}, obj.stepsDone, { [step]: true }) });
+  };
+  const markStep = (obj, step) => (
+    (obj.stepsDone || {})[step]
+      ? obj
+      : Object.assign({}, obj, { stepsDone: Object.assign({}, obj.stepsDone, { [step]: true }) })
+  );
+  const upd = (k, v) => {
+    let next = Object.assign({}, input, { [k]: v });
+    next = markStepFor(next, k);
+    /* "fund" arrives as one object rather than as its own fields, so it cannot
+       be caught by the field map. */
+    if (k === "fund") next = markStep(next, "fund");
+    return setInput(next);
+  };
   const updComp = (idx, c) => {
     const arr = input.components.slice();
+    const before = arr[idx] || {};
     arr[idx] = c;
-    upd("components", arr);
+    /* Changing a share is the allocation step; changing anything else about a
+       component is the tuning step. Both are real edits, so both count. */
+    const allocChanged = (+before.allocationPct || 0) !== (+c.allocationPct || 0);
+    let next = Object.assign({}, input, { components: arr });
+    next = markStep(next, allocChanged ? "allocate" : "tune");
+    setInput(next);
   };
   /* Removing a component hands its land back to the others in proportion, so
      the split still comes to 100% without the user having to go and repair it. */
@@ -1465,6 +1493,30 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       newComp,
     ]);
   };
+
+  /* The guided build's two shortcuts that cannot be a plain patch: a program
+     has to be built through addComp — presets, leasehold coercion, deep-copied
+     subs, refitted shares — and an even split has to know how many components
+     there are. Both live here rather than in the guide so there is one place
+     that knows how a component is made. */
+  useEffectS(() => {
+    const onDefaultProgram = () => {
+      if (input.components.filter((c) => c.enabled !== false).length > 0) return;
+      addComp("apartment");
+    };
+    const onEvenAllocation = () => {
+      const arr = input.components;
+      if (!arr.length) return;
+      const share = Feas.fitShares(arr.map(() => 1), 1);
+      upd("components", arr.map((c, i) => Object.assign({}, c, { allocationPct: share[i] })));
+    };
+    window.addEventListener("feas:defaultProgram", onDefaultProgram);
+    window.addEventListener("feas:evenAllocation", onEvenAllocation);
+    return () => {
+      window.removeEventListener("feas:defaultProgram", onDefaultProgram);
+      window.removeEventListener("feas:evenAllocation", onEvenAllocation);
+    };
+  });
 
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const hasComponents = input.components.filter(c => c.enabled).length > 0;

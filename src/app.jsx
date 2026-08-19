@@ -63,6 +63,103 @@ const SAMPLE_INPUT = {
 // empty program — no components selected until the user picks from the tiles.
 const STORAGE_KEY = "ad_feas_v5";
 
+/* ---------- The guided build ----------
+   The dashboards used to appear the moment one component was picked, which
+   meant most of the model was never looked at: the timing, the cost loadings,
+   the gearing and the hurdle all carried defaults nobody had seen, and a
+   number came out anyway. That is a fine demo and a bad feasibility — the
+   figure is only worth what the assumptions behind it are worth.
+
+   So the results are held back until every required step has been passed
+   through, and each step is passed either by editing it or by pressing "use
+   default inputs" on it. Accepting a default is a decision; inheriting one
+   silently is not, and the whole point of the walk is that the driver has
+   been seen once.
+
+   What this does NOT do is blank the fields. The engine takes months, rates
+   and percentages straight into arithmetic, and a null reaches the cashflow
+   as NaN — emptying them would mean null-guarding calc.js throughout, which
+   is a change to the calculation engine in service of a UI flow. The fields
+   keep their values; what changed is that a value is not treated as answered
+   until someone has looked at it. */
+const STEP_FIELDS = {
+  land: ["landArea", "landPricePerSqm", "landTransferFeesPct", "landTenure",
+         "landRentPerSqmYr", "landRentEscalationYears", "landRentEscalationPct",
+         "landType", "developablePct", "landInfraCostPerSqm"],
+  timing: ["predesignMonths", "constructionMonths", "preSalesStartMonth", "horizonMonths",
+           "softCostsPct", "contingencyPct", "marketingPct", "salesCommissionPct", "govFeesPct"],
+  finance: ["ltc", "interestRate", "discountRate"],
+};
+/* Which step owns a given top-level field, so editing anything in the sidebar
+   marks its step without every input having to know it is part of a walk. */
+const FIELD_STEP = (() => {
+  const m = {};
+  Object.keys(STEP_FIELDS).forEach((step) => STEP_FIELDS[step].forEach((f) => { m[f] = step; }));
+  return m;
+})();
+window.REAP_FIELD_STEP = FIELD_STEP;
+
+/* The values "use default inputs" writes. Deliberately the same numbers the
+   model has always opened with — the button is a shortcut past a decision,
+   not a different model. */
+const STEP_DEFAULTS = {
+  timing: {
+    predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
+    softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
+    salesCommissionPct: 0.025, govFeesPct: 0.025,
+  },
+  finance: { ltc: 0.55, interestRate: 0.075, discountRate: 0.10 },
+};
+
+const STEP_LIST = [
+  { key: "land",      required: true,  cta: false, title: "Set the land",
+    body: "Area, price per m², transfer fees — and whether the site is serviced or raw." },
+  { key: "program",   required: true,  cta: true,  title: "Choose your program",
+    body: "Pick component tiles — villas, townhouses, apartments, retail, office, hotel." },
+  { key: "allocate",  required: true,  cta: true,  title: "Allocate the land",
+    body: "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site." },
+  { key: "tune",      required: true,  cta: true,  title: "Tune each component",
+    body: "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates." },
+  { key: "timing",    required: true,  cta: true,  title: "Set timing & general costs",
+    body: "Pre-construction, construction and sales start — then soft costs, contingency, marketing and fees." },
+  { key: "finance",   required: true,  cta: true,  title: "Set financing & targets",
+    body: "Loan-to-cost and interest rate, and the hurdle rate the equity IRR is judged against." },
+  { key: "fund",      required: false, cta: true,  title: "Fund structure",
+    body: "Optional. Split the equity between LP, developer and GP, set the preferred return and the promote." },
+];
+
+/* A step is done when its own evidence says so. The first three read the model
+   directly — land priced, a component picked, the site divided — because those
+   cannot be faked by a default. The rest need a deliberate act, recorded on
+   input.stepsDone, since their fields arrive with values already in them. */
+function stepDone(input, key) {
+  const seen = input.stepsDone || {};
+  const comps = (input.components || []).filter((c) => c.enabled !== false);
+  switch (key) {
+    case "land":
+      return (+input.landArea || 0) > 0 && (
+        (input.landTenure || "own") === "lease"
+          ? (+input.landRentPerSqmYr || 0) > 0
+          : (+input.landPricePerSqm || 0) > 0
+      );
+    case "program":  return comps.length > 0;
+    case "allocate": return comps.length > 0 && comps.reduce((s, c) => s + (+c.allocationPct || 0), 0) > 0;
+    default:         return !!seen[key];
+  }
+}
+function guideState(input) {
+  const steps = STEP_LIST.map((s) => Object.assign({}, s, { done: stepDone(input, s.key) }));
+  const required = steps.filter((s) => s.required);
+  return {
+    steps,
+    doneCount: required.filter((s) => s.done).length,
+    total: required.length,
+    allDone: required.every((s) => s.done),
+    currentIdx: steps.findIndex((s) => !s.done),
+  };
+}
+window.REAP_GUIDE = { stepDone, guideState, STEP_DEFAULTS, STEP_LIST };
+
 function App() {
   /* The panel always opens with the page, and collapsing is a deliberate act
      for the session you are in.
@@ -159,6 +256,33 @@ function App() {
   const k = result.kpi;
   const irrTone = (k.equityIRR ?? 0) >= (input.discountRate || 0) ? "positive" : "negative";
   const hasComponents = (input.components || []).filter((c) => c.enabled).length > 0;
+
+  /* Marking a step is idempotent and never clears one — a walk only ever moves
+     forward, and re-editing a field the user already answered must not throw
+     them back to the guide mid-session. */
+  const markStep = (key) => setInput((prev) => (
+    (prev.stepsDone || {})[key]
+      ? prev
+      : Object.assign({}, prev, { stepsDone: Object.assign({}, prev.stepsDone, { [key]: true }) })
+  ));
+  const applyStepDefaults = (key) => {
+    if (key === "program") { window.dispatchEvent(new CustomEvent("feas:defaultProgram")); return; }
+    if (key === "allocate") { window.dispatchEvent(new CustomEvent("feas:evenAllocation")); return; }
+    /* Taking the default on the fund step means running one, so it switches
+       the structure on as well as filling it — otherwise the button would
+       claim to set up a waterfall and leave it disabled. */
+    if (key === "fund") {
+      setInput((prev) => Object.assign({}, prev, {
+        fund: Object.assign({}, SAMPLE_INPUT.fund, prev.fund, { enabled: true }),
+        stepsDone: Object.assign({}, prev.stepsDone, { fund: true }),
+      }));
+      return;
+    }
+    setInput((prev) => Object.assign({}, prev, STEP_DEFAULTS[key] || {}, {
+      stepsDone: Object.assign({}, prev.stepsDone, { [key]: true }),
+    }));
+  };
+  const guide = guideState(input);
 
   return (
     <div style={{
@@ -338,8 +462,8 @@ function App() {
         </div>
 
         <div>
-          {!hasComponents ?
-          <DashboardEmptyState input={input} /> :
+          {!guide.allDone ?
+          <BuildGuide input={input} guide={guide} onUseDefaults={applyStepDefaults} onMark={markStep} /> :
 
           <>
               {tab === "summary" && <Panels.SummaryPanel result={result} input={input} scenarios={scenarios} />}
@@ -474,59 +598,34 @@ function AppFooter() {
   );
 }
 
-function DashboardEmptyState({ input }) {
+function BuildGuide({ input, guide, onUseDefaults, onMark }) {
   const landArea = +input.landArea || 0;
   const landPrice = +input.landPricePerSqm || 0;
-  // Step 1 counts as done only when BOTH the area and the price are in —
-  // area alone can't cost the land.
-  const hasLand = landArea > 0 && landPrice > 0;
-  const comps = (input.components || []).filter((c) => c.enabled);
-  const hasComponents = comps.length > 0;
-  const allocated = comps.reduce((s, c) => s + (+c.allocationPct || 0), 0);
-  // On a ground lease nothing is bought and no RETT falls due, so this landing
-  // screen must not present a purchase cost the project will never incur.
   const isLeasehold = (input.landTenure || "own") === "lease";
+  const hasLand = guide.steps[0].done;
   const totalLandCost = isLeasehold ? 0 : landArea * landPrice;
   const totalLandIn = isLeasehold ? 0 : totalLandCost * (1 + (input.landTransferFeesPct || 0));
 
-  // Six steps in sidebar order. The first three track live; the rest come
-  // pre-filled with sensible defaults the user reviews.
-  const steps = [
-    { done: hasLand, title: "Set the land",
-      body: "Area, price per m², transfer fees — and whether the site is serviced or raw." },
-    { done: hasComponents, title: "Choose your program",
-      body: "Pick component tiles — villas, townhouses, apartments, retail, office, hotel." },
-    { done: allocated > 0, title: "Allocate the land",
-      body: "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site." },
-    { title: "Tune each component",
-      body: "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates." },
-    { title: "Set timing & general costs",
-      body: "Pre-construction, construction and sales start — then soft costs, contingency, marketing and fees." },
-    { title: "Set financing & targets",
-      body: "Loan-to-cost and interest rate, the hurdle rate for NPV, and optionally an LP / GP fund structure." },
-  ];
-  const doneCount = steps.filter((s) => s.done).length;
-  // The step to nudge: first one not yet done.
-  const currentIdx = steps.findIndex((s) => !s.done);
+  const { steps, doneCount, total, currentIdx } = guide;
 
   return (
     <div style={{ padding: "56px 48px", maxWidth: 900, margin: "0 auto" }}>
       <div style={{
         fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase",
         fontWeight: 500, color: "var(--fg-3)"
-      }}>{hasLand ? "Awaiting program" : "Getting started"}</div>
+      }}>{hasLand ? "Building your model" : "Getting started"}</div>
       <h2 style={{
         fontSize: 32, fontFamily: "var(--font-display)", fontWeight: 600,
         letterSpacing: "-0.02em", color: "var(--fg-1)", marginTop: 8
       }}>
         {hasLand
-          ? "Now choose your program components."
+          ? "Keep going — the results open when the walk is done."
           : "Start by setting your land, then build the program."}
       </h2>
-      <p style={{ fontSize: 15, color: "var(--fg-2)", marginTop: 12, maxWidth: 640, lineHeight: 1.5 }}>
-        Work down the sidebar in order — the checklist below follows the same sequence. Every
-        dashboard (cashflow, cost stack, returns, sensitivity, Monte Carlo and risk) fills in
-        automatically as you go.
+      <p style={{ fontSize: 15, color: "var(--fg-2)", marginTop: 12, maxWidth: 660, lineHeight: 1.55 }}>
+        Every step below is a driver of the answer. Set it yourself in the panel, or take the
+        default and move on — either way you will have seen it once. Nothing is calculated until
+        the last required step is passed.
       </p>
 
       {hasLand && (
@@ -555,25 +654,40 @@ function DashboardEmptyState({ input }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 84, height: 4, background: "var(--bg-3)", borderRadius: 999, overflow: "hidden" }}>
               <div style={{
-                width: `${(doneCount / steps.length) * 100}%`, height: "100%",
+                width: `${(doneCount / total) * 100}%`, height: "100%",
                 background: "var(--ad-success)", borderRadius: 999,
                 transition: "width 420ms var(--ease-out)"
               }} />
             </div>
             <span className="tabnum" style={{ fontSize: 11, color: "var(--fg-3)", fontWeight: 600 }}>
-              {doneCount}/{steps.length}
+              {doneCount}/{total}
             </span>
           </div>
         </div>
         <div>
           {steps.map((s, i) => (
             <StepRow
-              key={i}
+              key={s.key}
               n={i + 1}
               index={i}
               last={i === steps.length - 1}
               current={i === currentIdx}
-              {...s}
+              stepKey={s.key}
+              title={s.title}
+              body={s.body}
+              done={s.done}
+              optional={!s.required}
+              /* The shortcut is offered on the step the walk has reached — on
+                 an earlier row it would be a way past the walk, which is the
+                 thing the walk exists to prevent.
+
+                 The optional step is the exception: it is never what the walk
+                 is waiting on, so it would otherwise only become "current"
+                 at the moment the last required step completes and the guide
+                 closes — its buttons would be unreachable for the entire
+                 session. It offers itself throughout instead. */
+              onUseDefaults={s.cta && (i === currentIdx || (!s.required && !s.done)) ? () => onUseDefaults(s.key) : null}
+              onSkip={!s.required && !s.done ? () => onMark(s.key) : null}
             />
           ))}
         </div>
@@ -582,7 +696,7 @@ function DashboardEmptyState({ input }) {
 
 }
 
-function StepRow({ n, title, body, done, index, last, current }) {
+function StepRow({ n, title, body, done, index, last, current, onUseDefaults, onSkip, optional }) {
   const DOT = 26;
   return (
     <div
@@ -609,18 +723,43 @@ function StepRow({ n, title, body, done, index, last, current }) {
         }}>{done ? "✓" : n}</span>
       <div style={{ minWidth: 0, paddingTop: 3 }}>
         <div style={{
-          fontSize: 13.5, fontWeight: 600, marginBottom: 3,
-          color: done ? "var(--fg-3)" : "var(--fg-1)"
-        }}>{title}</div>
+          display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3
+        }}>
+          <span style={{
+            fontSize: 13.5, fontWeight: 600,
+            color: done ? "var(--fg-3)" : "var(--fg-1)"
+          }}>{title}</span>
+          {optional && (
+            <span style={{
+              fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600,
+              color: "var(--fg-4)", border: "1px solid var(--border-1)",
+              borderRadius: 999, padding: "1px 7px"
+            }}>Optional</span>
+          )}
+        </div>
         <div className="reap-body" style={{
           fontSize: 12, lineHeight: 1.55,
           color: done ? "var(--fg-4)" : "var(--fg-2)"
         }}>{body}</div>
+
+        {(onUseDefaults || onSkip) && (
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+            {onUseDefaults && (
+              <button className="btn" onClick={onUseDefaults} style={{ padding: "6px 12px", fontSize: 11 }}>
+                Use default inputs
+              </button>
+            )}
+            {onSkip && (
+              <button className="btn" onClick={onSkip} style={{ padding: "6px 12px", fontSize: 11, borderStyle: "dashed" }}>
+                Skip — no fund structure
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>);
 
 }
-
 function FactTile({ label, value, accent }) {
   return (
     <div style={{
