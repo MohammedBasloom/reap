@@ -79,6 +79,29 @@
     "Use default inputs": "استخدم المدخلات الافتراضية",
     "Show the result": "اعرض النتيجة",
     "Go to the platform": "انتقل للمنصة",
+    /* Guided valuation */
+    "How to build your valuation": "كيف تبني تقييمك",
+    "Building your valuation": "جارٍ بناء تقييمك",
+    "Keep going — the value opens when the walk is done.": "واصل — تُفتح القيمة عند إتمام الخطوات.",
+    "Start with the property, then the evidence.": "ابدأ بالعقار، ثم بالأدلة.",
+    "Each step below moves the final figure. Set it in the panel, or take the market-typical default and move on — either way you will have seen it. Nothing is valued until the last step is answered.":
+      "كل خطوة أدناه تحرّك الرقم النهائي. اضبطها من اللوحة، أو خذ الافتراضي السائد في السوق وامضِ — في الحالتين تكون قد اطّلعت عليها. لا يُحتسب تقييم حتى تُجاب آخر خطوة.",
+    "Every step is answered — open the valuation.": "تمت الإجابة على كل الخطوات — افتح التقييم.",
+    "Describe the property": "صف العقار",
+    "Type, city and district, the areas being valued, and — for a building — its age and condition.":
+      "النوع والمدينة والحي، والمساحات محل التقييم — وللمبنى: عمره وحالته.",
+    "Enter comparable sales": "أدخل الصفقات المقارنة",
+    "Three to five recent sales of similar properties, with the adjustment each one needs.":
+      "من ثلاث إلى خمس صفقات حديثة لعقارات مشابهة، مع التعديل الذي تحتاجه كل صفقة.",
+    "Set the rental income": "حدّد الدخل الإيجاري",
+    "Rent, vacancy, operating costs and the cap rate an investor would apply.":
+      "الإيجار ونسبة الشغور ومصروفات التشغيل ومعدل الرسملة الذي يطبّقه المستثمر.",
+    "Set the rebuild cost": "حدّد تكلفة إعادة البناء",
+    "Land rate and build cost per m², the economic life, and any obsolescence.":
+      "سعر الأرض وتكلفة البناء للمتر، والعمر الاقتصادي، وأي تقادم.",
+    "Weight the approaches": "رجّح الأساليب",
+    "How much comparable sales, income and cost each count toward the final figure.":
+      "كم يزن كل من المقارنات السوقية والدخل والتكلفة في الرقم النهائي.",
     "Open financial modeling": "افتح النمذجة المالية",
     "Open property valuation": "افتح التقييم العقاري",
     "Every step is answered — open the dashboards.": "تمت الإجابة على كل الخطوات — افتح اللوحات.",

@@ -23,16 +23,94 @@ const STORAGE_KEY = "reap_val_v1";
 /* ---------- Default inputs ---------- */
 const blankComp = () => ({ price: "", area: "", monthsAgo: 0, locationAdj: 0, conditionAdj: 0, otherAdj: 0 });
 
+/* Everything past the property itself starts empty, the same as the modeling
+   platform. A valuation that arrives pre-filled with a rent, a cap rate and a
+   build cost produces a number before anyone has looked at a single one of
+   them — and here the number is the entire deliverable. Each step is passed by
+   typing it or by taking its default, and the value is not shown until they
+   have all been passed. */
 function defaultInput(type = "apartment") {
-  const d = V.PROPERTY_TYPES[type].defaults;
   return {
     name: (window.I18N && I18N.lang === "ar") ? "تقييم جديد" : "New Valuation",
-    property: { type, city: "", district: "", landArea: type === "apartment" ? 0 : 500, builtArea: type === "land" ? 0 : 250, age: 5, condition: "good" },
-    sales: { comps: [blankComp(), blankComp(), blankComp()], marketTrendPctYr: 0.03 },
-    income: { rentBasis: "perSqm", rentPerSqmYr: d.rentPerSqmYr, annualRent: 0, vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate },
-    cost: { landPricePerSqm: 1200, buildCostPerSqm: d.buildCostPerSqm, economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0 },
-    weights: { ...V.PROPERTY_TYPES[type].weights },
+    property: { type, city: "", district: "", landArea: null, builtArea: null, age: null, condition: "good" },
+    sales: { comps: [blankComp(), blankComp(), blankComp()], marketTrendPctYr: null },
+    income: { rentBasis: "perSqm", rentPerSqmYr: null, annualRent: null, vacancyPct: null, opexPct: null, capRate: null },
+    cost: { landPricePerSqm: null, buildCostPerSqm: null, economicLifeYrs: null, obsolescencePct: null },
+    weights: { sales: null, income: null, cost: null },
+    stepsDone: {},
   };
+}
+
+/* ---------- The guided valuation ----------
+   Land is valued on comparables and weighting alone — there is no building to
+   rent out or rebuild — so the income and cost steps drop out of the walk
+   entirely rather than sitting there unanswerable. */
+function valSteps(input) {
+  const isLand = !!V.PROPERTY_TYPES[input.property.type].landOnly;
+  const all = [
+    { key: "property", cta: false, title: "Describe the property",
+      body: "Type, city and district, the areas being valued, and — for a building — its age and condition." },
+    /* No shortcut. Comparables are evidence of what actually sold, not an
+       assumption with a sensible default; inventing three would be inventing
+       the market the valuation rests on. */
+    { key: "comps", cta: false, title: "Enter comparable sales",
+      body: "Three to five recent sales of similar properties, with the adjustment each one needs." },
+    { key: "income", cta: true, title: "Set the rental income",
+      body: "Rent, vacancy, operating costs and the cap rate an investor would apply." },
+    { key: "cost", cta: true, title: "Set the rebuild cost",
+      body: "Land rate and build cost per m², the economic life, and any obsolescence." },
+    { key: "weights", cta: true, title: "Weight the approaches",
+      body: "How much comparable sales, income and cost each count toward the final figure." },
+  ];
+  return isLand ? all.filter((s) => s.key !== "income" && s.key !== "cost") : all;
+}
+
+function valStepDone(input, key) {
+  const seen = input.stepsDone || {};
+  const isLand = !!V.PROPERTY_TYPES[input.property.type].landOnly;
+  switch (key) {
+    case "property":
+      return !!input.property.city && (isLand
+        ? (+input.property.landArea || 0) > 0
+        : (+input.property.builtArea || 0) > 0);
+    /* At least one comparable carrying both a price and an area — a row with
+       only one of the two cannot be reduced to a rate and contributes nothing. */
+    case "comps":
+      return (input.sales.comps || []).some((c) => (+c.pricePerSqm || 0) > 0 || ((+c.price || 0) > 0 && (+c.area || 0) > 0));
+    default:
+      return !!seen[key];
+  }
+}
+
+function valGuide(input) {
+  const steps = valSteps(input).map((s) => Object.assign({}, s, { done: valStepDone(input, s.key) }));
+  return {
+    steps,
+    doneCount: steps.filter((s) => s.done).length,
+    total: steps.length,
+    allDone: steps.every((s) => s.done),
+    currentIdx: steps.findIndex((s) => !s.done),
+  };
+}
+
+/* What each step's "use default inputs" writes — the same market-typical
+   figures the platform used to open with, now taken deliberately. */
+function valStepDefaults(input, key) {
+  const t = V.PROPERTY_TYPES[input.property.type];
+  const d = t.defaults;
+  if (key === "income") {
+    return { income: Object.assign({}, input.income, {
+      rentPerSqmYr: d.rentPerSqmYr, vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate,
+    }) };
+  }
+  if (key === "cost") {
+    return { cost: Object.assign({}, input.cost, {
+      landPricePerSqm: 1200, buildCostPerSqm: d.buildCostPerSqm,
+      economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0,
+    }) };
+  }
+  if (key === "weights") return { weights: Object.assign({}, t.weights) };
+  return {};
 }
 
 /* ---------- Small UI atoms (brand-consistent) ---------- */
@@ -103,10 +181,15 @@ function BandLabel({ n, title, open = true }) {
   );
 }
 
-function Section({ n, title, sub, children, defaultOpen = true }) {
+/* `sec` names the step this section answers, so the guide can walk the panel
+   to it. data-open lets it check before clicking — the income, cost and
+   weighting sections all start collapsed, and clicking one already open would
+   shut the thing it came to reveal. */
+function Section({ n, title, sub, children, defaultOpen = true, sec }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderTop: "1px solid var(--border-strong)" }}>
+    <div data-sec={sec || undefined} data-open={open ? "1" : "0"}
+         style={{ borderTop: "1px solid var(--border-strong)" }}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -196,6 +279,10 @@ function ValApp() {
   const result = useMemo(() => V.runValuation(input), [input]);
   const sens = useMemo(() => V.sensitivity(input), [input]);
 
+  /* Editing anything under income, cost or weights passes that step — the walk
+     asks that the driver be looked at, not that a particular button be used to
+     look at it. The first path segment is the step, which is why the input is
+     shaped in those groups. Marking only ever adds. */
   const upd = (path, value) => {
     setInput((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
@@ -203,9 +290,49 @@ function ValApp() {
       let o = next;
       for (let i = 0; i < keys.length - 1; i++) o = o[keys[i]];
       o[keys[keys.length - 1]] = value;
+      const step = keys[0];
+      if ((step === "income" || step === "cost" || step === "weights") && !(next.stepsDone || {})[step]) {
+        next.stepsDone = Object.assign({}, next.stepsDone, { [step]: true });
+      }
       return next;
     });
   };
+
+  const markValStep = (key) => setInput((prev) => (
+    (prev.stepsDone || {})[key] ? prev
+      : Object.assign({}, prev, { stepsDone: Object.assign({}, prev.stepsDone, { [key]: true }) })
+  ));
+  const applyValDefaults = (key) => setInput((prev) => Object.assign({}, prev,
+    valStepDefaults(prev, key),
+    { stepsDone: Object.assign({}, prev.stepsDone, { [key]: true }) }));
+
+  /* ---------- Walk the panel to the step ----------
+     Same behaviour as the modeling platform: once per step change, never on
+     scroll, so the panel stays where the user puts it in between. Income,
+     cost and weighting all start collapsed here, which makes the expand step
+     matter more than it does on the other platform. */
+  const currentValStep = (() => {
+    if (input.showResults) return null;
+    const s = valGuide(input).steps.find((x) => !x.done);
+    return s ? s.key : null;
+  })();
+  useEffect(() => {
+    if (!currentValStep || !sideOpen) return;
+    const target = document.querySelector(`[data-sec="${currentValStep}"]`);
+    if (!target) return;
+    const scroller = target.closest("aside");
+    if (!scroller) return;
+    if (target.getAttribute("data-open") === "0") {
+      const header = target.querySelector("button");
+      if (header) header.click();
+    }
+    const id = window.setTimeout(() => {
+      const top = scroller.scrollTop
+        + (target.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
+      scroller.scrollTo({ top: Math.max(0, top - 8), behavior: "smooth" });
+    }, 140);
+    return () => window.clearTimeout(id);
+  }, [currentValStep, sideOpen]);
 
   const changeType = (type) => {
     setInput((prev) => {
@@ -257,6 +384,7 @@ function ValApp() {
 
   const typeDef = V.PROPERTY_TYPES[input.property.type];
   const isLand = !!typeDef.landOnly;
+  const guide = valGuide(input);
   const r = result.reconciliation;
 
   return (
@@ -379,7 +507,9 @@ function ValApp() {
           </button>
           <SideToggle open={true} onToggle={() => setSideOpen(false)} />
         </div>
-        <div style={{ padding: "18px 24px 14px" }}>
+        {/* Step 01 is not a <Section> — it has no collapsing band — so it
+            carries the anchor itself and is always open. */}
+        <div data-sec="property" data-open="1" style={{ padding: "18px 24px 14px" }}>
           <div style={{ fontSize: 11.5, color: "var(--fg-3)", lineHeight: 1.55 }}>
             Tell us what you're valuing. Everything else pre-fills with realistic market defaults you can refine later.
           </div>
@@ -420,7 +550,7 @@ function ValApp() {
         </div>
 
         {/* --- Comparables --- */}
-        <Section n="02" title="Comparable sales" sub="The market approach — what did similar properties actually sell for?">
+        <Section n="02" sec="comps" title="Comparable sales" sub="The market approach — what did similar properties actually sell for?">
           <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 6 }}>
             Find 3–5 recent sales of similar properties (ask agents, or check Ministry of Justice / Aqar transaction records).
             Then adjust each one: <em>“compared to my property, was that one better or worse?”</em> Better comp → negative %, worse comp → positive %.
@@ -480,7 +610,7 @@ function ValApp() {
 
         {/* --- Income --- */}
         {!isLand && (
-          <Section n="03" title="Rental income" sub="The income approach — what is the property worth as an investment?" defaultOpen={false}>
+          <Section n="03" sec="income" title="Rental income" sub="The income approach — what is the property worth as an investment?" defaultOpen={false}>
             <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 6 }}>
               Even if you won't rent it out, this shows what an investor would pay. Defaults are typical for {typeDef.label.toLowerCase()}s — adjust to your market knowledge.
             </div>
@@ -507,7 +637,7 @@ function ValApp() {
 
         {/* --- Cost --- */}
         {!isLand && (
-          <Section n="04" title="Rebuild cost" sub="The cost approach — land plus what it would cost to rebuild, minus wear." defaultOpen={false}>
+          <Section n="04" sec="cost" title="Rebuild cost" sub="The cost approach — land plus what it would cost to rebuild, minus wear." defaultOpen={false}>
             <Row cols={2}>
               {typeDef.usesLand ? (
                 <Field label="Land price" suffix="SAR/m²"
@@ -532,7 +662,7 @@ function ValApp() {
         )}
 
         {/* --- Weights --- */}
-        <Section n={isLand ? "03" : "05"} title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
+        <Section n={isLand ? "03" : "05"} sec="weights" title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
           <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 8 }}>
             We pre-weight by property type following professional practice ({typeDef.label.toLowerCase()}s lean on {typeDef.weights.sales >= 0.5 ? "comparable sales" : "income"}). Adjust if you trust one approach more.
           </div>
@@ -583,10 +713,115 @@ function ValApp() {
 
       {/* ===== MAIN (results) ===== */}
       <main style={{ gridArea: "main", overflowY: "auto", background: "var(--bg-2)" }}>
-        <ValResults result={result} sens={sens} input={input} />
+        {input.showResults
+          ? <ValResults result={result} sens={sens} input={input} />
+          : <ValBuildGuide guide={guide} onUseDefaults={applyValDefaults}
+                           onShowResults={() => setInput((p) => Object.assign({}, p, { showResults: true }))} />}
       </main>
 
       <ValFooter />
+    </div>
+  );
+}
+
+/* ---------- The guided build, before any figure is shown ----------
+   Same shape as the modeling platform's, and deliberately so: a valuer moving
+   between the two should not have to learn a second way of being walked
+   through a model. */
+function ValBuildGuide({ guide, onUseDefaults, onShowResults }) {
+  const { steps, doneCount, total, currentIdx, allDone } = guide;
+  return (
+    <div style={{ padding: "56px 48px", maxWidth: 860, margin: "0 auto" }}>
+      <div style={{ fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase",
+                    fontWeight: 500, color: "var(--fg-3)" }}>
+        {doneCount ? "Building your valuation" : "Getting started"}
+      </div>
+      <h2 style={{ fontSize: 32, fontFamily: "var(--font-display)", fontWeight: 600,
+                   letterSpacing: "-0.02em", color: "var(--fg-1)", marginTop: 8 }}>
+        {doneCount ? "Keep going — the value opens when the walk is done."
+                   : "Start with the property, then the evidence."}
+      </h2>
+      <p style={{ fontSize: 15, color: "var(--fg-2)", marginTop: 12, maxWidth: 640, lineHeight: 1.55 }}>
+        Each step below moves the final figure. Set it in the panel, or take the market-typical
+        default and move on — either way you will have seen it. Nothing is valued until the last
+        step is answered.
+      </p>
+
+      <div style={{ marginTop: 32, padding: "22px 26px 8px",
+                    border: "1px solid var(--border-1)", background: "var(--bg-1)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                      gap: 16, marginBottom: 18 }}>
+          <div style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
+                        fontWeight: 500, color: "var(--fg-3)" }}>How to build your valuation</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 84, height: 4, background: "var(--bg-3)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ width: `${(doneCount / total) * 100}%`, height: "100%",
+                            background: "var(--ad-success)", borderRadius: 999,
+                            transition: "width 420ms var(--ease-out)" }} />
+            </div>
+            <span className="tabnum" style={{ fontSize: 11, color: "var(--fg-3)", fontWeight: 600 }}>
+              {doneCount}/{total}
+            </span>
+          </div>
+        </div>
+        {steps.map((s, i) => (
+          <ValStepRow key={s.key} n={i + 1} index={i} last={i === steps.length - 1}
+                      current={i === currentIdx} title={s.title} body={s.body} done={s.done}
+                      onUseDefaults={s.cta && i === currentIdx ? () => onUseDefaults(s.key) : null} />
+        ))}
+      </div>
+
+      <div style={{ marginTop: 22, display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+        <button className="btn btn-primary" onClick={onShowResults} disabled={!allDone}
+                style={{ padding: "12px 26px", fontSize: 12.5, opacity: allDone ? 1 : 0.45,
+                         cursor: allDone ? "pointer" : "not-allowed" }}>
+          Show the result
+        </button>
+        <span style={{ fontSize: 12, color: "var(--fg-3)" }}>
+          {allDone ? <span>Every step is answered — open the valuation.</span>
+            : <>
+                <span className="tabnum" style={{ fontWeight: 600, color: "var(--fg-2)" }}>{total - doneCount}</span>
+                {" "}<span>still to answer</span>
+              </>}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ValStepRow({ n, title, body, done, index, last, current, onUseDefaults }) {
+  const DOT = 26;
+  return (
+    <div className={`reap-step${current ? " is-current" : ""}`}
+         style={{ display: "flex", gap: 14, position: "relative",
+                  paddingBottom: last ? 16 : 20, animationDelay: `${index * 70}ms` }}>
+      {!last && (
+        <span style={{ position: "absolute", insetInlineStart: (DOT - 2) / 2, top: DOT + 2, bottom: 0,
+                       width: 2, background: "var(--border-1)" }}>
+          {done && <span className="reap-line-fill" style={{ position: "absolute", inset: 0, background: "var(--ad-success)" }} />}
+        </span>
+      )}
+      <span className="reap-dot" style={{
+        flexShrink: 0, width: DOT, height: DOT, borderRadius: "50%",
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, zIndex: 1,
+        background: done ? "var(--ad-success)" : current ? "var(--ad-gold-500)" : "var(--bg-1)",
+        color: done || current ? "#FFFFFF" : "var(--fg-3)",
+        border: done || current ? "none" : "1px solid var(--border-strong)",
+      }}>{done ? "✓" : n}</span>
+      <div style={{ minWidth: 0, paddingTop: 3 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 3,
+                      color: done ? "var(--fg-3)" : "var(--fg-1)" }}>{title}</div>
+        <div className="reap-body" style={{ fontSize: 12, lineHeight: 1.55,
+                                            color: done ? "var(--fg-4)" : "var(--fg-2)" }}>{body}</div>
+        {onUseDefaults && (
+          <div style={{ marginTop: 10 }}>
+            <button className="btn" onClick={onUseDefaults} style={{ padding: "6px 12px", fontSize: 11 }}>
+              Use default inputs
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
