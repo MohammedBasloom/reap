@@ -544,8 +544,20 @@ function buildBlocks(ctx) {
 
   const comps = result.components || [];
   if (comps.length) {
+    /* Revenue in this report already carries whatever escalation was set, and
+       nothing else in it says so — a reader checking rent against rate × area
+       would find a gap they could not account for. The note appears only when
+       a component actually escalates, so an unescalated study reads exactly as
+       it did before. */
+    const escalates = comps.some(c => {
+      const units = Array.isArray(c.subs) && c.subs.length ? c.subs : [c];
+      return units.some(u => Math.abs(+u.escalationPct || 0) > 0);
+    });
     table({
       title: "Development programme",
+      note: escalates
+        ? T("Revenue figures throughout this report include the escalation set on each component — a rent or price list stepping on its own review cycle — so they will exceed the opening rate multiplied by area.", null)
+        : undefined,
       head: ["Component", "Land share", "GFA (m²)", "NSA (m²)", "Units / keys", "Basis"],
       align: ["start", "end", "end", "end", "end", "end"],
       rows: comps.map(c => [

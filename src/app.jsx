@@ -139,10 +139,35 @@ const STEP_LIST = [
     body: "Optional. Split the equity between LP, developer and GP, set the preferred return and the promote." },
 ];
 
-/* A step is done when its own evidence says so. The first three read the model
-   directly — land priced, a component picked, the site divided — because those
-   cannot be faked by a default. The rest need a deliberate act, recorded on
-   input.stepsDone, since their fields arrive with values already in them. */
+/* Has this component still got blanks in it?
+
+   A component arrives from the picker with every preset assumption nulled, and
+   they are filled either by typing or by "use default inputs" — which only
+   refills what that component's own preset supplies. So the honest test for
+   "tuned" is: nothing the defaults button would fill is still empty. A villa
+   is not held open waiting for a rent it has no field for, and a component
+   added before any of this existed already carries values and reads as done. */
+function compTuned(c) {
+  const keys = window.REAP_PRESET_ASSUMPTIONS;
+  const preset = (window.COMPONENT_PRESETS || {})[c.kind];
+  // Without the sidebar's lists loaded there is nothing to check against, and
+  // guessing would reopen the step on every component. Treat as answered.
+  if (!keys || !preset) return true;
+  return keys.every((k) => preset[k] === undefined || (c[k] !== null && c[k] !== undefined));
+}
+
+/* A step is done when its own evidence says so. Land priced, a component
+   picked, the site divided, each component filled in — all read the model
+   directly, because none of them can be faked by a default: the picker blanks
+   every assumption it hands over. The remaining steps arrive with values in
+   them, so they need a deliberate act, recorded on input.stepsDone.
+
+   Tune reads the model for a specific reason. It used to be a sticky flag, so
+   a model that had been through the walk stayed "tuned" for ever — add a
+   component to a finished scheme and the guide reopened to ask for its share
+   of the land (that test is live) while never once asking for the assumptions
+   behind it, which had just been blanked. The two questions are now asked on
+   the same terms. */
 function stepDone(input, key) {
   const seen = input.stepsDone || {};
   const comps = (input.components || []).filter((c) => c.enabled !== false);
@@ -159,6 +184,7 @@ function stepDone(input, key) {
        unanswered question — the second one would just contribute nothing and
        say so nowhere. */
     case "allocate": return comps.length > 0 && comps.every((c) => (+c.allocationPct || 0) > 0);
+    case "tune":     return comps.length > 0 && comps.every(compTuned);
     default:         return !!seen[key];
   }
 }

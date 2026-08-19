@@ -277,6 +277,11 @@ const PRESET_ASSUMPTIONS = [
   "rentPerSqmYr", "rentPerUnitYr", "adr", "occupancy",
   "initialOccupancy", "yearsToStabilization", "opexPct", "exitCapRate",
   "salesPeriodMonths", "operatingPeriodMonths",
+  /* Escalation is deliberately NOT here. The blanking pass nulls these keys on
+     a new component and "use default inputs" only refills what a preset
+     supplies — no preset carries an escalation, so listing them would blank a
+     pair of fields nothing could ever fill again. Zero percent is already a
+     complete answer ("no review"), so they keep their opening values. */
 ];
 
 const COMPONENT_PRESETS = {
@@ -442,6 +447,9 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
       id: Math.random().toString(36).slice(2, 9),
       name, enabled: true, mode,
       gfaSharePct: fitted[fitted.length - 1], efficiency: 0.78, revenueBasis: "sqm",
+      // Opt-in, same as a component: a review period is offered, the uplift is
+      // zero until asked for, so adding a space re-prices nothing by itself.
+      escalationPct: 0, escalationYears: 5,
     };
     // Build cost is the one figure that differs by purpose here and is not a
     // revenue assumption, so it stays local; everything else comes from the
@@ -471,6 +479,8 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   const basis = comp.revenueBasis || "sqm";
   const units = computed.units || 0;
   const keys = computed.keys || 0;
+  // Whether this building type is counted in keys at all — see the basis toggle.
+  const isKeyed = !!(COMPONENT_PRESETS[comp.kind] && COMPONENT_PRESETS[comp.kind].basis === "key");
 
   /* Revenue — taken from the engine, not recomputed.
 
@@ -806,6 +816,18 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                   </>
                 )}
 
+                {/* Escalation — set per space, so a retail lease reviewed every
+                    five years can sit in the same building as offices reviewed
+                    every three. */}
+                <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6 }}>
+                  {s.mode === "sale" ? "Price escalation" : "Rent escalation"}
+                </div>
+                <Row cols={2}>
+                  <Field label={s.mode === "sale" ? "Price review" : "Rent review"} suffix="years"
+                    value={s.escalationYears} onChange={v => updateSub(i, "escalationYears", v)} step={1} min={1} hint="Escalates every" />
+                  <PctField label="Escalation" value={s.escalationPct} onChange={v => updateSub(i, "escalationPct", v)} hint="At each review" step={0.5} />
+                </Row>
+
                 <div style={{ fontSize: 10, color: "var(--fg-3)", marginTop: 6 }}>
                   {s.mode === "sale" ? "Sales revenue " : "Annual NOI "}
                   <span className="tabnum" style={{ color: "var(--fg-1)", fontWeight: 600 }}>
@@ -854,7 +876,15 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
               options={[
                 { value: "sqm",  label: "per m²" },
                 { value: "unit", label: "per unit" },
-                { value: "key",  label: "per key" },
+                /* A key is a hospitality unit of account: hotels and serviced
+                   apartments are let, sold and valued per key, an office or a
+                   warehouse never is. Gated on the preset's own basis rather
+                   than a hard-coded list of kinds, so a keyed type added later
+                   is covered without touching this. Segmented leaves an option
+                   live while it is the current value, so a component already
+                   set to keys keeps working and simply cannot return to it. */
+                { value: "key",  label: "per key", disabled: !isKeyed,
+                  disabledHint: "Keys apply to hospitality only — hotels and serviced apartments" },
               ]}
             />
           </div>
@@ -930,6 +960,29 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
           <Row cols={2}>
             <PctField label="OpEx" value={comp.opexPct} onChange={v => update("opexPct", v)} hint="% of gross income" tip="Operating expenses — the annual cost of running the asset: management, maintenance, utilities, insurance and service charges. Deducted from gross income to give NOI." />
             <PctField label="Exit cap rate" value={comp.exitCapRate} onChange={v => update("exitCapRate", v)} tip="Capitalisation rate at sale — the yield a buyer accepts. Exit value = stabilised NOI ÷ cap rate, so a lower cap rate means a higher sale price. Enter 0 if the asset is not sold at the end — the model then shows no exit proceeds and the return comes from rental income alone." />
+          </Row>
+        </>
+      )}
+
+      {/* Escalation — a rent review or a price list that steps every few years.
+          Offered on both purposes: a sell-down running four years prices its
+          later releases above its first, exactly as a lease is reviewed. Left
+          at zero it does nothing at all. */}
+      {!isMixed && (
+        <>
+          <div style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6, marginTop: 6 }}>
+            {comp.mode === "sale" ? "Price escalation" : "Rent escalation"}
+          </div>
+          <Row cols={2}>
+            <Field label={comp.mode === "sale" ? "Price review" : "Rent review"} suffix="years"
+              value={comp.escalationYears} onChange={v => update("escalationYears", v)} step={1} min={1}
+              hint="Escalates every"
+              tip="How often the rent steps up. With a five-year review the first five years sit at the opening rate and the first uplift lands in year six." />
+            <PctField label="Escalation" value={comp.escalationPct} onChange={v => update("escalationPct", v)}
+              hint="At each review" step={0.5}
+              tip={comp.mode === "sale"
+                ? "How much the price list steps at each review. A sell-down is booked across a curve, so the revenue picks up the curve-weighted average of the steps it passes through — not the final one. A review longer than the sell-down never bites."
+                : "How much the rent steps at each review. Opex is carried as a share of gross income, so it rises with the rent and the margin holds. The exit is capitalised on the NOI in the year of sale, so escalation lifts the exit too."} />
           </Row>
         </>
       )}
@@ -1503,6 +1556,12 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
       exitCapRate: preset.exitCapRate,
       salesPeriodMonths: preset.salesPeriodMonths,
       operatingPeriodMonths: preset.operatingPeriodMonths,
+      /* Escalation is opt-in and starts at nothing. A house default of, say,
+         5% every five years would quietly re-price every model built from here
+         on and make new components disagree with saved ones, so the review
+         period is offered and the uplift is left at zero until asked for. */
+      escalationPct: preset.escalationPct ?? 0,
+      escalationYears: preset.escalationYears ?? 5,
     };
     /* On leased land a sale preset cannot arrive set to sell — the project has
        no title to pass on. It comes in leasable instead, with the fields
@@ -2070,3 +2129,7 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
 
 window.Sidebar = Sidebar;
 window.COMPONENT_PRESETS = COMPONENT_PRESETS;
+/* The guide asks "has this component been tuned?" and the honest answer is
+   "are any of the fields the picker blanked still blank?" — a question only
+   this list can answer. Exported rather than copied so the two cannot drift. */
+window.REAP_PRESET_ASSUMPTIONS = PRESET_ASSUMPTIONS;

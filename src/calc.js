@@ -325,6 +325,55 @@ function projectEndMonth(components, conEnd, preSalesStart) {
   return endMonth;
 }
 
+/* ---------- Revenue escalation ----------
+   A rent review or a price list that steps every few years, expressed on the
+   unit as escalationPct over escalationYears. The shape is deliberately the
+   same as the ground-rent review: escalation lands on completed multiples of
+   the review period, so with a 5-year review the first five years sit at the
+   opening rate and the first uplift arrives in year six. A site whose ground
+   rent and whose passing rent both step therefore step on the same rule.
+
+   `monthsSinceStart` is measured from the month the unit begins earning — the
+   start of operations for a lease, the start of the sell-down for a sale — not
+   from the start of the project. A lease signed two years into a build has its
+   first review five years after the tenant moves in, not three.
+
+   Defaulting to zero is what makes this safe to add: every existing study has
+   no escalation on it, returns a factor of exactly 1, and is unchanged. */
+function escalationFactor(u, monthsSinceStart) {
+  const pct = numOr(u.escalationPct, 0);
+  if (!pct) return 1;
+  const years = Math.max(1, Math.round(numOr(u.escalationYears, 5)));
+  const steps = Math.floor(Math.floor(Math.max(0, monthsSinceStart) / 12) / years);
+  return Math.pow(1 + pct, steps);
+}
+
+/* The weighted uplift across a sell-down. Sale revenue is booked over the
+   selling period on an S-curve, so an escalating price list is worth the
+   curve-weighted average of the steps it passes through — not the final step.
+   The weights sum to 1, so with no escalation this is exactly 1. */
+function saleEscalationFactor(u) {
+  if (!numOr(u.escalationPct, 0)) return 1;
+  const dist = sCurveMonthly(salePeriodOf(u));
+  return dist.reduce((s, w, i) => s + w * escalationFactor(u, i), 0);
+}
+
+/* Apply `fn` to every revenue unit of a component and re-roll the component
+   totals a mixed-use building derives from its subs. Without the re-roll a
+   sub's escalated revenue would never reach the KPIs. */
+function mapRevenueUnits(c, fn) {
+  if (!c || !c.enabled) return c;
+  if (Array.isArray(c.subs)) {
+    const subs = c.subs.map(fn);
+    return Object.assign({}, c, {
+      subs,
+      salesRevenue: subs.reduce((s, u) => s + (u.salesRevenue || 0), 0),
+      exitValue: subs.reduce((s, u) => s + (u.exitValue || 0), 0),
+    });
+  }
+  return fn(c);
+}
+
 function autoHorizonMonths(input) {
   const predesign = Math.max(0, input.predesignMonths | 0);
   const construction = Math.max(1, input.constructionMonths | 0);
@@ -569,6 +618,43 @@ function runFeasibility(input) {
     return computeComponent(c, netDevelopableArea, isLeasehold ? 0 : landPricePerSqm);
   });
 
+  /* ----- Revenue escalation -----
+     Applied here, before the aggregates below are taken, so the headline
+     revenue and the monthly flows can never disagree: whatever escalation adds
+     is added once, on the unit, and every consumer reads it from there.
+
+     A sale takes the curve-weighted uplift across its sell-down. A lease keeps
+     its stabilized grossIncome/opex/noi as reported — those are year-one,
+     run-rate figures and are labelled as such — but the exit is capitalised on
+     the NOI in the year the asset is actually sold, because that is the income
+     a buyer at that date is paying for. Leaving the exit on year-one NOI would
+     show rent climbing for a decade and then value the asset as though it had
+     never moved. */
+  for (let i = 0; i < components.length; i++) {
+    const c = components[i];
+    if (!c.enabled) continue;
+    components[i] = mapRevenueUnits(c, (u) => {
+      if (!u || !numOr(u.escalationPct, 0)) return u;
+      if (u.mode === "sale") {
+        return Object.assign({}, u, {
+          salesRevenue: (u.salesRevenue || 0) * saleEscalationFactor(u),
+        });
+      }
+      if (u.mode === "lease") {
+        // Same month the cashflow exits on: the last month of operation. The
+        // horizon is floored at the project's own end, so it never clips this.
+        const monthsHeld = leasePeriodOf(u) - 1;
+        const noiAtExit = (u.noi || 0) * escalationFactor(u, monthsHeld);
+        const cap = numOr(u.exitCapRate, 0.075);
+        return Object.assign({}, u, {
+          noiAtExit,
+          exitValue: cap > 0 ? noiAtExit / cap : 0,
+        });
+      }
+      return u;
+    });
+  }
+
   /* ----- Leasehold: the exit is of an ENCUMBERED income stream -----
      A buyer at exit inherits the ground lease, so they capitalise the income
      net of the rent they will have to keep paying. Capitalising the pre-rent
@@ -598,7 +684,11 @@ function runFeasibility(input) {
       const encumber = (u) => {
         if (!u || !(u.noi > 0)) return u;
         const share = annualRentAtExit * (u.noi / leasedNoi);
-        const netNoi = Math.max(0, u.noi - share);
+        /* Both sides of this subtraction are dated to the exit: the ground
+           rent is escalated to that year above, so the income it is taken out
+           of must be too, or an escalating lease would be charged tomorrow's
+           rent against today's NOI. Without escalation the two are equal. */
+        const netNoi = Math.max(0, numOr(u.noiAtExit, u.noi) - share);
         const cap = numOr(u.exitCapRate, 0.075);
         return Object.assign({}, u, {
           groundRentAtExit: share,
@@ -761,10 +851,18 @@ function runFeasibility(input) {
       const salesStart = preSalesStartMonth;
       const salesPeriod = salePeriodOf(u);
       const dist = sCurveMonthly(salesPeriod);
-      for (let i = 0; i < dist.length; i++) {
+      /* u.salesRevenue already carries the curve-weighted uplift, so the curve
+         that spends it has to be re-normalised rather than escalated a second
+         time. Weighting by the same factors and dividing by their weighted sum
+         tilts the money towards the later, dearer months while leaving the
+         total exactly as booked — the flow sums to the headline either way. */
+      const escW = dist.map((w, i) => w * escalationFactor(u, i));
+      const escTotal = escW.reduce((s, w) => s + w, 0);
+      const spend = escTotal > 0 ? escW.map(w => w / escTotal) : dist;
+      for (let i = 0; i < spend.length; i++) {
         const m = salesStart + i;
         if (m <= horizon) {
-          salesFlow[m] += (u.salesRevenue || 0) * dist[i];
+          salesFlow[m] += (u.salesRevenue || 0) * spend[i];
         }
       }
     });
@@ -811,8 +909,13 @@ function runFeasibility(input) {
         const currentOcc = initOcc + (stabOcc - initOcc) * t;
         // Ratio vs. the stabilized grossIncome already on the unit.
         const occRatio = stabOcc > 0 ? currentOcc / stabOcc : 1;
-        const monthGross = (u.grossIncome || 0) / 12 * occRatio;
-        const monthOpex  = (u.opex || 0) / 12 * occRatio;
+        /* Reviews run from the day the tenant starts paying, so the clock is
+           months-in-operation — the same origin the lease-up ramp uses. Opex is
+           carried on a percentage of gross, so escalating both together holds
+           the margin flat, which is what a rent review does to it. */
+        const esc = escalationFactor(u, m - opStart);
+        const monthGross = (u.grossIncome || 0) / 12 * occRatio * esc;
+        const monthOpex  = (u.opex || 0) / 12 * occRatio * esc;
         rentFlow[m] += monthGross;
         opexFlow[m] -= monthOpex;
         noiFlow[m]  += monthGross - monthOpex;

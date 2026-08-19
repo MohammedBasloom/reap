@@ -199,6 +199,19 @@
       "كل كم سنة يرتفع الإيجار. بمراجعة كل خمس سنوات تبقى السنوات الخمس الأولى على السعر الابتدائي ويأتي أول ارتفاع في السنة السادسة.",
     "Escalation": "نسبة التصاعد",
     "At each review": "عند كل مراجعة",
+    /* Component revenue escalation — same vocabulary as the ground rent above,
+       so a rent review and the review of the rent under it read alike. */
+    "Price review": "مراجعة السعر",
+    "Rent escalation": "تصاعد الإيجار",
+    "Price escalation": "تصاعد السعر",
+    "How much the price list steps at each review. A sell-down is booked across a curve, so the revenue picks up the curve-weighted average of the steps it passes through — not the final one. A review longer than the sell-down never bites.":
+      "مقدار ارتفاع قائمة الأسعار عند كل مراجعة. تُسجَّل مبيعات المشروع على منحنى زمني، لذا تلتقط الإيرادات المتوسط المرجّح بالمنحنى للدرجات التي تمر بها — لا الدرجة الأخيرة. ومراجعة أطول من فترة البيع لا يكون لها أثر.",
+    "How much the rent steps at each review. Opex is carried as a share of gross income, so it rises with the rent and the margin holds. The exit is capitalised on the NOI in the year of sale, so escalation lifts the exit too.":
+      "مقدار ارتفاع الإيجار عند كل مراجعة. تُحمَّل المصروفات التشغيلية كنسبة من الدخل الإجمالي، فترتفع مع الإيجار ويبقى الهامش ثابتًا. وتُرسمل قيمة الخروج على صافي دخل سنة البيع، لذا يرفع التصاعد قيمة الخروج أيضًا.",
+    "Keys apply to hospitality only — hotels and serviced apartments":
+      "المفاتيح تخص الضيافة فقط — الفنادق والشقق المخدومة",
+    "Revenue figures throughout this report include the escalation set on each component — a rent or price list stepping on its own review cycle — so they will exceed the opening rate multiplied by area.":
+      "تشمل أرقام الإيرادات في هذا التقرير التصاعد المحدد على كل مكوّن — إيجار أو قائمة أسعار ترتفع وفق دورة مراجعتها — لذا ستتجاوز السعر الابتدائي مضروبًا في المساحة.",
     "First year rent": "إيجار السنة الأولى",
     "Ground rent is an operating cost, so it does not count toward the debt facility — a lender advances against build cost, not rent. Expect a smaller facility than buying the land.":
       "إيجار الأرض مصروف تشغيلي، لذا لا يدخل ضمن أساس حساب التسهيل الائتماني — فالممول يقرض مقابل تكلفة البناء لا مقابل الإيجار. توقّع تسهيلًا أقل ممّا لو اشتريت الأرض.",
