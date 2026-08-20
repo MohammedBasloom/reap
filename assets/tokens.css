@@ -279,6 +279,22 @@ html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
 .reap-step .reap-line-fill { transform-origin: top; animation: reap-fill-in 520ms var(--ease-out) both; }
 .reap-step .reap-body { transition: color var(--t-base) var(--ease-out); }
 
+/* Step titles are links to their own section of the assumptions panel. They
+   carry no button chrome — the row is a checklist, not a toolbar — so the
+   underline on hover and focus is the only thing announcing they are live. */
+.reap-step-title {
+  font: inherit; color: inherit; background: none; border: none;
+  padding: 0; margin: 0; text-align: start; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out);
+}
+.reap-step-title:hover { text-decoration-color: currentColor; }
+.reap-step-title:focus-visible {
+  text-decoration-color: currentColor;
+  outline: 2px solid var(--ad-gold-500); outline-offset: 3px;
+}
+
 /* Remove control on an allocation row. Sized to the 44px touch guidance via
    padding rather than a large glyph, and kept grey until the row is hovered
    so it does not read as a warning sitting beside every component. It turns

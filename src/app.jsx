@@ -787,7 +787,7 @@ function BuildGuide({ input, guide, onUseDefaults, onMark, onShowResults }) {
 
 }
 
-function StepRow({ n, title, body, done, index, last, current, onUseDefaults, onSkip, optional }) {
+function StepRow({ n, stepKey, title, body, done, index, last, current, onUseDefaults, onSkip, optional }) {
   const DOT = 26;
   return (
     <div
@@ -816,10 +816,18 @@ function StepRow({ n, title, body, done, index, last, current, onUseDefaults, on
         <div style={{
           display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3
         }}>
-          <span style={{
-            fontSize: 13.5, fontWeight: 600,
-            color: done ? "var(--fg-3)" : "var(--fg-1)"
-          }}>{title}</span>
+          {/* The title is the way back into the panel. A finished step is not
+              a closed one — an answer given early is the one most worth
+              re-reading — so every row stays reachable, done or not. */}
+          <button
+            type="button"
+            className="reap-step-title"
+            title="Open this section in the assumptions panel"
+            onClick={() => window.dispatchEvent(new CustomEvent("feas:walkTo", { detail: stepKey }))}
+            style={{
+              fontSize: 13.5, fontWeight: 600,
+              color: done ? "var(--fg-3)" : "var(--fg-1)"
+            }}>{title}</button>
           {optional && (
             <span style={{
               fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600,

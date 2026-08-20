@@ -62,6 +62,7 @@
     "An allocation panel appears under the tiles as soon as you pick a component — give each one its share (%) of the site.":
       "تظهر لوحة التوزيع أسفل البطاقات فور اختيارك أي مكوّن — امنح كل مكوّن حصته (٪) من الأرض.",
     "Tune each component": "اضبط كل مكوّن",
+    "Open this section in the assumptions panel": "افتح هذا القسم في لوحة الافتراضات",
     "Massing, build cost and efficiency, then sale price or rent and how long it sells or operates.":
       "أسلوب البناء وتكلفته والكفاءة، ثم سعر البيع أو الإيجار ومدة البيع أو التشغيل.",
     "Set timing & general costs": "حدّد الجدول الزمني والتكاليف العامة",

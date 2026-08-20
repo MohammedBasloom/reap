@@ -1693,12 +1693,15 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
     const s = g(input).steps.find((x) => !x.done);
     return s ? s.key : null;
   })();
-  useEffectS(() => {
-    if (!currentStepKey || !open) return;
-    const target = document.querySelector(`[data-sec="${currentStepKey}"]`);
-    if (!target) return;
+  /* One implementation, two callers: the automatic walk to whichever step is
+     current, and a click on any step title in the guide. Returns the pending
+     timeout so an effect can cancel it if the step changes underneath. */
+  const walkToSection = (key) => {
+    if (!key) return null;
+    const target = document.querySelector(`[data-sec="${key}"]`);
+    if (!target) return null;
     const scroller = target.closest("aside");
-    if (!scroller) return;
+    if (!scroller) return null;
 
     /* Expand first if the user had collapsed it, then scroll on a later frame
        — the section's height only exists after React has re-rendered it, and
@@ -1712,13 +1715,37 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
        66px of it showing at the very bottom edge. This asks for an exact
        position and lets the browser clamp it, so a section near the end goes
        as far as the panel can actually travel. */
-    const id = window.setTimeout(() => {
+    return window.setTimeout(() => {
       const top = scroller.scrollTop
         + (target.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
       scroller.scrollTo({ top: Math.max(0, top - 8), behavior: "smooth" });
     }, 140);
-    return () => window.clearTimeout(id);
+  };
+
+  useEffectS(() => {
+    if (!currentStepKey || !open) return;
+    const id = walkToSection(currentStepKey);
+    return () => { if (id) window.clearTimeout(id); };
   }, [currentStepKey, open]);
+
+  /* Clicking a step title in the guide asks for that section by name. Unlike
+     the walk above it is not tied to the current step — any step can be
+     revisited, including finished ones, which is the point: the guide becomes
+     a table of contents rather than a one-way march.
+
+     A click is explicit, so a collapsed panel is opened for it; the section
+     itself only exists in the DOM once that render lands, hence the deferral
+     rather than reading the DOM straight away. */
+  useEffectS(() => {
+    const onWalk = (e) => {
+      const key = e && e.detail;
+      if (!key) return;
+      if (!open && onToggle) onToggle();
+      window.setTimeout(() => walkToSection(key), 0);
+    };
+    window.addEventListener("feas:walkTo", onWalk);
+    return () => window.removeEventListener("feas:walkTo", onWalk);
+  });
 
   const totalAllocationPct = input.components.filter(c => c.enabled).reduce((s, c) => s + (+c.allocationPct || 0), 0);
   const hasComponents = input.components.filter(c => c.enabled).length > 0;
