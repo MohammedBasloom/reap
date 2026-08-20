@@ -300,24 +300,61 @@ const PRESET_ASSUMPTIONS = [
      complete answer ("no review"), so they keep their opening values. */
 ];
 
+/* ---------- What a building type can be DONE with ----------
+   Purpose used to be baked into the type, which is why this table once held
+   two pairs that differed in nothing else: a residential building you sell and
+   the identical one you let, a retail box you sell and the identical one you
+   let. Selling or letting is a decision about a building, not a different
+   building, so each type now declares the purposes it supports and the tile
+   badge and the purpose toggle both read from here.
+
+   A villa is the plain case the old table got wrong: it was labelled sale-only
+   and villas are let every day. Hospitality is the opposite case — a hotel is
+   an operating business measured in keys and ADR, and "selling" one is a sale
+   of the operating asset, not of units, so those two stay lease-only.
+
+   Dual-purpose types carry BOTH sets of rates. Without them, switching purpose
+   would fall through to modeDefaults' generic figures and a 380 m² villa would
+   arrive asking 85,000 a year like a flat. */
+const SALE = ["sale"], LEASE = ["lease"], BOTH = ["sale", "lease"];
+
 const COMPONENT_PRESETS = {
-  "villa":     { mode: "sale",  label: "Villa",            blurb: "Detached homes for sale", icon: "▱", basis: "unit", far: 1.6,  landCoveragePct: 0.45, maxFloors: 2, upperFloorCoveragePct: 0.30, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.85, avgUnitSize: 380, pricePerUnit: 2500000, salesPeriodMonths: 48 },
-  "townhouse": { mode: "sale",  label: "Townhouse",        blurb: "Attached homes for sale", icon: "▤", basis: "unit", far: 0.9,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.82, avgUnitSize: 260, pricePerUnit: 1850000, salesPeriodMonths: 42 },
+  "villa":     { mode: "sale",  purposes: BOTH, label: "Villa",            blurb: "Detached homes, sold or let", icon: "▱", basis: "unit", far: 1.6,  landCoveragePct: 0.45, maxFloors: 2, upperFloorCoveragePct: 0.30, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.85, avgUnitSize: 380, pricePerUnit: 2500000, salesPeriodMonths: 48, rentPerUnitYr: 140000, occupancy: 0.92, opexPct: 0.25, operatingPeriodMonths: 60, exitCapRate: 0.07 },
+  "townhouse": { mode: "sale",  purposes: BOTH, label: "Townhouse",        blurb: "Attached homes, sold or let", icon: "▤", basis: "unit", far: 0.9,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.82, avgUnitSize: 260, pricePerUnit: 1850000, salesPeriodMonths: 42, rentPerUnitYr: 100000, occupancy: 0.92, opexPct: 0.25, operatingPeriodMonths: 60, exitCapRate: 0.07 },
   // One building, one envelope, several uses. Massing, basement and site works
   // are unified; each sub takes a share of the GFA with its own build cost,
   // efficiency, purpose, rate, occupancy, timing and exit cap.
   // Starts with NO spaces: the user adds them from inside the component, so
   // nothing is assumed about what the building contains.
-  "mixed":     { mode: "mixed", label: "Mixed-Use Building",   blurb: "Several uses in one building", icon: "▥", basis: "sqm", far: 3.0,  landCoveragePct: 0.50, maxFloors: 10, upperFloorCoveragePct: 0.50, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.78,
+  "mixed":     { mode: "mixed", purposes: BOTH, label: "Mixed-Use Building",   blurb: "Several uses in one building", icon: "▥", basis: "sqm", far: 3.0,  landCoveragePct: 0.50, maxFloors: 10, upperFloorCoveragePct: 0.50, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2000, efficiency: 0.78,
     subs: [] },
-  "apartment": { mode: "sale",  label: "Residential Building", blurb: "Strata residences", icon: "▣", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36 },
-  "btr":       { mode: "lease", label: "Build-to-Rent",    blurb: "Residential rental", icon: "◫", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 100, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075 },
-  "retail":    { mode: "lease", label: "Retail",           blurb: "Leasable retail GLA", icon: "◰", basis: "sqm",  far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
-  "office":    { mode: "lease", label: "Office",           blurb: "Leasable office NLA", icon: "◳", basis: "sqm",  far: 4.0,  landCoveragePct: 0.50, maxFloors: 12, upperFloorCoveragePct: 0.50, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2300, efficiency: 0.78, rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.08 },
-  "hotel":     { mode: "lease", label: "Hotel",            blurb: "Keyed hospitality", icon: "◧", basis: "key",  far: 3.0,  landCoveragePct: 0.45, maxFloors: 10, upperFloorCoveragePct: 0.40, lastFloorPct: 0.75, costPerSqmGFA: 4500, siteWorkPct: 0.10, basementCostPerSqm: 2800, efficiency: 0.65, keys: 220, adr: 1050, occupancy: 0.68, opexPct: 0.58, operatingPeriodMonths: 60, exitCapRate: 0.08 },
-  "serviced":  { mode: "lease", label: "Serviced Apartment", blurb: "Long-stay keyed", icon: "◨", basis: "key",  far: 2.5,  landCoveragePct: 0.50, maxFloors: 8, upperFloorCoveragePct: 0.45, lastFloorPct: 0.80, costPerSqmGFA: 4500, siteWorkPct: 0.08, basementCostPerSqm: 2400, efficiency: 0.70, keys: 96,  adr: 720,  occupancy: 0.74, opexPct: 0.50, operatingPeriodMonths: 60, exitCapRate: 0.075 },
-  "retail-sale": { mode: "sale", label: "Retail (Strata)", blurb: "Retail sold per m²", icon: "▦", basis: "sqm", far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, pricePerSqm: 11500, salesPeriodMonths: 36 },
-  "custom":    { mode: "sale",  label: "Custom",           blurb: "Blank — define your own", icon: "◇", basis: "sqm", far: 1.0,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.80, pricePerSqm: 6000, salesPeriodMonths: 36 },
+  "apartment": { mode: "sale",  purposes: BOTH, label: "Residential", blurb: "Apartments, sold or let", icon: "▣", basis: "unit", far: 2.4,  landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 150, pricePerUnit: 1000000, salesPeriodMonths: 36, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+  "retail":    { mode: "lease", purposes: BOTH, label: "Retail",      blurb: "Shops, let or sold per m²", icon: "◰", basis: "sqm",  far: 1.0,  landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075, pricePerSqm: 11500, salesPeriodMonths: 36 },
+  "office":    { mode: "lease", purposes: BOTH, label: "Office",      blurb: "Floors, let or sold per m²", icon: "◳", basis: "sqm",  far: 4.0,  landCoveragePct: 0.50, maxFloors: 12, upperFloorCoveragePct: 0.50, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.07, basementCostPerSqm: 2300, efficiency: 0.78, rentPerSqmYr: 1150, occupancy: 0.85, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.08, pricePerSqm: 15000, salesPeriodMonths: 36 },
+  /* Hospitality is an operating business, not a stock of units: it is measured
+     in keys and ADR and it is held, so both of these are lease-only. They are
+     NOT the same asset and the blurbs now say how they differ — a hotel turns
+     its rooms over nightly at a high rate and a high cost to run; serviced
+     apartments take long stays at a lower rate, fuller and cheaper to operate. */
+  "hotel":     { mode: "lease", purposes: LEASE, label: "Hotel",      blurb: "Nightly stays, top rate", icon: "◧", basis: "key",  far: 3.0,  landCoveragePct: 0.45, maxFloors: 10, upperFloorCoveragePct: 0.40, lastFloorPct: 0.75, costPerSqmGFA: 4500, siteWorkPct: 0.10, basementCostPerSqm: 2800, efficiency: 0.65, keys: 220, adr: 1050, occupancy: 0.68, opexPct: 0.58, operatingPeriodMonths: 60, exitCapRate: 0.08 },
+  "serviced":  { mode: "lease", purposes: LEASE, label: "Serviced Apartment", blurb: "Long stays, steadier occupancy", icon: "◨", basis: "key",  far: 2.5,  landCoveragePct: 0.50, maxFloors: 8, upperFloorCoveragePct: 0.45, lastFloorPct: 0.80, costPerSqmGFA: 4500, siteWorkPct: 0.08, basementCostPerSqm: 2400, efficiency: 0.70, keys: 96,  adr: 720,  occupancy: 0.74, opexPct: 0.50, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+  "custom":    { mode: "sale",  purposes: BOTH, label: "Custom",      blurb: "Blank — define your own", icon: "◇", basis: "sqm", far: 1.0,  landCoveragePct: 0.50, maxFloors: 3, upperFloorCoveragePct: 0.45, lastFloorPct: 0.85, costPerSqmGFA: 2500, siteWorkPct: 0.08, basementCostPerSqm: 2200, efficiency: 0.80, pricePerSqm: 6000, salesPeriodMonths: 36, rentPerSqmYr: 1000, occupancy: 0.85, opexPct: 0.30, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+
+  /* Superseded by the dual-purpose types above, which now carry both sets of
+     rates. Kept — and still resolvable by kind — because saved models were
+     built from them: dropping the entries would leave those components with no
+     preset, no keyed basis and nothing for "use default inputs" to fill.
+     `hidden` keeps them out of the picker without breaking any of that. */
+  "btr":         { hidden: true, mode: "lease", purposes: BOTH, label: "Build-to-Rent",   blurb: "Residential rental", icon: "◫", basis: "unit", far: 2.4, landCoveragePct: 0.55, maxFloors: 8, upperFloorCoveragePct: 0.55, lastFloorPct: 0.80, costPerSqmGFA: 2500, siteWorkPct: 0.06, basementCostPerSqm: 2000, efficiency: 0.78, avgUnitSize: 100, rentPerUnitYr: 85000, occupancy: 0.92, opexPct: 0.32, operatingPeriodMonths: 60, exitCapRate: 0.075, pricePerUnit: 1000000, salesPeriodMonths: 36 },
+  "retail-sale": { hidden: true, mode: "sale",  purposes: BOTH, label: "Retail (Strata)", blurb: "Retail sold per m²", icon: "▦", basis: "sqm", far: 1.0, landCoveragePct: 0.65, maxFloors: 2, upperFloorCoveragePct: 0.55, lastFloorPct: 0.90, costPerSqmGFA: 2500, siteWorkPct: 0.10, basementCostPerSqm: 2500, efficiency: 0.72, pricePerSqm: 11500, salesPeriodMonths: 36, rentPerSqmYr: 1450, occupancy: 0.88, opexPct: 0.28, operatingPeriodMonths: 60, exitCapRate: 0.075 },
+};
+
+/* Which purposes a component's own type allows. Unknown types — a saved model
+   from before this table, or one whose preset has since gone — are left
+   unconstrained rather than locked to a guess. */
+const purposesOf = (kind) => {
+  const p = COMPONENT_PRESETS[kind];
+  return (p && p.purposes) || BOTH;
 };
 
 /* ---------- Floor-by-floor breakdown (coverage mode) ---------- */
@@ -497,6 +534,9 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
   const keys = computed.keys || 0;
   // Whether this building type is counted in keys at all — see the basis toggle.
   const isKeyed = !!(COMPONENT_PRESETS[comp.kind] && COMPONENT_PRESETS[comp.kind].basis === "key");
+  // ...and what it can be done with — see the purpose toggle.
+  const allowsSale = purposesOf(comp.kind).indexOf("sale") >= 0;
+  const allowsLease = purposesOf(comp.kind).indexOf("lease") >= 0;
 
   /* Revenue — taken from the engine, not recomputed.
 
@@ -569,7 +609,22 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
                  that list, shared with the mixed-use spaces. */
               onChange(Object.assign({}, comp, Feas.modeDefaults(comp, v)));
             }}
-            options={[{ value: "sale", label: "Saleable", disabled: isLeasehold, disabledHint: "Units cannot be sold on leased land" }, { value: "lease", label: "Leasable" }]}
+            /* Two independent reasons a purpose can be shut off, and they say
+               different things: the SITE may forbid selling (a ground lease
+               conveys no title), or the TYPE may not do it at all — a hotel is
+               an operating business measured in keys, not a stock of units to
+               sell. Whichever applies, Segmented leaves the option live while
+               it is the current value, so a component already set that way
+               keeps working and simply cannot return to it. */
+            options={[
+              { value: "sale", label: "Saleable",
+                disabled: isLeasehold || !allowsSale,
+                disabledHint: isLeasehold
+                  ? "Units cannot be sold on leased land"
+                  : "This building type is held and operated, not sold as units" },
+              { value: "lease", label: "Leasable", disabled: !allowsLease,
+                disabledHint: "This building type is sold, not let" },
+            ]}
           />
         )}
       </div>
@@ -1038,7 +1093,7 @@ function ComponentEditor({ comp, onChange, onRemove, totalLandArea, landPricePer
 /* ---------- Component picker (tile grid) ---------- */
 
 function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
-  const entries = Object.entries(COMPONENT_PRESETS);
+  const entries = Object.entries(COMPONENT_PRESETS).filter(([, p]) => !p.hidden);
   /* Every component type stays available on leased land — a villa or an
      apartment block can perfectly well be BUILT and LET on a ground lease.
      What is unavailable is SELLING it, which is enforced on each component's
@@ -1080,15 +1135,20 @@ function ComponentPicker({ onPick, hasComponents, landArea, isLeasehold }) {
           >
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
               <span style={{ fontSize: 18, color: "var(--ad-navy-700)", lineHeight: 1 }}>{p.icon}</span>
+              {/* The badge states what the type CAN be, not what this tile
+                  happens to open on. A villa let out is still a villa, and the
+                  badge saying "Sale" was the reason nobody knew that. A type
+                  offering both is neutral in colour — neither purpose is the
+                  real one — and a mixed-use building reads as both because
+                  each space inside it decides for itself. */}
               <span style={{
                 fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase",
-                // A mixed-use building has no single purpose — each sub-component
-                // is sold or leased on its own terms.
-                color: p.mode === "mixed" ? "var(--ad-navy-700)"
-                     : p.mode === "sale"  ? "var(--ad-success)"
+                color: (p.purposes || []).length > 1 ? "var(--ad-navy-700)"
+                     : (p.purposes || [])[0] === "sale" ? "var(--ad-success)"
                      : "var(--ad-gold-600)",
                 fontWeight: 600,
-              }}>{p.mode === "mixed" ? "Sale + Lease" : p.mode === "sale" ? "Sale" : "Lease"}</span>
+              }}>{(p.purposes || []).length > 1 ? "Sale or Lease"
+                  : (p.purposes || [])[0] === "sale" ? "Sale" : "Lease"}</span>
             </div>
             <div style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-1)", marginTop: 4 }}>{p.label}</div>
             <div style={{ fontSize: 10, color: "var(--fg-3)", lineHeight: 1.3 }}>{p.blurb}</div>

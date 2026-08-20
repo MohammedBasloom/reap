@@ -262,6 +262,20 @@
     "Leasable retail GLA": "مساحات تجزئة تأجيرية", "Leasable office NLA": "مساحات مكتبية تأجيرية",
     "Keyed hospitality": "ضيافة فندقية", "Long-stay keyed": "إقامة طويلة",
     "Blank — define your own": "فارغ — عرّفه بنفسك",
+    /* Purpose is a choice about a building, not a kind of building, so the
+       tiles now say what each type CAN be rather than what it opens on. */
+    "Sale or Lease": "بيع أو تأجير",
+    "Residential": "سكني",
+    "Detached homes, sold or let": "مساكن مستقلة — بيع أو تأجير",
+    "Attached homes, sold or let": "مساكن متلاصقة — بيع أو تأجير",
+    "Apartments, sold or let": "شقق — بيع أو تأجير",
+    "Shops, let or sold per m²": "محلات — تأجير أو بيع بالمتر",
+    "Floors, let or sold per m²": "أدوار — تأجير أو بيع بالمتر",
+    "Nightly stays, top rate": "إقامة ليلية بأعلى سعر",
+    "Long stays, steadier occupancy": "إقامة طويلة بإشغال أثبت",
+    "This building type is held and operated, not sold as units":
+      "هذا النوع يُحتفظ به ويُشغَّل، ولا يُباع كوحدات",
+    "This building type is sold, not let": "هذا النوع يُباع ولا يُؤجَّر",
     "+ ADD": "+ إضافة", "+ Add": "+ إضافة", "on": "مفعّل",
     "Land & massing": "الأرض والكتلة العمرانية",
     "Allocation of land": "حصة الأرض", "% of total land": "% من إجمالي الأرض",
