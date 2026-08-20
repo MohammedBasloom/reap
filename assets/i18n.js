@@ -474,6 +474,7 @@
     "From project start": "من بداية المشروع",
     "No component is being sold": "لا يوجد مكوّن معروض للبيع",
     "Pre-construction + construction + hold / sell-down": "ما قبل الإنشاء + الإنشاء + التشغيل / البيع",
+    "Set pre-construction and construction first": "حدّد ما قبل الإنشاء والإنشاء أولًا",
     "General Costs": "التكاليف العامة", "Soft costs": "التكاليف غير المباشرة", "Contingency": "الاحتياطي",
     "Marketing": "التسويق", "Sales commission": "عمولة البيع", "Gov / sales fees": "رسوم حكومية / بيع",
     "Financing": "التمويل", "LTC": "نسبة التمويل LTC", "Interest": "الفائدة",

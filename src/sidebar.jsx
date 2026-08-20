@@ -137,7 +137,15 @@ function AutoHorizonDisplay({ input }) {
      Mixed-Use Building — whose mode is "mixed" — extended it by nothing and
      the read-out showed construction plus three while the model ran for
      years. */
-  const horizon = Feas.autoHorizonMonths(input);
+  /* The horizon is DERIVED, so there is nothing honest to show until the
+     periods it derives from exist. With them blank the engine floors
+     construction at a single month, and this read-out announced a 61-month
+     project nobody had described — a figure carrying the authority of a
+     calculation with no inputs underneath it. Held back like the sales-start
+     field beside it, which greys out when no component is being sold. */
+  const entered = (v) => v !== null && v !== undefined && v !== "" && !isNaN(+v);
+  const ready = entered(input.predesignMonths) && entered(input.constructionMonths);
+  const horizon = ready ? Feas.autoHorizonMonths(input) : 0;
   const years = (horizon / 12);
   return (
     <div>
@@ -155,11 +163,19 @@ function AutoHorizonDisplay({ input }) {
         fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--fg-1)",
         fontVariantNumeric: "tabular-nums",
       }}>
-        <span>{horizon} mo</span>
-        <span style={{ color: "var(--fg-3)", fontSize: 11 }}>{years.toFixed(1)} yrs</span>
+        {ready ? (
+          <>
+            <span>{horizon} mo</span>
+            <span style={{ color: "var(--fg-3)", fontSize: 11 }}>{years.toFixed(1)} yrs</span>
+          </>
+        ) : (
+          <span style={{ color: "var(--fg-4)" }}>—</span>
+        )}
       </div>
       <div style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 3 }}>
-        Pre-construction + construction + hold / sell-down
+        {ready
+          ? "Pre-construction + construction + hold / sell-down"
+          : "Set pre-construction and construction first"}
       </div>
     </div>
   );
