@@ -309,7 +309,11 @@
     "Ground": "أرضي", "Upper": "علوي", "Last": "الأخير",
     "Enter a land allocation and max floors to see the floor-by-floor breakdown.":
       "أدخل حصة الأرض وعدد الأدوار لعرض توزيع المسطحات دورًا بدور.",
-    "Coverage": "التغطية", "ratio": "نسبة",
+    /* FAR is a multiplier of the plot, not a percentage of it — "نسبة" next to
+       a number field reads as percent, and a FAR of 3 is three TIMES the land,
+       not three per cent of it. The hint under the box already says
+       الإجمالي = الأرض × معامل البناء; the unit must not contradict it. */
+    "Coverage": "التغطية", "ratio": "مُعامل",
     "GFA = Land × FAR": "الإجمالي = الأرض × معامل البناء",
     "SAR/m² GFA": "ر.س/م² إجمالي",
     "Above-ground construction rate": "معدل البناء فوق الأرض",
