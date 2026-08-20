@@ -161,7 +161,7 @@
        being valued. The feasibility component is a whole building sold as
        units, so it carries its own key. */
     "Villa": "فيلا", "Townhouse": "تاون هاوس", "Apartment": "شقة", "Build-to-Rent": "سكني للتأجير",
-    "Residential Building": "عمارة سكنية - بيع وحدات",
+    "Residential Building": "سكني - بيع وحدات",
 
     /* Mixed-Use Building — one envelope, several uses, each sold or let on its
        own terms. */
