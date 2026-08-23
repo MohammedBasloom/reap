@@ -86,6 +86,13 @@ function valStepDone(input, key) {
        only one of the two cannot be reduced to a rate and contributes nothing. */
     case "comps":
       return (input.sales.comps || []).some((c) => (+c.pricePerSqm || 0) > 0 || ((+c.price || 0) > 0 && (+c.area || 0) > 0));
+    /* Read the model, not a visit log. These were sticky flags, so a step
+       stayed answered for the rest of the session however the figures changed
+       afterwards — clear the cap rate on a valued property and the result went
+       on standing there, computed from a blank the engine reads as zero, with
+       nothing to say so. */
+    case "income": case "cost": case "weights":
+      return valStepFilled(input, key);
     default:
       return !!seen[key];
   }
@@ -103,23 +110,46 @@ function valGuide(input) {
 }
 
 /* What each step's "use default inputs" writes — the same market-typical
-   figures the platform used to open with, now taken deliberately. */
-function valStepDefaults(input, key) {
+   figures the platform used to open with, now taken deliberately.
+
+   This map is also what "is the step answered?" is measured against, so the
+   button and the test cannot disagree about which figures the step is
+   responsible for. Naming them twice is how a step ends up closed with one of
+   its fields still empty. */
+const VAL_STEP_GROUP = { income: "income", cost: "cost", weights: "weights" };
+
+function valStepValues(input, key) {
   const t = V.PROPERTY_TYPES[input.property.type];
   const d = t.defaults;
   if (key === "income") {
-    return { income: Object.assign({}, input.income, {
-      rentPerSqmYr: d.rentPerSqmYr, vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate,
-    }) };
+    return { rentPerSqmYr: d.rentPerSqmYr, vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate };
   }
   if (key === "cost") {
-    return { cost: Object.assign({}, input.cost, {
-      landPricePerSqm: 1200, buildCostPerSqm: d.buildCostPerSqm,
-      economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0,
-    }) };
+    return { landPricePerSqm: 1200, buildCostPerSqm: d.buildCostPerSqm,
+             economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0 };
   }
-  if (key === "weights") return { weights: Object.assign({}, t.weights) };
-  return {};
+  if (key === "weights") return Object.assign({}, t.weights);
+  return null;
+}
+
+function valStepDefaults(input, key) {
+  const vals = valStepValues(input, key);
+  if (!vals) return {};
+  const g = VAL_STEP_GROUP[key];
+  return { [g]: Object.assign({}, input[g], vals) };
+}
+
+/* Answered means the figures are actually there — not that the step was
+   visited once. A zero is an answer (no obsolescence, no weight on cost); only
+   an empty box is not. */
+function valStepFilled(input, key) {
+  const vals = valStepValues(input, key);
+  if (!vals) return false;
+  const cur = input[VAL_STEP_GROUP[key]] || {};
+  return Object.keys(vals).every((f) => {
+    const v = cur[f];
+    return v !== null && v !== undefined && v !== "" && !isNaN(+v);
+  });
 }
 
 /* ---------- Small UI atoms (brand-consistent) ---------- */
@@ -321,27 +351,55 @@ function ValApp() {
      cost and weighting all start collapsed here, which makes the expand step
      matter more than it does on the other platform. */
   const currentValStep = (() => {
-    if (input.showResults) return null;
-    const s = valGuide(input).steps.find((x) => !x.done);
+    const g = valGuide(input);
+    /* The walk engages whenever the guide is the thing on screen, which is the
+       same condition the main panel renders it on — including the case where a
+       finished valuation lost one of its figures and the guide came back. */
+    if (input.showResults && g.allDone) return null;
+    const s = g.steps.find((x) => !x.done);
     return s ? s.key : null;
   })();
-  useEffect(() => {
-    if (!currentValStep || !sideOpen) return;
-    const target = document.querySelector(`[data-sec="${currentValStep}"]`);
-    if (!target) return;
+  /* One implementation, two callers: the automatic walk to the current step,
+     and a click on any step title in the guide. Returns the pending timeout so
+     an effect can cancel it if the step changes underneath. */
+  const walkToValSection = (key) => {
+    if (!key) return null;
+    const target = document.querySelector(`[data-sec="${key}"]`);
+    if (!target) return null;
     const scroller = target.closest("aside");
-    if (!scroller) return;
+    if (!scroller) return null;
     if (target.getAttribute("data-open") === "0") {
       const header = target.querySelector("button");
       if (header) header.click();
     }
-    const id = window.setTimeout(() => {
+    return window.setTimeout(() => {
       const top = scroller.scrollTop
         + (target.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
       scroller.scrollTo({ top: Math.max(0, top - 8), behavior: "smooth" });
     }, 140);
-    return () => window.clearTimeout(id);
+  };
+
+  useEffect(() => {
+    if (!currentValStep || !sideOpen) return;
+    const id = walkToValSection(currentValStep);
+    return () => { if (id) window.clearTimeout(id); };
   }, [currentValStep, sideOpen]);
+
+  /* Clicking a step title asks for that section by name — any step, finished
+     or not, so the guide reads as a table of contents rather than a one-way
+     march. A collapsed panel holds no sections in the DOM at all, so a click
+     opens it first and defers the lookup a frame, or there would be nothing
+     to scroll to. Same event the modeling platform uses. */
+  useEffect(() => {
+    const onWalk = (e) => {
+      const key = e && e.detail;
+      if (!key) return;
+      if (!sideOpen) setSideOpen(true);
+      window.setTimeout(() => walkToValSection(key), 0);
+    };
+    window.addEventListener("feas:walkTo", onWalk);
+    return () => window.removeEventListener("feas:walkTo", onWalk);
+  });
 
   const changeType = (type) => {
     setInput((prev) => {
@@ -621,7 +679,12 @@ function ValApp() {
         {!isLand && (
           <Section n="03" sec="income" title="Rental income" sub="The income approach — what is the property worth as an investment?" defaultOpen={false}>
             <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 6 }}>
-              Even if you won't rent it out, this shows what an investor would pay. Defaults are typical for {typeDef.label.toLowerCase()}s — adjust to your market knowledge.
+              {/* One plain string, no interpolation. Splicing the property type
+                  into the sentence produced a key no dictionary could hold, so
+                  the whole line stayed in English on an Arabic page — and it
+                  read "typical for a apartments" into the bargain. The type is
+                  named in the section heading directly above. */}
+              Even if you won't rent it out, this shows what an investor would pay. The defaults are typical for this property type — adjust them to your market knowledge.
             </div>
             <Row cols={2}>
               <Field label="Rent basis">
@@ -658,7 +721,12 @@ function ValApp() {
                 <Field label="Land share" hint="Apartments don't own a plot — a land share (~15% of building value) is included automatically.">
                   <input className="field-input" value="~15%" disabled /></Field>
               )}
-              <Field label="Build cost" suffix="SAR/m²" hint={`Typical for a ${typeDef.label.toLowerCase()}: ~${fn(typeDef.defaults.buildCostPerSqm)} SAR/m².`}>
+              {/* A hint is a prop, so it cannot be split into elements the way
+                  a sentence can — the prose half is translated by hand and the
+                  rate appended, rather than building one interpolated string
+                  the dictionary can never match. */}
+              <Field label="Build cost" suffix="SAR/m²"
+                     hint={`${window.I18N ? I18N.t("Typical for this property type") : "Typical for this property type"}: ~${fn(typeDef.defaults.buildCostPerSqm)}`}>
                 <NumInput value={input.cost.buildCostPerSqm} onChange={(v) => upd("cost.buildCostPerSqm", v)} /></Field>
             </Row>
             <Row cols={2}>
@@ -693,7 +761,14 @@ function ValApp() {
         ) : (
         <Section n="05" sec="weights" title="Final weighting" sub="How much each approach counts toward the final value." defaultOpen={false}>
           <div style={{ fontSize: 11, color: "var(--fg-3)", lineHeight: 1.5, marginBottom: 8 }}>
-            We pre-weight by property type following professional practice ({typeDef.label.toLowerCase()}s lean on {typeDef.weights.sales >= 0.5 ? "comparable sales" : "income"}). Adjust if you trust one approach more.
+            {/* Three plain string children rather than one interpolated line.
+                Each is a key the dictionary can hold, and the middle one is a
+                conditional between two literals — also translatable — so the
+                sentence survives in Arabic instead of falling back to English
+                wholesale. */}
+            <span>We pre-weight by property type following professional practice — this type leans on </span>
+            <span>{typeDef.weights.sales >= 0.5 ? "comparable sales" : "rental income"}</span>
+            <span>. Adjust if you trust one approach more.</span>
           </div>
           <Row cols={3}>
             <Field label="Sales comp." suffix="%"><PctInput value={input.weights.sales} onChange={(v) => upd("weights.sales", v)} /></Field>
@@ -743,7 +818,12 @@ function ValApp() {
 
       {/* ===== MAIN (results) ===== */}
       <main style={{ gridArea: "main", overflowY: "auto", background: "var(--bg-2)" }}>
-        {input.showResults
+        {/* Opening the result is a decision the user makes once; KEEPING it
+            open depends on the walk still being complete. Emptying a field
+            afterwards reopens the guide on the step that lost its answer,
+            rather than leaving a valuation on screen that is quietly being
+            computed from a blank. */}
+        {input.showResults && guide.allDone
           ? <ValResults result={result} sens={sens} input={input} />
           : <ValBuildGuide guide={guide} onUseDefaults={applyValDefaults}
                            onShowResults={() => setInput((p) => Object.assign({}, p, { showResults: true }))} />}
@@ -796,7 +876,7 @@ function ValBuildGuide({ guide, onUseDefaults, onShowResults }) {
         </div>
         {steps.map((s, i) => (
           <ValStepRow key={s.key} n={i + 1} index={i} last={i === steps.length - 1}
-                      current={i === currentIdx} title={s.title} body={s.body} done={s.done}
+                      current={i === currentIdx} stepKey={s.key} title={s.title} body={s.body} done={s.done}
                       onUseDefaults={s.cta && i === currentIdx ? () => onUseDefaults(s.key) : null} />
         ))}
       </div>
@@ -819,7 +899,7 @@ function ValBuildGuide({ guide, onUseDefaults, onShowResults }) {
   );
 }
 
-function ValStepRow({ n, title, body, done, index, last, current, onUseDefaults }) {
+function ValStepRow({ n, stepKey, title, body, done, index, last, current, onUseDefaults }) {
   const DOT = 26;
   return (
     <div className={`reap-step${current ? " is-current" : ""}`}
@@ -840,8 +920,17 @@ function ValStepRow({ n, title, body, done, index, last, current, onUseDefaults 
         border: done || current ? "none" : "1px solid var(--border-strong)",
       }}>{done ? "✓" : n}</span>
       <div style={{ minWidth: 0, paddingTop: 3 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 600, marginBottom: 3,
-                      color: done ? "var(--fg-3)" : "var(--fg-1)" }}>{title}</div>
+        {/* The title is the way back into the panel — an answer given early is
+            the one most worth re-reading, so finished steps stay reachable. */}
+        <div style={{ marginBottom: 3 }}>
+          <button
+            type="button"
+            className="reap-step-title"
+            title="Open this section in the assumptions panel"
+            onClick={() => window.dispatchEvent(new CustomEvent("feas:walkTo", { detail: stepKey }))}
+            style={{ fontSize: 13.5, fontWeight: 600,
+                     color: done ? "var(--fg-3)" : "var(--fg-1)" }}>{title}</button>
+        </div>
         <div className="reap-body" style={{ fontSize: 12, lineHeight: 1.55,
                                             color: done ? "var(--fg-4)" : "var(--fg-2)" }}>{body}</div>
         {onUseDefaults && (

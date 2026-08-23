@@ -921,6 +921,17 @@
     "Obsolescence": "التقادم",
     "Extra value loss from outdated design or a declining area. Usually 0.": "فقد إضافي بسبب تصميم قديم أو منطقة متراجعة. عادة 0.",
     "Final weighting": "الترجيح النهائي",
+    /* These three lines used to be built by splicing the property type into a
+       sentence, which produced a key no dictionary could hold — so they stayed
+       in English on an Arabic page. Split into plain strings, they translate. */
+    "Even if you won't rent it out, this shows what an investor would pay. The defaults are typical for this property type — adjust them to your market knowledge.":
+      "حتى إن لم تُؤجّره، يوضّح هذا ما قد يدفعه المستثمر. والقيم الافتراضية معتادة لهذا النوع من العقارات — عدّلها وفق معرفتك بالسوق.",
+    "Typical for this property type": "معتاد لهذا النوع من العقارات",
+    "We pre-weight by property type following professional practice — this type leans on ":
+      "نضع ترجيحًا مبدئيًا حسب نوع العقار وفق الممارسة المهنية — وهذا النوع يميل إلى ",
+    "comparable sales": "الصفقات المقارنة",
+    "rental income": "الدخل الإيجاري",
+    ". Adjust if you trust one approach more.": ". عدّل الترجيح إن كنت تثق بأسلوب أكثر من غيره.",
     "How much each approach counts toward the final value.": "وزن كل أسلوب في القيمة النهائية.",
     "Sales comp.": "المقارنات", "Income": "الدخل",
     "Save to my account": "احفظ في حسابي", "New": "جديد",
