@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261110"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261110" />
+  <script src="assets/i18n.js?v=20261111"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261111" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -954,24 +954,23 @@
       .vcard blockquote { font-size: 14.5px; line-height: 1.65; }
     }
 
-    /* A rotated box is wider than itself, and these cards are tall: at the
-       16° the back card reaches, a 340×560 card needs 482px of room. On a
-       375px phone that is 47px the page can scroll sideways into and never
-       needs — every section then sits 47px narrower than the screen and the
-       margins stop lining up, which is what the fan was really costing.
+    /* Phones read the testimonials as a plain column — the same treatment
+       reduced motion gets, and for a related reason: the fan cannot work here.
 
-       The tilt is a wide-screen flourish, so below the width where it stops
-       fitting the cards keep the slide and lose the rotation. Overriding
-       `transform` rather than `--rot`: the scroll driver writes the custom
-       properties inline, where a stylesheet cannot reach them, but the
-       transform itself is declared here and a later rule wins. */
-    @media (max-width: 600px) {
-      .vcard { transform: translateY(var(--y, 0%)); }
-    }
+       Two things break it. A rotated box is wider than itself, and these cards
+       are tall: at the 16° the back card reaches, a 340×560 card needs 482px,
+       so a 375px phone gained 47px of sideways scroll and every section on the
+       page sat 47px off with it. And the pin gives all five cards 1,624px of
+       travel between them, which one flick with momentum clears in a single
+       gesture — the whole sequence went past at once instead of a card at a
+       time. Buying the stagger back would take several screens of scrolling per
+       card, which is a worse thing to do to someone than dropping the effect.
 
-    /* Reduced motion gets the same content as a plain column — no fan, no
-       pinning, nothing driven by scroll position. */
-    @media (prefers-reduced-motion: reduce) {
+       A column shows every card, one under the next, at whatever pace the
+       reader scrolls. It also frees the height: the fan needs one fixed box
+       sized to the longest quote, so the short ones carried a screenful of
+       blank paper underneath them. */
+    @media (prefers-reduced-motion: reduce), (max-width: 600px) {
       .vstack { height: auto; }
       .vstack-pin { position: static; height: auto; display: block; perspective: none; }
       .vstack-cards { width: auto; max-width: 620px; height: auto; margin: 0 auto; padding-bottom: 40px; }
@@ -1266,7 +1265,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261110"></script>
+<script src="assets/mobile-notice.js?v=20261111"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -2089,8 +2088,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261110"></script>
-<script src="assets/auth.js?v=20261110"></script>
+<script src="assets/config.js?v=20261111"></script>
+<script src="assets/auth.js?v=20261111"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
