@@ -1215,7 +1215,7 @@ function ValFooter() {
       padding: "8px 28px", background: "var(--ad-navy-900)", borderTop: "1px solid var(--ad-navy-700)",
       color: "rgba(255,255,255,0.7)", fontSize: 12,
     }}>
-      <span>Developed by <span style={{ color: "white", fontWeight: 600 }}>Mohammed Basloom</span></span>
+      <span>Developed by <a className="byline-link" href="https://mohbaslom.com/" target="_blank" rel="noopener noreferrer">Mohammed Basloom</a></span>
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />
       <a href="tel:+966558793201" className="tabnum" style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>+966 55 879 3201</a>
       <span style={{ width: 1, height: 16, background: "rgba(255,255,255,0.18)" }} />

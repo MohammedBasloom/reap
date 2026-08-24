@@ -295,6 +295,30 @@ html[dir="rtl"] [style*="text-align: left"] { text-align: right !important; }
   outline: 2px solid var(--ad-gold-500); outline-offset: 3px;
 }
 
+/* The byline in every footer links to its author's own site. It keeps the
+   weight and colour the name already had — a credit line should not start
+   competing with the calls to action above it — so the underline arrives only
+   on hover and focus. One rule here rather than six copies inline: every page
+   loads this file, including the two whose footers are rendered by React. */
+/* Matched on :link/:visited rather than the bare class. The static pages carry
+   `.footer a { color: rgba(255,255,255,.7); display: inline-flex }` for the
+   social icons, which outranks a lone class and would strip the name of the
+   white it has always had — and lay a flex box into the middle of a sentence.
+   A pseudo-class costs the same as a class, so this clears it honestly.
+   Hovering is left to `.footer a:hover`, which is more specific still and turns
+   every other link in that bar gold; the underline follows whatever colour
+   that leaves behind. */
+.byline-link:link, .byline-link:visited {
+  color: #FFFFFF; font-weight: 600; text-decoration: none; display: inline;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out);
+}
+.byline-link:hover { border-bottom-color: currentColor; }
+.byline-link:focus-visible {
+  border-bottom-color: currentColor;
+  outline: 2px solid var(--ad-gold-500); outline-offset: 3px;
+}
+
 /* Remove control on an allocation row. Sized to the 44px touch guidance via
    padding rather than a large glyph, and kept grey until the row is hovered
    so it does not read as a warning sitting beside every component. It turns
