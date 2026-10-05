@@ -2177,6 +2177,9 @@ function Sidebar({ input, setInput, open = true, onToggle }) {
           <PctField label="Marketing" value={input.marketingPct} onChange={v => upd("marketingPct", v)} hint="Of sales revenue" />
           <PctField label="Sales commission" value={input.salesCommissionPct} onChange={v => upd("salesCommissionPct", v)} hint="Of sales revenue" />
           <PctField label="Gov / sales fees" value={input.govFeesPct} onChange={v => upd("govFeesPct", v)} hint="On sales revenue" />
+          {/* The disposal of the let asset is a sale like any other, and was the
+              one sale in the model that cost nothing to make. */}
+          <PctField label="Exit sale costs" value={input.exitCostPct} onChange={v => upd("exitCostPct", v)} hint="Of exit value" tip="Brokerage and legal costs of selling a let asset at the end of the hold. Taken off the exit proceeds, so the exit value shown everywhere is what the project actually receives. Raises nothing on a scheme with no exit." />
         </Row>
       </Section>
 

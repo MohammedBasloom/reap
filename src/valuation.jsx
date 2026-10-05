@@ -38,9 +38,10 @@ function defaultInput(type = "apartment") {
   return {
     name: (window.I18N && I18N.lang === "ar") ? "تقييم جديد" : "New Valuation",
     property: { type, city: "", district: "", landArea: null, builtArea: null, age: null, condition: "good" },
-    sales: { comps: [blankComp(), blankComp(), blankComp()], marketTrendPctYr: null },
+    sales: { comps: [blankComp(), blankComp(), blankComp()], marketTrendPctYr: null, areaBasis: "built" },
     income: { rentBasis: "perSqm", rentPerSqmYr: null, annualRent: null, vacancyPct: null, opexPct: null, capRate: null },
-    cost: { landPricePerSqm: null, buildCostPerSqm: null, economicLifeYrs: null, obsolescencePct: null },
+    cost: { landPricePerSqm: null, landSharePct: null, buildCostPerSqm: null, softCostPct: null,
+            developerProfitPct: null, economicLifeYrs: null, obsolescencePct: null },
     weights: landOnly ? { sales: 1, income: 0, cost: 0 } : { sales: null, income: null, cost: null },
     stepsDone: {},
   };
@@ -121,23 +122,49 @@ const VAL_STEP_GROUP = { income: "income", cost: "cost", weights: "weights" };
 function valStepValues(input, key) {
   const t = V.PROPERTY_TYPES[input.property.type];
   const d = t.defaults;
+  /* The list follows the fields the panel is SHOWING. Rent is asked for either
+     per m² or as a yearly total, and land either as a price per m² or — for a
+     unit with no plot of its own — as a share; naming the hidden one of each
+     pair made the step impossible to finish by hand, because the box it was
+     waiting on was not on screen. */
   if (key === "income") {
-    return { rentPerSqmYr: d.rentPerSqmYr, vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate };
+    const rent = (input.income || {}).rentBasis === "total"
+      ? { annualRent: Math.round(d.rentPerSqmYr * (+input.property.builtArea || 0)) }
+      : { rentPerSqmYr: d.rentPerSqmYr };
+    return Object.assign(rent, { vacancyPct: d.vacancyPct, opexPct: d.opexPct, capRate: d.capRate });
   }
   if (key === "cost") {
-    return { landPricePerSqm: 1200, buildCostPerSqm: d.buildCostPerSqm,
-             economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0 };
+    const land = t.usesLand ? { landPricePerSqm: 1200 } : { landSharePct: d.landSharePct || 0.15 };
+    return Object.assign(land, {
+      buildCostPerSqm: d.buildCostPerSqm,
+      // Design, supervision and finance; then the margin a developer expects.
+      softCostPct: 0.10, developerProfitPct: 0.15,
+      economicLifeYrs: d.economicLifeYrs || 60, obsolescencePct: 0,
+    });
   }
   if (key === "weights") return Object.assign({}, t.weights);
   return null;
 }
 
+/* Fills only what is still empty. The button is offered again whenever a step
+   reopens, and by then the step usually holds figures the user typed; taking a
+   default for the one box they cleared must not write over the rest. */
+const valBlank = (v) => v === null || v === undefined || v === "" || isNaN(+v);
 function valStepDefaults(input, key) {
   const vals = valStepValues(input, key);
   if (!vals) return {};
   const g = VAL_STEP_GROUP[key];
-  return { [g]: Object.assign({}, input[g], vals) };
+  const cur = input[g] || {};
+  const patch = {};
+  Object.keys(vals).forEach((f) => { if (valBlank(cur[f])) patch[f] = vals[f]; });
+  return { [g]: Object.assign({}, cur, patch) };
 }
+
+/* Fields added after valuations were already being saved. One saved before
+   them has no such key at all, and the engine reads that as it always did —
+   no uplift, the standard land share — so it is not reopened to ask. A new
+   valuation carries the key as an empty box, and is asked like any other. */
+const VAL_LATER_FIELDS = { softCostPct: 1, developerProfitPct: 1, landSharePct: 1 };
 
 /* Answered means the figures are actually there — not that the step was
    visited once. A zero is an answer (no obsolescence, no weight on cost); only
@@ -148,7 +175,8 @@ function valStepFilled(input, key) {
   const cur = input[VAL_STEP_GROUP[key]] || {};
   return Object.keys(vals).every((f) => {
     const v = cur[f];
-    return v !== null && v !== undefined && v !== "" && !isNaN(+v);
+    if (v === undefined && VAL_LATER_FIELDS[f]) return true;
+    return !valBlank(v);
   });
 }
 
@@ -451,6 +479,10 @@ function ValApp() {
 
   const typeDef = V.PROPERTY_TYPES[input.property.type];
   const isLand = !!typeDef.landOnly;
+  // Which area the comparables are quoted on — the same rule the engine applies.
+  const compBasis = isLand ? "land"
+    : !typeDef.usesLand ? "built"
+    : (input.sales.areaBasis === "land" ? "land" : "built");
   const guide = valGuide(input);
   const r = result.reconciliation;
 
@@ -622,6 +654,21 @@ function ValApp() {
             Find 3–5 recent sales of similar properties (ask agents, or check Ministry of Justice / Aqar transaction records).
             Then adjust each one: <em>“compared to my property, was that one better or worse?”</em> Better comp → negative %, worse comp → positive %.
           </div>
+          {/* A building on its own plot can be compared on either area, and the
+              market quotes villas both ways. The choice is asked for rather
+              than assumed, because the subject is multiplied back by the SAME
+              area — and the two readings of one set of sales differ by a fifth. */}
+          {typeDef.usesLand && !isLand && (
+            <Row cols={2}>
+              <Field label="Comparables are priced on"
+                     hint="Use the same area for every comparable. The subject is valued on the matching area from step 01.">
+                <select className="field-input" value={compBasis} onChange={(e) => upd("sales.areaBasis", e.target.value)}>
+                  <option value="built">Built-up area</option>
+                  <option value="land">Land (plot) area</option>
+                </select>
+              </Field>
+            </Row>
+          )}
           {input.sales.comps.map((c, i) => (
             <div key={i} style={{ border: "1px solid var(--border-1)", padding: 12, marginTop: 10, background: "var(--bg-2)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -646,9 +693,9 @@ function ValApp() {
                     The label follows the property type for the same reason,
                     and matches the wording used for the subject in step 01. */}
                 <Field
-                  label={isLand ? "Comparable land area" : "Comparable built-up area"}
+                  label={compBasis === "land" ? "Comparable land area" : "Comparable built-up area"}
                   suffix="m²"
-                  hint={isLand
+                  hint={compBasis === "land"
                     ? "Plot size of the comparable — the same basis as the subject."
                     : "Covered floor area (GFA) of the comparable — the same basis as the subject."}
                 >
@@ -718,8 +765,8 @@ function ValApp() {
                     : "Set the land area in step 01 — land value = plot size × this price."}>
                   <NumInput value={input.cost.landPricePerSqm} onChange={(v) => upd("cost.landPricePerSqm", v)} /></Field>
               ) : (
-                <Field label="Land share" hint="Apartments don't own a plot — a land share (~15% of building value) is included automatically.">
-                  <input className="field-input" value="~15%" disabled /></Field>
+                <Field label="Land share" suffix="%" hint="A unit has no plot of its own — its share of the land is taken as this percentage of the build cost.">
+                  <PctInput value={input.cost.landSharePct} onChange={(v) => upd("cost.landSharePct", v)} /></Field>
               )}
               {/* A hint is a prop, so it cannot be split into elements the way
                   a sentence can — the prose half is translated by hand and the
@@ -728,6 +775,12 @@ function ValApp() {
               <Field label="Build cost" suffix="SAR/m²"
                      hint={`${window.I18N ? I18N.t("Typical for this property type") : "Typical for this property type"}: ~${fn(typeDef.defaults.buildCostPerSqm)}`}>
                 <NumInput value={input.cost.buildCostPerSqm} onChange={(v) => upd("cost.buildCostPerSqm", v)} /></Field>
+            </Row>
+            <Row cols={2}>
+              <Field label="Fees and finance" suffix="%" hint="Design, supervision and the cost of money while building — on top of the build cost.">
+                <PctInput value={input.cost.softCostPct} onChange={(v) => upd("cost.softCostPct", v)} /></Field>
+              <Field label="Developer's margin" suffix="%" hint="The profit a developer would expect for building it again.">
+                <PctInput value={input.cost.developerProfitPct} onChange={(v) => upd("cost.developerProfitPct", v)} /></Field>
             </Row>
             <Row cols={2}>
               <Field label="Economic life" suffix="years" hint="How long this type of building stays useful (usually 45–60).">
@@ -1023,7 +1076,7 @@ function ValResults({ result, sens, input }) {
                   />
                 ))}
                 <LedgerRow label="Median adjusted" value={`${fn(s.medianPpsqm)} ${curSym()}/${sqm()}`} strong />
-                <LedgerRow label={`× ${fn(s.subjectArea)} ${sqm()}`} value={fc(s.indicatedValue)} final />
+                <LedgerRow label={`× ${fn(s.subjectArea)} ${sqm()} · ${I18N.t(s.areaBasis === "land" ? "land area" : "built-up area")}`} value={fc(s.indicatedValue)} final />
               </>
             )}
           </div>
@@ -1043,6 +1096,13 @@ function ValResults({ result, sens, input }) {
             <div>
               <ApproachHead title="Cost approach" />
               <LedgerRow label="Land value" value={fc(cost.landValue)} />
+              {(cost.softCost > 0 || cost.developerProfit > 0) && (
+                <>
+                  <LedgerRow label="Construction" value={fc(cost.buildCost)} muted />
+                  {cost.softCost > 0 && <LedgerRow label="+ Fees and finance" value={fc(cost.softCost)} muted />}
+                  {cost.developerProfit > 0 && <LedgerRow label="+ Developer's margin" value={fc(cost.developerProfit)} muted />}
+                </>
+              )}
               <LedgerRow label="Replacement cost (new)" value={fc(cost.replacementCost)} />
               <LedgerRow label={`− Depreciation (${fp(cost.physicalDep, 0)} · eff. age ${cost.effectiveAge.toFixed(0)} yrs)`} value={fc(-(cost.replacementCost - cost.depreciatedCost))} muted />
               <LedgerRow label="Depreciated building value" value={fc(cost.depreciatedCost)} strong />

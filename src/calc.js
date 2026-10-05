@@ -371,6 +371,9 @@ function mapRevenueUnits(c, fn) {
       subs,
       salesRevenue: subs.reduce((s, u) => s + (u.salesRevenue || 0), 0),
       exitValue: subs.reduce((s, u) => s + (u.exitValue || 0), 0),
+      // Present only once the exit-cost pass has run; before it, gross is net.
+      exitGross: subs.reduce((s, u) => s + numOr(u.exitGross, u.exitValue || 0), 0),
+      exitCost: subs.reduce((s, u) => s + (u.exitCost || 0), 0),
     });
   }
   return fn(c);
@@ -679,13 +682,37 @@ function runFeasibility(input) {
       Math.pow(1 + rentEscalation, Math.floor(exitYearIndex / rentReviewYears))
     : 0;
 
+  /* Units that are sold take their part of the ground lease with them. Each
+     entry is the month a unit exits and the fraction of the site's rent its
+     buyer was priced to carry; the rent flow further down stops charging that
+     fraction from the following month.
+
+     Without this the two halves of the model contradicted each other whenever
+     leased units exited on different dates: the early unit's sale price was
+     marked down for the rent its buyer inherits, and the project then went on
+     paying the whole site's rent anyway — the same obligation taken out of the
+     exit and out of the cash flow. With a single exit date nothing is handed
+     over before the project ends, and the result is unchanged. */
+  const rentHandovers = [];
+
   if (annualRentAtExit > 0) {
     const leasedNoi = components.reduce((s, c) =>
       s + revenueUnits(c).reduce((t, u) => t + Math.max(0, u.noi || 0), 0), 0);
     if (leasedNoi > 0) {
       const encumber = (u) => {
         if (!u || !(u.noi > 0)) return u;
-        const share = annualRentAtExit * (u.noi / leasedNoi);
+        const noiShare = u.noi / leasedNoi;
+        /* Dated to THIS unit's exit, not the project's. The buyer takes on the
+           rent as it stands the day they buy; pricing a unit sold in year six
+           against the rent of year fourteen charged it for reviews that had
+           not happened yet. */
+        const unitExitMonth = conEnd + leasePeriodOf(u) - 1;
+        const rentAtUnitExit = landArea * rentRatePerSqmYr *
+          Math.pow(1 + rentEscalation, Math.floor(Math.floor(unitExitMonth / 12) / rentReviewYears));
+        const share = rentAtUnitExit * noiShare;
+        // A zero cap rate means the unit is held, not sold: nobody inherits
+        // its rent, so the project keeps paying it.
+        if (numOr(u.exitCapRate, 0.075) > 0) rentHandovers.push({ month: unitExitMonth, share: noiShare });
         /* Both sides of this subtraction are dated to the exit: the ground
            rent is escalated to that year above, so the income it is taken out
            of must be too, or an escalating lease would be charged tomorrow's
@@ -712,6 +739,31 @@ function runFeasibility(input) {
         }
       }
     }
+  }
+
+  /* ----- Cost of selling the asset at exit -----
+     Unit sales have always carried marketing, commission and fees; the single
+     largest sale in most studies — the disposal of the let asset — carried
+     nothing, so the exit was banked at its full capitalised value. A broker
+     and a lawyer are paid on that sale like any other.
+
+     Taken off the PROCEEDS rather than added as a cost line. What the project
+     receives is the net figure, so the exit flow, the headline exit value and
+     every table that sums them stay in agreement without each one having to
+     learn about a new line; the gross value and the cost are carried alongside
+     for anything that wants to show the working. Runs last, after escalation
+     and the leasehold encumbrance, because the cost is a share of the price
+     actually achieved. Blank is zero, which leaves an older study as it was. */
+  const exitCostPct = Math.max(0, Math.min(1, numOr(a.exitCostPct, 0)));
+  for (let i = 0; i < components.length; i++) {
+    const c = components[i];
+    if (!c.enabled) continue;
+    components[i] = mapRevenueUnits(c, (u) => {
+      if (!u || u.mode !== "lease") return u;
+      const exitGross = u.exitValue || 0;
+      const exitCost = exitGross * exitCostPct;
+      return Object.assign({}, u, { exitGross, exitCost, exitValue: exitGross - exitCost });
+    });
   }
 
   // Allocation validation
@@ -812,7 +864,11 @@ function runFeasibility(input) {
     for (let m = 0; m <= rentLastMonth; m++) {
       const steps = Math.floor(Math.floor(m / 12) / landRentEscalationYears);
       const annual = landArea * landRentPerSqmYr * Math.pow(1 + landRentEscalationPct, steps);
-      const due = annual / 12;
+      // The part of the site already sold on is its buyer's rent to pay, from
+      // the month after that sale — see rentHandovers.
+      let handedOver = 0;
+      for (const h of rentHandovers) if (h.month < m) handedOver += h.share;
+      const due = annual / 12 * Math.max(0, 1 - handedOver);
       landRentFlow[m] -= due;
       totalLandRent += due;
     }
@@ -1255,7 +1311,18 @@ function runFeasibility(input) {
   const equityIRR = irr(equityCashflow);
   const projectNPV = npv(grossCashflow, discount);
   const equityNPV = npv(equityCashflow, discount);
-  const projectROI = totalCashCosts > 0 ? profitUnlevered / totalCashCosts : 0;
+  /* Return on cost is measured against what it cost to DEVELOP the scheme, not
+     against everything it ever paid. totalCashCosts also holds the running
+     costs of the hold — OpEx and ground rent — which are met out of the rent
+     they help to earn. Leaving them in the denominator made a scheme look more
+     expensive, and less profitable, purely for being held longer: the same
+     building read 104% on a five-year hold and would read lower still on ten,
+     with nothing about its development having changed. totalCost itself is
+     left whole, because it is the figure the Capital tab's uses reconcile to. */
+  const operatingCost = -(
+    opexFlow.reduce((s, v) => s + v, 0) + landRentFlow.reduce((s, v) => s + v, 0));
+  const developmentCost = totalCashCosts - operatingCost;
+  const projectROI = developmentCost > 0 ? profitUnlevered / developmentCost : 0;
   // equityROI is computed AFTER totalEquityContributed below — the debt-loop
   // cash variable `totalEquity` can be 0 under debt-first funding, which made
   // ROI/multiple display as 0%/1.00× while the header showed real equity.
@@ -1288,8 +1355,23 @@ function runFeasibility(input) {
   // Equity required = actual CASH called from investors — only what neither
   // the month's own revenue nor the facility could cover (revenue-first →
   // debt → equity funding order).
-  const totalEquityContributed = totalEquity;
-  // Canonical equity basis — same figure the header / Capital tab display.
+  /* TWO equity figures, because they answer two questions.
+
+     equityForUses — equity that paid for the project's costs. This is the one
+       the Sources ≡ Uses identity needs: repaying loan principal is financing,
+       not a use, so cash called to do that cannot sit among the sources of uses.
+     totalEquityContributed — every riyal investors were asked for, including
+       the call that clears whatever loan the project could not repay at exit.
+
+     The headline, the return on equity and the risk register all used the
+     first where they meant the second. A sale scheme that lost 120M, and whose
+     investors paid that 120M to the lender at exit, was reported as needing no
+     equity at all and given a green "No equity called"; a loss-making hold
+     showed a return of −117% on equity, a loss larger than the money put in,
+     because the 24M that cleared the loan was missing from the denominator. */
+  const totalDeficiency = deficiencyFlow.reduce((s, v) => s + (v || 0), 0);
+  const equityForUses = totalEquity;
+  const totalEquityContributed = totalEquity + totalDeficiency;
   // null when the facility funds everything (ROI on zero equity is undefined).
   const equityROI = totalEquityContributed > 0 ? profit / totalEquityContributed : null;
 
@@ -1346,6 +1428,7 @@ function runFeasibility(input) {
     softCostsPct, constructionMonths, predesignMonths, peakDebt, debtFacility,
     allocationOverflow, totalAllocationPct, allocationUnused,
     totalEquity: totalEquityContributed,
+    totalDeficiency,
     components,
   });
 
@@ -1355,7 +1438,12 @@ function runFeasibility(input) {
       projectROI, equityROI, projectPayback, equityPayback,
       profit, profitUnlevered,
       totalRevenue: totalCashRevenue, totalCost: totalCashCosts,
+      // totalCost split by what it is: building the scheme, and running it.
+      developmentCost, operatingCost,
       peakDebt, totalEquity: totalEquityContributed, peakEquity: peakEquityAtRisk, debtDrawnTotal,
+      // See totalEquityContributed: equity that funded costs, and the call
+      // that cleared an unrepaid loan at exit. They sum to totalEquity.
+      equityForUses, equityDeficiency: totalDeficiency,
       interestCover,
       gfa: totalGFA, nsa: totalNSA, totalUnits, totalKeys,
       landCost, landTransferFees,
@@ -1368,7 +1456,11 @@ function runFeasibility(input) {
       siteWorkCost: totalSiteWorkCost,
       softCosts, contingency,
       marketing, salesCommission, govFees, totalInterest,
+      // totalExit is what the project receives — net of the cost of the sale.
       devCostExFinance, totalExit, totalNOI,
+      totalExitGross: components.reduce((s, c) => s + numOr(c.exitGross, c.exitValue || 0), 0),
+      exitCosts: components.reduce((s, c) => s + (c.exitCost || 0), 0),
+      exitCostPct,
       totalGrossIncome, totalOpex,
       totalAllocationPct, allocationUnused, allocationOverflow,
       // Durations, not indices — these are what the UI prints as "N months".
@@ -1421,7 +1513,7 @@ function runFeasibility(input) {
 
 function computeRisks(ctx) {
   const out = [];
-  const { a, equityIRR, profit, ltc, contingencyPct, softCostsPct, constructionMonths, peakDebt, debtFacility, allocationOverflow, totalAllocationPct, allocationUnused, totalEquity, components } = ctx;
+  const { a, equityIRR, profit, ltc, contingencyPct, softCostsPct, constructionMonths, peakDebt, debtFacility, allocationOverflow, totalAllocationPct, allocationUnused, totalEquity, totalDeficiency, components } = ctx;
   const push = (level, title, detail) => out.push({ level, title, detail });
 
   // Allocation alarm (high priority)
@@ -1437,7 +1529,9 @@ function computeRisks(ctx) {
     push("success", "Land allocation balanced", `${(totalAllocationPct * 100).toFixed(1)}% allocated across components.`);
   }
 
-  const hurdle = numOr(a.discountRate, 0.12);
+  // The same fallback the NPV uses. This read 12% while the NPV beside it was
+  // discounted at 10%, so a blank rate judged one study against two hurdles.
+  const hurdle = numOr(a.discountRate, 0.10);
   // A null IRR has two very different causes. If no equity was ever called the
   // project simply funded itself, and there is no equity series to solve — that
   // is a good outcome, not a danger. Only an unsolvable series is a red flag.
@@ -1449,6 +1543,10 @@ function computeRisks(ctx) {
   else push("success", "Equity IRR clears hurdle", `${(equityIRR * 100).toFixed(1)}% vs target ${(hurdle * 100).toFixed(1)}%.`);
 
   if (profit < 0) push("danger", "Project shows a loss", `Net profit SAR ${(profit / 1e6).toFixed(1)}M.`);
+  // Said outright, because it is the one equity call no schedule shows coming:
+  // it lands in a single month, at the end, after everything else has failed.
+  if (totalDeficiency > 0.01) push("danger", "Loan not repaid by the project",
+    `Equity must pay SAR ${(totalDeficiency / 1e6).toFixed(1)}M at exit to clear the loan.`);
   if (ltc > 0.70) push("warning", "Leverage above 70% LTC", "High debt exposure — sensitivity to rate moves will be material.");
   if (contingencyPct < 0.05) push("warning", "Contingency below 5%", "Limited buffer for construction overruns.");
   if (softCostsPct < 0.08) push("warning", "Soft costs look low", "Typical design + consultants + PM is 10–15% of construction.");
@@ -1657,9 +1755,19 @@ function runWaterfall(input, result) {
     const accruePref = (p) => {
       p.prefAccrued += (Math.max(0, p.contrib - p.returned) + p.prefAccrued) * prefMonthly;
     };
-    accruePref(party.lp);
-    accruePref(party.dev);
-    accruePref(party.gp);
+    /* Not in month 0. Capital goes in at month 0 and no time has passed, so
+       nothing has been earned on it yet; the first month of preferred return
+       falls due at month 1. Accruing at 0 as well ran this clock one month
+       ahead of the one the IRR is measured on — at month m the balance carried
+       m + 1 months of return — so investors had to receive slightly MORE than
+       the stated rate before the hurdle read as cleared (8.14% rather than 8%
+       on a five-year hold). With the two clocks aligned, the bucket empties at
+       exactly the payout that gives an IRR of the preferred rate. */
+    if (m > 0) {
+      accruePref(party.lp);
+      accruePref(party.dev);
+      accruePref(party.gp);
+    }
 
     // ----- Distributions this month -----
     // Positive equity cashflow (after debt sweep) is what's available to
@@ -1746,10 +1854,20 @@ function runWaterfall(input, result) {
   }
 
   // Per-party totals & metrics
+  /* Contributed is the capital the party put in — p.contrib — not the negative
+     months of its cash flow. Those two differ whenever money comes back in the
+     same month it goes out, and for the GP it always does: the subscription
+     fee and the first month's management fee arrive in month 0 alongside the
+     co-investment, so the net month understated what the GP had invested
+     (8.2M shown against 10.6M paid in) and overstated the multiple on it
+     (11.1× against 8.6×). Everything received is then the net cash flow plus
+     the capital that was netted out of it. The IRR stays on the net cash flow,
+     which is the party's real cash position month by month. */
   const totalsFor = (p) => {
-    const inn  = p.cashflow.reduce((s, v) => v < 0 ? s - v : s, 0);
-    const out  = p.cashflow.reduce((s, v) => v > 0 ? s + v : s, 0);
-    return { contributed: inn, distributed: out, profit: out - inn, moic: inn > 0 ? out / inn : 0, irr: irr(p.cashflow) };
+    const net = p.cashflow.reduce((s, v) => s + v, 0);
+    const inn = p.contrib;
+    const out = net + inn;
+    return { contributed: inn, distributed: out, profit: net, moic: inn > 0 ? out / inn : 0, irr: irr(p.cashflow) };
   };
   const lpT  = totalsFor(party.lp);
   const devT = totalsFor(party.dev);
@@ -1848,6 +1966,10 @@ function shockUnit(u, m) {
     rentPerUnitYr: u.rentPerUnitYr ? u.rentPerUnitYr * m.price : u.rentPerUnitYr,
     adr:           u.adr           ? u.adr           * m.price : u.adr,
     costPerSqmGFA: u.costPerSqmGFA ? u.costPerSqmGFA * m.cost  : u.costPerSqmGFA,
+    // A basement is construction too. Left out, a building with one took a
+    // 3.8% cost shock where 5% was asked for, and looked more resilient than
+    // the same building without a basement.
+    basementCostPerSqm: u.basementCostPerSqm ? u.basementCostPerSqm * m.cost : u.basementCostPerSqm,
     occupancy:     u.occupancy     ? Math.max(0.3, Math.min(0.98, u.occupancy * m.occ)) : u.occupancy,
   });
 }
@@ -1908,7 +2030,7 @@ function monteCarlo(input, trials = 400) {
   const probPositive = irrSampleCount
     ? irrs.filter(v => v > 0).length / irrSampleCount : null;
   const probAboveHurdle = irrSampleCount
-    ? irrs.filter(v => v > numOr(input.discountRate, 0.12)).length / irrSampleCount : null;
+    ? irrs.filter(v => v > numOr(input.discountRate, 0.10)).length / irrSampleCount : null;
   return {
     trials, irrs, npvs, profits, roiVals,
     // How many of `trials` produced a defined equity IRR.

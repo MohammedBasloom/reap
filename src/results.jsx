@@ -2038,7 +2038,11 @@ function ReturnsSplit({ k, input, cf }) {
      coverage chart in this same panel uses. */
   const cov = (cf && cf.coverageTotals) || null;
   const debtDrawn = cov ? (cov.debt || 0) : (k.debtDrawnTotal || 0);
-  const equity = k.totalEquity;
+  /* Equity that paid for USES. kpi.totalEquity also counts the call that clears
+     an unrepaid loan at exit, and repaying principal is financing rather than a
+     use — putting it here would be offset out of "Revenue applied" and credit
+     equity with costs that the loan had in fact already paid for. */
+  const equity = k.equityForUses ?? k.totalEquity;
   const revenueApplied = Math.max(0, totalUses - equity - debtDrawn);
   const sourcesItems = [
     { label: "Equity contributed",   value: equity,           color: "var(--ad-navy-900)" },
@@ -2062,6 +2066,16 @@ function ReturnsSplit({ k, input, cf }) {
                  share={totalSources > 0 ? s.value / totalSources : 0} />
           ))}
           <TotalRow label="Total sources" value={totalSources} share={totalSources > 0 ? 1 : undefined} />
+          {/* The headline equity is larger than the equity above whenever the
+              project could not repay its loan. Said here, or the two figures
+              simply look like they disagree. The amount is its own element so
+              the sentence around it stays a string the dictionary can hold. */}
+          {(k.equityDeficiency || 0) > 0.5 && (
+            <div style={{ marginTop: 8, fontSize: 11, lineHeight: 1.5, color: "var(--ad-danger)" }}>
+              <span>Equity also pays off the loan at exit — financing, not a use, so it is not among the sources above: </span>
+              <b className="tabnum">{fc(k.equityDeficiency)}</b>
+            </div>
+          )}
         </div>
 
         {/* Uses */}
@@ -2193,6 +2207,7 @@ function RiskPanel({ result, input }) {
 
       {(() => {
         const allInCost = k.totalCost + k.totalInterest;
+        const devAllIn = (k.developmentCost ?? k.totalCost) + k.totalInterest;
         /* Cost structure base. site + build + soft is EXACTLY
            devCostExFinance + ground rent — the engine builds
            devCostExFinance from those same six lines — so the three shares
@@ -2231,8 +2246,11 @@ function RiskPanel({ result, input }) {
                  revenue, and over ALL-IN cost (incl. financing interest). */
               { label: "Margin on revenue", value: k.totalRevenue > 0 ? fp(k.profit / k.totalRevenue) : "—", ok: (k.profit / Math.max(1, k.totalRevenue)) > 0.12,
                 note: "Profit after financing as a share of total revenue. Under ~12% leaves little room for error." },
-              { label: "Margin on cost", value: allInCost > 0 ? fp(k.profit / allInCost) : "—", ok: (k.profit / Math.max(1, allInCost)) > 0.15,
-                note: "Profit after financing over all-in cost including interest — the return on every riyal spent." },
+              /* Over what it cost to DEVELOP, plus the interest. allInCost also
+                 holds OpEx and ground rent across the hold, which made the same
+                 building look thinner the longer it was kept. */
+              { label: "Margin on cost", value: devAllIn > 0 ? fp(k.profit / devAllIn) : "—", ok: (k.profit / Math.max(1, devAllIn)) > 0.15,
+                note: "Profit after financing over development cost including interest — the running costs of the hold are left out." },
               { label: "Revenue per m² sellable / leasable", value: k.nsa > 0 ? `${fn(k.totalRevenue / k.nsa)} SAR/m²` : "—", ok: true,
                 note: "Total revenue per m² of saleable or leasable area — a quick sanity check against market pricing." },
             ],
@@ -2341,7 +2359,10 @@ function ReturnsPanel({ result, input }) {
   const hurdle = input.discountRate || 0;
   const irrTone = (k.equityIRR ?? 0) >= hurdle ? "positive" : "negative";
   const equityMultiple = k.totalEquity > 0 ? 1 + (k.profit / k.totalEquity) : null;
-  const projectMultiple = k.totalCost > 0 ? 1 + (k.profitUnlevered / k.totalCost) : 0;
+  // On development cost, as kpi.projectROI is — not on cost including the
+  // running costs of the hold.
+  const devCost = k.developmentCost ?? k.totalCost;
+  const projectMultiple = devCost > 0 ? 1 + (k.profitUnlevered / devCost) : 0;
 
   // Chart payback marker: the engine's payback needs a dip below zero. When
   // no equity is ever at risk (cumulative never negative), mark break-even —
@@ -2561,7 +2582,7 @@ function ProfitWaterfall({ k }) {
       }}>
         <span style={{ color: "var(--fg-3)" }}>Margin on cost</span>
         <span className="tabnum" style={{ color: "var(--ad-navy-900)", fontWeight: 600 }}>
-          {(k.totalCost + k.totalInterest) > 0 ? fp(k.profit / (k.totalCost + k.totalInterest)) : "—"}
+          {((k.developmentCost ?? k.totalCost) + k.totalInterest) > 0 ? fp(k.profit / ((k.developmentCost ?? k.totalCost) + k.totalInterest)) : "—"}
         </span>
       </div>
     </div>

@@ -88,8 +88,28 @@ const median = (arr) => {
 function salesApproach(input) {
   const s = input.sales || {};
   const p = input.property || {};
-  const subjectArea = num(p.type === "land" ? p.landArea : p.builtArea);
-  const trend = num(s.marketTrendPctYr, 0.03);
+  const typeDef = PROPERTY_TYPES[p.type] || PROPERTY_TYPES.apartment;
+  /* WHICH area the comparables are quoted on, stated rather than assumed.
+
+     A comparable is a price and an area, and the rate between them only means
+     something if the subject is multiplied back by the same kind of area. The
+     subject was always taken on built-up area, whatever the user had typed in
+     the comparable's area box — and a villa is as often quoted on its plot as
+     on its floor space. The same three sales gave 3.20M read one way and 2.56M
+     read the other, with nothing on screen saying which had been used.
+
+     Land is always on plot area; a unit with no plot of its own (an apartment)
+     is always on built-up area; everything else follows the user's choice,
+     defaulting to built-up area, which is what it did before. */
+  const areaBasis = typeDef.landOnly ? "land"
+    : !typeDef.usesLand ? "built"
+    : (s.areaBasis === "land" ? "land" : "built");
+  const subjectArea = num(areaBasis === "land" ? p.landArea : p.builtArea);
+  /* Blank is no adjustment. This used to fall back to 3% a year, so an empty
+     box quietly lifted every dated comparable — a view on the market the user
+     had never been shown, let alone taken. */
+  const trend = num(s.marketTrendPctYr, 0);
+  const trendSet = !(s.marketTrendPctYr === undefined || s.marketTrendPctYr === null || s.marketTrendPctYr === "");
 
   const comps = (s.comps || [])
     .map((c) => ({ price: num(c.price), area: num(c.area), monthsAgo: num(c.monthsAgo),
@@ -115,6 +135,10 @@ function salesApproach(input) {
     medianPpsqm: med,
     spread,
     subjectArea,
+    areaBasis,
+    trendSet,
+    // Comparables that would move if a market trend were supplied.
+    datedCompCount: adjusted.filter((c) => c.monthsAgo > 0).length,
     indicatedValue: med * subjectArea,
   };
 }
@@ -148,12 +172,30 @@ function costApproach(input) {
   const landArea = num(p.landArea);
   const builtArea = num(p.builtArea);
   const landPricePerSqm = num(c.landPricePerSqm);
-  // Apartments usually don't own their land plot — attribute a land share instead.
+  /* What it would cost to put the building back, in full.
+
+     Construction alone is not that figure. Nobody can replace a building for
+     its contract sum: there are design and supervision fees and the cost of
+     carrying the money while it is built, and a developer who takes the risk
+     expects a margin for it. Leaving both out made the cost approach lean low
+     on every valuation, and pull the reconciled value down with it wherever it
+     carried weight. Each is a percentage on top; blank is zero, so a valuation
+     saved before these existed still gives the figure it gave. */
+  const buildCost = builtArea * num(c.buildCostPerSqm);
+  const softCostPct = clamp(num(c.softCostPct, 0), 0, 1);
+  const developerProfitPct = clamp(num(c.developerProfitPct, 0), 0, 1);
+  const softCost = buildCost * softCostPct;
+  const developerProfit = (buildCost + softCost) * developerProfitPct;
+  const replacementCost = buildCost + softCost + developerProfit;
+
+  /* A unit with no plot of its own still sits on land it has a share in. That
+     share was fixed at 15% of the build cost for every apartment in the
+     Kingdom; it is now the user's to set, on the same base, and 15% only where
+     nothing was entered. */
+  const landSharePct = clamp(num(c.landSharePct, num(typeDef.defaults.landSharePct, 0.15)), 0, 5);
   const landValue = typeDef.usesLand
     ? landArea * landPricePerSqm
-    : (builtArea * num(c.buildCostPerSqm)) * num(typeDef.defaults.landSharePct, 0.15);
-
-  const replacementCost = builtArea * num(c.buildCostPerSqm);
+    : buildCost * landSharePct;
   const econLife = Math.max(1, num(c.economicLifeYrs, 60));
   const condFactor = (CONDITIONS[p.condition] || CONDITIONS.good).factor;
   const effectiveAge = num(p.age) * condFactor;
@@ -163,6 +205,7 @@ function costApproach(input) {
 
   return {
     landValue, replacementCost, econLife, effectiveAge,
+    buildCost, softCostPct, softCost, developerProfitPct, developerProfit, landSharePct,
     physicalDep, obsolescence, depreciatedCost,
     indicatedValue: landValue + depreciatedCost,
   };
@@ -190,8 +233,14 @@ function runValuation(input) {
 
   const finalValue = entries.reduce((s, e) => s + e.value * e.normWeight, 0);
 
-  // Confidence range: wider when the approaches disagree or comps are thin.
-  const active = entries.filter((e) => e.value > 0);
+  /* Confidence range: wider when the approaches disagree or comps are thin.
+
+     Disagreement is measured between the approaches the value actually rests
+     on. An approach weighted at nothing has been set aside, and it used to go
+     on widening the range and raising "approaches disagree" all the same — a
+     valuation resting wholly on comparables was marked ±19% uncertain because
+     of two figures that formed no part of it. */
+  const active = entries.filter((e) => e.value > 0 && e.normWeight > 0);
   let divergence = 0;
   if (active.length >= 2 && finalValue > 0) {
     const vals = active.map((e) => e.value);
@@ -214,6 +263,8 @@ function runValuation(input) {
     if (Math.abs(c.totalAdjPct) > 0.25)
       flag("warning", `Comp ${i + 1} is heavily adjusted (${(c.totalAdjPct * 100).toFixed(0)}%)`, "Total adjustments beyond ±25% suggest the comparable is not truly similar — consider replacing it.");
   });
+  if (!sales.trendSet && sales.datedCompCount > 0)
+    flag("warning", "Older sales not adjusted for time", "Some comparables sold months ago and no market trend is set, so their prices are used as they stood. Enter the yearly market trend to bring them to today.");
   if (income && income.indicatedValue > 0) {
     if (income.capRate < 0.04 || income.capRate > 0.12)
       flag("warning", "Unusual capitalisation rate", `${(income.capRate * 100).toFixed(1)}% is outside the typical 4–12% band for income property in the region.`);

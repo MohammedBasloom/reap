@@ -132,7 +132,7 @@ function scoreProject(k, risks, horizonMonths, hurdle) {
   const noEquity = !(k.totalEquity > 0.01);
   const irr = noEquity ? k.projectIRR : k.equityIRR;
   const npv = noEquity ? k.projectNPV : k.equityNPV;
-  const base = noEquity ? (k.totalCost || 0) : (k.totalEquity || 0);
+  const base = noEquity ? (k.developmentCost ?? k.totalCost ?? 0) : (k.totalEquity || 0);
   const payback = noEquity ? k.projectPayback : k.equityPayback;
 
   // 1. Return against the discount rate the user set as their hurdle (30)
@@ -1368,6 +1368,8 @@ function buildBlocks(ctx) {
         T("Sales revenue only — raises nothing on a wholly leased scheme", null)],
       [T("Government and sales fees", null), FP(input.govFeesPct || 0),
         T("Sales revenue only — raises nothing on a wholly leased scheme", null)],
+      [T("Exit sale costs", null), FP(input.exitCostPct || 0),
+        T("Exit value — taken off the proceeds of selling the let asset", null)],
       [T("Loan to cost, as set", null), FP(input.ltc || 0),
         T("Development cost before finance — land, transfer fees, construction, site works, soft costs and contingency. It sets the facility limit, not the amount drawn", null)],
       [T("Interest rate", null), FP(input.interestRate || 0),

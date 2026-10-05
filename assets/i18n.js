@@ -980,6 +980,38 @@
     "Net operating income": "صافي الدخل التشغيلي",
     "Cost build-up ": "بناء التكلفة",
     "Land value": "قيمة الأرض", "Replacement cost (new)": "تكلفة الإحلال (جديد)",
+
+    /* ----- Engine audit: exit costs, the unrepaid loan, and the valuation basis ----- */
+    "Exit sale costs": "تكاليف بيع الأصل عند التخارج",
+    "Of exit value": "من قيمة التخارج",
+    "Brokerage and legal costs of selling a let asset at the end of the hold. Taken off the exit proceeds, so the exit value shown everywhere is what the project actually receives. Raises nothing on a scheme with no exit.":
+      "عمولة الوساطة والتكاليف القانونية لبيع الأصل المؤجَّر في نهاية فترة الاحتفاظ. تُخصم من متحصلات التخارج، فتكون قيمة التخارج الظاهرة في كل موضع هي ما يستلمه المشروع فعلًا. ولا أثر لها في مشروع بلا تخارج.",
+    "Exit value — taken off the proceeds of selling the let asset":
+      "قيمة التخارج — تُخصم من متحصلات بيع الأصل المؤجَّر",
+    "Loan not repaid by the project": "المشروع لم يسدّد القرض",
+    "Profit after financing over development cost including interest — the running costs of the hold are left out.":
+      "الربح بعد التمويل مقسومًا على تكلفة التطوير شاملة الفوائد — دون تكاليف التشغيل خلال فترة الاحتفاظ.",
+    "Equity also pays off the loan at exit — financing, not a use, so it is not among the sources above: ":
+      "تسدّد الملكية أيضًا القرض عند التخارج — وهو تمويل لا استخدام، لذا لا يظهر ضمن المصادر أعلاه: ",
+
+    "Comparables are priced on": "المقارنات مسعّرة على أساس",
+    "Use the same area for every comparable. The subject is valued on the matching area from step 01.":
+      "استخدم المساحة نفسها لكل العقارات المقارنة. ويُقيَّم العقار محل التقييم على المساحة المطابقة من الخطوة 01.",
+    "Land (plot) area": "مساحة الأرض (القطعة)",
+    "land area": "مساحة الأرض", "built-up area": "المساحة المبنية",
+    "A unit has no plot of its own — its share of the land is taken as this percentage of the build cost.":
+      "الوحدة لا تملك قطعة أرض خاصة بها — تُحتسب حصتها من الأرض بهذه النسبة من تكلفة البناء.",
+    "Fees and finance": "الأتعاب والتمويل",
+    "Design, supervision and the cost of money while building — on top of the build cost.":
+      "التصميم والإشراف وتكلفة التمويل أثناء البناء — تُضاف إلى تكلفة البناء.",
+    "Developer's margin": "هامش المطوّر",
+    "The profit a developer would expect for building it again.":
+      "الربح الذي يتوقعه المطوّر مقابل إعادة بنائه.",
+    "+ Fees and finance": "+ الأتعاب والتمويل",
+    "+ Developer's margin": "+ هامش المطوّر",
+    "Older sales not adjusted for time": "صفقات قديمة لم تُعدَّل زمنيًا",
+    "Some comparables sold months ago and no market trend is set, so their prices are used as they stood. Enter the yearly market trend to bring them to today.":
+      "بعض العقارات المقارنة بِيعت قبل أشهر ولم يُحدَّد اتجاه السوق، فاستُخدمت أسعارها كما كانت. أدخل اتجاه السوق السنوي لتعديلها إلى اليوم.",
     "Depreciated building value": "قيمة المبنى بعد الإهلاك", "Land + building": "الأرض + المبنى",
     "What moves the value": "ما الذي يحرّك القيمة",
     "Final value if each key input turns out 10% better or worse.": "القيمة النهائية إذا تغيّر كل مدخل رئيسي ‏10% صعودًا أو نزولًا.",
@@ -1756,6 +1788,7 @@
     [/^(\d+(?:\.\d+)?)% allocated across components\.$/, "$1% موزعة على المكوّنات."],
     [/^Components allocate (.+)% of the land area — over by (.+) pts\. Reduce one or more component allocations\.$/, "المكوّنات توزّع $1% من مساحة الأرض — بزيادة $2 نقطة. قلّل توزيع مكوّن أو أكثر."],
     [/^Net profit SAR (.+)M\.$/, "صافي الربح $1 مليون ريال."],
+    [/^Equity must pay SAR (.+)M at exit to clear the loan\.$/, "على الملكية سداد $1 مليون ريال عند التخارج لتسوية القرض."],
     [/^Equity IRR (.+)% vs hurdle (.+)%\.$/, "IRR الملكية $1% مقابل المستهدف $2%."],
     [/^(.+)% vs target (.+)%\.$/, "$1% مقابل المستهدف $2%."],
     [/^(\d+) months may not reflect typical procurement\.$/, "$1 شهرًا قد لا تعكس مدد التوريد المعتادة."],

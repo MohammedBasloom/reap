@@ -42,6 +42,7 @@ const SAMPLE_INPUT = {
   marketingPct: null,
   salesCommissionPct: null,
   govFeesPct: null,
+  exitCostPct: null,
 
   // Financing
   ltc: null,
@@ -95,7 +96,8 @@ const STEP_FIELDS = {
          "landRentPerSqmYr", "landRentEscalationYears", "landRentEscalationPct",
          "landType", "developablePct", "landInfraCostPerSqm"],
   timing: ["predesignMonths", "constructionMonths", "preSalesStartMonth", "horizonMonths",
-           "softCostsPct", "contingencyPct", "marketingPct", "salesCommissionPct", "govFeesPct"],
+           "softCostsPct", "contingencyPct", "marketingPct", "salesCommissionPct", "govFeesPct",
+           "exitCostPct"],
   finance: ["ltc", "interestRate", "discountRate"],
 };
 /* Which step owns a given top-level field, so editing anything in the sidebar
@@ -115,6 +117,8 @@ const STEP_DEFAULTS = {
     predesignMonths: 12, constructionMonths: 36, preSalesStartMonth: 14, horizonMonths: 120,
     softCostsPct: 0.10, contingencyPct: 0.05, marketingPct: 0.025,
     salesCommissionPct: 0.025, govFeesPct: 0.025,
+    // Brokerage and legal on selling the let asset at exit.
+    exitCostPct: 0.02,
   },
   finance: { ltc: 0.55, interestRate: 0.075, discountRate: 0.10 },
 };
@@ -404,7 +408,7 @@ function App() {
               <HeaderStat label="Profit" value={Feas.formatCurrency(k.profit)}
             tone={k.profit >= 0 ? "ok" : "bad"} />
               <Divider />
-              <HeaderStat label="Total cost" value={Feas.formatCurrency((k.totalCost || 0) + (k.totalInterest || 0))} />
+              <HeaderStat label="Development cost" value={Feas.formatCurrency((k.developmentCost || 0) + (k.totalInterest || 0))} />
               <Divider />
               <HeaderStat label="Equity req." value={Feas.formatCurrency(k.totalEquity)} sub="Total capital called" />
             </> :
@@ -458,7 +462,7 @@ function App() {
               <span>Equity IRR <b className="tabnum">{Feas.formatPct(k.equityIRR)}</b></span>
               <span>NPV <b className="tabnum">{Feas.formatCurrency(k.equityNPV)}</b></span>
               <span>Profit <b className="tabnum">{Feas.formatCurrency(k.profit)}</b></span>
-              <span>Total cost <b className="tabnum">{Feas.formatCurrency((k.totalCost || 0) + (k.totalInterest || 0))}</b></span>
+              <span>Development cost <b className="tabnum">{Feas.formatCurrency((k.developmentCost || 0) + (k.totalInterest || 0))}</b></span>
               <span>Equity req. <b className="tabnum">{Feas.formatCurrency(k.totalEquity)}</b></span>
             </div>
           )}
