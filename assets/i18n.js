@@ -982,6 +982,10 @@
     "Land value": "قيمة الأرض", "Replacement cost (new)": "تكلفة الإحلال (جديد)",
 
     /* ----- Engine audit: exit costs, the unrepaid loan, and the valuation basis ----- */
+    "Stabilised figures are the first full year at stabilised occupancy — the bar for ":
+      "الأرقام المستقرة هي لأول سنة كاملة عند الإشغال المستقر — وهي عمود السنة ",
+    "The hold never reaches a full year at stabilised occupancy, so the stabilised figures are the run-rate at full occupancy and match no single bar.":
+      "لا تبلغ فترة الاحتفاظ سنة كاملة عند الإشغال المستقر، لذا فالأرقام المستقرة هي المعدل السنوي عند الإشغال الكامل ولا تطابق عمودًا بعينه.",
     "Exit sale costs": "تكاليف بيع الأصل عند التخارج",
     "Of exit value": "من قيمة التخارج",
     "Brokerage and legal costs of selling a let asset at the end of the hold. Taken off the exit proceeds, so the exit value shown everywhere is what the project actually receives. Raises nothing on a scheme with no exit.":

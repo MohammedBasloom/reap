@@ -725,6 +725,22 @@ function runningTotal(values) {
   return (values || []).map(v => (c += (v || 0)));
 }
 
+/* Which year the "stabilised" figures are. They are read off the cash flow —
+   the first year every leased unit runs full for all twelve months — so they
+   are one of the bars, and this says which. When the hold never reaches such a
+   year they fall back to the run-rate at full occupancy, which is no bar at
+   all, and that has to be said just as plainly. The year sits in its own
+   element so the sentence around it stays a string the dictionary can hold. */
+function StabilisedNote({ year }) {
+  return (
+    <div style={{ fontSize: 10.5, color: "var(--fg-3)", marginTop: 6, lineHeight: 1.5 }}>
+      {year
+        ? <><span>Stabilised figures are the first full year at stabilised occupancy — the bar for </span><b className="tabnum" style={{ color: "var(--fg-1)" }}>Y{year}</b></>
+        : <span>The hold never reaches a full year at stabilised occupancy, so the stabilised figures are the run-rate at full occupancy and match no single bar.</span>}
+    </div>
+  );
+}
+
 function ProgramPanel({ result, input }) {
   const k = result.kpi;
   const cf = result.cashflow;
@@ -740,14 +756,20 @@ function ProgramPanel({ result, input }) {
         if ((s.noi || 0) > 0) {
           incomeUnits.push({
             key: `${c.id}-${s.id || i}`, name: `${c.name} — ${s.name}`, mode: s.mode,
-            grossIncome: s.grossIncome, opex: s.opex, noi: s.noi,
+            grossIncome: s.stabGross ?? s.grossIncome, opex: s.stabOpex ?? s.opex, noi: s.stabNoi ?? s.noi,
+            runNoi: s.noi,
           });
         }
       });
     } else if ((c.noi || 0) > 0) {
+      /* The engine's stab* figures are this unit's income in the stabilised
+         YEAR, so the rows below sum to that year's bar in the chart above. The
+         opening run-rate stays on runNoi for the leasehold step further down,
+         which is about what the exit is capitalised from, not about a year. */
       incomeUnits.push({
         key: c.id, name: c.name, mode: c.mode,
-        grossIncome: c.grossIncome, opex: c.opex, noi: c.noi,
+        grossIncome: c.stabGross ?? c.grossIncome, opex: c.stabOpex ?? c.opex, noi: c.stabNoi ?? c.noi,
+        runNoi: c.noi,
       });
     }
   });
@@ -908,12 +930,14 @@ function ProgramPanel({ result, input }) {
             <span>Stab. NOI: <span style={{ color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>{fc(k.totalNOI)}/yr</span></span>
             <span>Operating starts: <span style={{ color: "var(--fg-1)", fontVariantNumeric: "tabular-nums" }}>M{(input.predesignMonths || 0) + (input.constructionMonths || 0)}</span></span>
           </div>
+          <StabilisedNote year={k.stabilisedYear} />
         </div>
       </div>
 
       {incomeUnits.length > 0 && (
         <div style={{ border: "1px solid var(--border-1)", padding: 24, background: "var(--bg-1)", marginTop: 24 }}>
           <Eyebrow>Annual rent income build-up by component</Eyebrow>
+          <StabilisedNote year={k.stabilisedYear} />
           <div style={{ marginTop: 16 }}>
             {incomeUnits.map((c) => {
               const maxGross = Math.max(...incomeUnits.map(u => u.grossIncome || 0));
@@ -967,7 +991,7 @@ function ProgramPanel({ result, input }) {
                 below the per-component bars as its own step: the bars show what
                 each space earns, this shows what the site costs to hold. */}
             {(k.annualRentAtExit || 0) > 0 && (() => {
-              const noiSum = incomeUnits.reduce((s, u) => s + (u.noi || 0), 0);
+              const noiSum = incomeUnits.reduce((s, u) => s + (u.runNoi || 0), 0);
               const rent = k.annualRentAtExit || 0;
               const step = (label, value, colour, strong) => (
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "5px 0" }}>

@@ -945,6 +945,10 @@ function runFeasibility(input) {
   const opexFlow = arr();
   const noiFlow = arr();
   const exitFlow = arr();
+  // Each leased unit's window and ramp, kept so the stabilised year can be
+  // found once every unit has been laid out.
+  const leaseWindows = [];
+  const yearCount = Math.ceil(horizonMonths / 12);
   components.forEach(c => {
     if (!c.enabled) return;
     revenueUnits(c).forEach(u => {
@@ -960,6 +964,11 @@ function runFeasibility(input) {
       const stabOcc = numOr(u.occupancy, 0.85);
       const initOcc = Math.max(0, Math.min(stabOcc, numOr(u.initialOccupancy, 0.30)));
       const leaseUpMonths = Math.max(1, Math.round(numOr(u.yearsToStabilization, 1) * 12));
+      // This unit's own income by project year — the same twelve-month
+      // buckets the charts draw, so a unit's year can be read off a bar.
+      u.rentByYear = new Array(yearCount).fill(0);
+      u.opexByYear = new Array(yearCount).fill(0);
+      if ((u.grossIncome || 0) > 0) leaseWindows.push({ u, opStart, opEnd, leaseUpMonths });
 
       for (let m = opStart; m < opEnd && m <= horizon; m++) {
         const elapsed = m - opStart + 1; // 1-indexed month-in-operation
@@ -977,6 +986,8 @@ function runFeasibility(input) {
         rentFlow[m] += monthGross;
         opexFlow[m] -= monthOpex;
         noiFlow[m]  += monthGross - monthOpex;
+        u.rentByYear[Math.floor(m / 12)] += monthGross;
+        u.opexByYear[Math.floor(m / 12)] += monthOpex;
       }
       // Exit ON the last operating month, not the month after it. The asset is
       // sold out of the final month of income, so the disposal and the last
@@ -985,6 +996,44 @@ function runFeasibility(input) {
       exitFlow[exitMonth] += u.exitValue || 0;
     });
   });
+
+  /* ---------- The stabilised year ----------
+     "Stabilised" income has to be a year the asset actually has, or it cannot
+     be checked against anything. It used to be the opening rent at full
+     occupancy — a run-rate, and one that no year ever shows once there is a
+     lease-up ramp and a rent review: the years before stabilisation fall short
+     of it and the years after have already escalated past it. A hotel filling
+     over three years on a 2% annual review was reported at 36.5M stabilised
+     while its bars read 20.4, 27.5, 34.9, 38.8 and 39.5.
+
+     So it is taken from the cash flow: the first project year in which every
+     leased unit runs all twelve months at stabilised occupancy. That year is a
+     bar on the chart, and the units' figures for it add up to that bar.
+
+     Where no such year exists — a hold too short to fill, or units that leave
+     before the others arrive — the run-rate is all there is, and stabilisedYear
+     stays null so the screens can say that is what they are showing. Without a
+     ramp or a review the two are the same number, so older studies are
+     unchanged. */
+  let stabilisedYear = null;
+  if (leaseWindows.length) {
+    for (let y = 0; y < yearCount; y++) {
+      const first = y * 12, last = first + 11;
+      if (last > horizon) break;
+      if (leaseWindows.every(w => first >= w.opStart + w.leaseUpMonths - 1 && last <= w.opEnd - 1)) {
+        stabilisedYear = y;
+        break;
+      }
+    }
+  }
+  leaseWindows.forEach(({ u }) => {
+    const atYear = stabilisedYear !== null;
+    u.stabGross = atYear ? u.rentByYear[stabilisedYear] : (u.grossIncome || 0);
+    u.stabOpex  = atYear ? u.opexByYear[stabilisedYear] : (u.opex || 0);
+    u.stabNoi   = u.stabGross - u.stabOpex;
+  });
+  const stabGross = leaseWindows.reduce((t, w) => t + w.u.stabGross, 0);
+  const stabOpex  = leaseWindows.reduce((t, w) => t + w.u.stabOpex, 0);
 
   /* ---------- Debt model — revenue-first funding, revolving cash sweep ----------
      Funding order each month:
@@ -1457,11 +1506,15 @@ function runFeasibility(input) {
       softCosts, contingency,
       marketing, salesCommission, govFees, totalInterest,
       // totalExit is what the project receives — net of the cost of the sale.
-      devCostExFinance, totalExit, totalNOI,
+      devCostExFinance, totalExit, totalNOI: stabGross - stabOpex,
       totalExitGross: components.reduce((s, c) => s + numOr(c.exitGross, c.exitValue || 0), 0),
       exitCosts: components.reduce((s, c) => s + (c.exitCost || 0), 0),
       exitCostPct,
-      totalGrossIncome, totalOpex,
+      /* The three "stabilised" figures describe one year — the stabilised one —
+         and stabilisedYear says which (1-based, as the charts label it), or is
+         null when they are the run-rate instead. */
+      totalGrossIncome: stabGross, totalOpex: stabOpex,
+      stabilisedYear: stabilisedYear === null ? null : stabilisedYear + 1,
       totalAllocationPct, allocationUnused, allocationOverflow,
       // Durations, not indices — these are what the UI prints as "N months".
       horizonMonths, autoHorizonMonths: autoHorizonMo,
