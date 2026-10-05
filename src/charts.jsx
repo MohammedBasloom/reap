@@ -271,29 +271,56 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumul
 }
 
 /* ---------- Bars (horizontal — cost stack, etc.) ---------- */
+/* Horizontal bars — one row per item: name, bar, amount.
+
+   Built from ordinary elements, not drawn. It used to be an SVG laid out 800
+   units wide and stretched to whatever box it was given, and stretching a
+   drawing stretches its lettering with it: in a 530px card every name and every
+   figure was squeezed to two-thirds of its width, which is the one thing a
+   chart of names and figures cannot afford. Text set as text is always at its
+   own size, wraps and aligns like the rest of the page, and prints as text.
+
+   One grid for the whole chart rather than a grid per row, so the name column
+   is as wide as the longest name and every bar starts on the same line. The
+   amount sits at the end of its bar; the bars are scaled inside the room left
+   after the widest amount, so the longest bar's figure still fits on the row.
+
+   Left-to-right in both languages, like every other chart here — the axes do
+   not mirror, and a cost chart that ran the other way from the charts beside
+   it would be the odd one out. */
 function HBars({ data, height = 240, formatV }) {
   // data: [{ label, value, color }]
-  const W = 800;
-  const H = height;
-  const padL = 180, padR = 80, padT = 10, padB = 10;
-  const rowH = (H - padT - padB) / data.length;
   const max = Math.max(...data.map(d => d.value), 1);
-  const x = (v) => padL + (v / max) * (W - padL - padR);
-
+  const rowH = height / Math.max(1, data.length);
+  const barH = Math.max(8, Math.min(18, rowH * 0.5));
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
-      {data.map((d, i) => {
-        const yC = padT + i * rowH + rowH / 2;
-        const barH = rowH * 0.5;
-        return (
-          <g key={i}>
-            <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{d.label}</text>
-            <rect x={padL} y={yC - barH / 2} width={x(d.value) - padL} height={barH} fill={d.color} />
-            <text x={x(d.value) + 8} y={yC + 3} fontSize="11" fill="var(--fg-1)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatV ? formatV(d.value) : d.value}</text>
-          </g>
-        );
-      })}
-    </svg>
+    <div dir="ltr" style={{
+      height, display: "grid",
+      gridTemplateColumns: "minmax(0, max-content) minmax(0, 1fr)",
+      gridAutoRows: "1fr", columnGap: 12, alignItems: "center",
+    }}>
+      {data.map((d, i) => (
+        <React.Fragment key={i}>
+          <span style={{
+            fontSize: 12, lineHeight: 1.25, color: "var(--fg-2)", textAlign: "end",
+            maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>{d.label}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <div style={{
+              flex: "0 0 auto", height: barH, minWidth: 2,
+              width: `calc((100% - 96px) * ${Math.max(0, d.value) / max})`,
+              background: d.color,
+              // Bars are backgrounds, and a browser drops backgrounds from a
+              // printed page unless told the colour is the content.
+              WebkitPrintColorAdjust: "exact", printColorAdjust: "exact",
+            }} />
+            <span className="tabnum" style={{
+              fontSize: 12, lineHeight: 1.25, fontWeight: 500, color: "var(--fg-1)", whiteSpace: "nowrap",
+            }}>{formatV ? formatV(d.value) : d.value}</span>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
   );
 }
 
