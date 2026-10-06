@@ -4,10 +4,76 @@
 
 const { useState, useMemo, useRef, useEffect } = React;
 
+/* ---------- Drawing at the real width ----------
+   These charts used to be laid out on a fixed 800-unit canvas and stretched to
+   whatever box they were given. Stretching a drawing stretches its lettering
+   with it, so in a 530px card every axis figure and every label was squeezed
+   to two-thirds of its width, and in a wide one pulled fat.
+
+   Each chart now measures the box it is in and lays itself out in those
+   pixels, so a unit in the drawing is a pixel on the screen and text is the
+   size it says it is. `preserveAspectRatio="none"` stays on the drawings as
+   the fallback only: before the first measurement, and on a printed dashboard
+   (whose width the page cannot measure in advance), the chart still fills its
+   box the way it always did rather than leaving a gap. */
+const MIN_W = 140;
+function useChartWidth(fallback = 800) {
+  const ref = useRef(null);
+  const [w, setW] = useState(fallback);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // clientWidth, not getBoundingClientRect: the report scales its pages to
+    // fit the window, and the chart must be laid out in the page's own pixels.
+    // Below MIN_W there is no room to lay a chart out at all — the margins
+    // alone are wider than the box and bar widths go negative. A box that
+    // small is drawn at MIN_W and squeezed into place, as every size once was.
+    const read = () => {
+      const cw = Math.max(el.clientWidth, MIN_W);
+      if (el.clientWidth > 0) setW(prev => (Math.abs(prev - cw) < 0.5 ? prev : cw));
+    };
+    read();
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
+
+/* Width of a piece of chart lettering, in pixels. Now that text is drawn at
+   its own size, anything that has to fit — a label in its slot, a figure
+   inside its bar — needs the real width, and a per-character guess is wrong
+   for Arabic in one direction and for capitals in the other. */
+let _measureCtx = null, _measureFamily = null;
+function textW(s, px = 10, weight = 400) {
+  const str = String(s ?? "");
+  try {
+    if (!_measureCtx) _measureCtx = document.createElement("canvas").getContext("2d");
+    if (!_measureFamily) _measureFamily = getComputedStyle(document.body).fontFamily || "sans-serif";
+    _measureCtx.font = `${weight} ${px}px ${_measureFamily}`;
+    return _measureCtx.measureText(str).width;
+  } catch (e) {
+    return str.length * px * 0.56;
+  }
+}
+// Shorten a label to a width, ending on an ellipsis.
+function fitText(s, maxPx, px = 10, weight = 400) {
+  let str = String(s ?? "");
+  if (textW(str, px, weight) <= maxPx) return str;
+  while (str.length > 1 && textW(str + "…", px, weight) > maxPx) str = str.slice(0, -1);
+  return str.trimEnd() + "…";
+}
+// Translate before measuring or cutting: a label cut in English no longer
+// matches its dictionary entry and would be left in English.
+const trLabel = (s) => (window.I18N && typeof window.I18N.t === "function" ? window.I18N.t(s) : s);
+// Show every n-th axis label so neighbours never run into each other.
+const labelStep = (slotPx, needPx) => Math.max(1, Math.ceil(needPx / Math.max(1, slotPx)));
+
 /* ---------- StackedArea (cash flow S-curve) ---------- */
 function StackedArea({ months, series, height = 220, formatY, cumulativeValues, cumulativeOnPrimary }) {
   // series: [{ label, color, values: [n], stack: "neg" | "pos" }]
-  const W = 800;
+  const [boxRef, W] = useChartWidth();
   const H = height;
   const padL = 56, padR = 16, padT = 12, padB = 28;
   const n = months.length;
@@ -90,6 +156,7 @@ function StackedArea({ months, series, height = 220, formatY, cumulativeValues, 
   };
 
   return (
+    <div ref={boxRef} style={{ width: "100%" }}>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked cashflow"
          onMouseMove={onMove} onMouseLeave={() => setHoverI(null)}>
       {/* Y grid */}
@@ -141,6 +208,7 @@ function StackedArea({ months, series, height = 220, formatY, cumulativeValues, 
         );
       })()}
     </svg>
+    </div>
   );
 }
 
@@ -149,8 +217,9 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumul
   // series: [{ label, color, values: [n monthly] }] — bars aggregate the
   // monthly values into `bucket`-month groups (years by default); the
   // cumulative net line keeps monthly resolution on its own scale.
-  const W = 800, H = height;
-  const padL = 56, padR = 16, padT = 12, padB = 28;
+  const [boxRef, W] = useChartWidth();
+  const H = height;
+  const padL = 56, padR = 16, padT = 12;
   const n = months.length;
   const nb = Math.max(1, Math.ceil(n / bucket));
 
@@ -168,6 +237,9 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumul
     });
     return { ...s, pts };
   });
+  // A total printed under a bar needs a line of its own above the year
+  // labels, or the two sit on top of each other at the foot of the chart.
+  const padB = neg.some(v => v < 0) ? 40 : 28;
 
   // Optional cumulative line (monthly resolution). Only drawn when the
   // caller passes `cumulativeValues` — the revenue charts stay bars-only.
@@ -194,10 +266,28 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumul
   const yTicks = [];
   for (let i = 0; i <= 4; i++) { const v = yMin + (yRange * i) / 4; yTicks.push({ v, y: y(v) }); }
 
-  const labelEvery = nb > 14 ? Math.ceil(nb / 12) : 1;
+  const fmtV = (v) => (formatY ? formatY(v) : v.toFixed(0));
+  const labelEvery = labelStep(slotW, textW(`Y${nb}`, 10) + 6);
+
+  // The totals above and below the bars. At their own size they do not always
+  // fit a slot each, so where two would run together the larger figure keeps
+  // its label and the smaller one gives way: the peaks are what a reader
+  // looks for first.
+  const roomFor = (vals) => {
+    const show = new Set(), taken = [];
+    vals.map((v, bi) => bi).filter(bi => vals[bi] !== 0)
+      .sort((a, b) => Math.abs(vals[b]) - Math.abs(vals[a]))
+      .forEach(bi => {
+        const half = textW(fmtV(vals[bi]), 9, 600) / 2 + 2;
+        const c = xSlot(bi);
+        if (taken.every(([a, b]) => c + half <= a || c - half >= b)) { taken.push([c - half, c + half]); show.add(bi); }
+      });
+    return show;
+  };
+  const showPos = roomFor(pos), showNeg = roomFor(neg);
 
   return (
-    <div>
+    <div ref={boxRef}>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }} aria-label="Stacked bars">
       {yTicks.map((t, i) => (
         <g key={i}>
@@ -236,14 +326,14 @@ function StackedBars({ months, series, height = 220, formatY, bucket = 12, cumul
 
       {/* Data labels: total of the positive stack above each bar,
           total of the negative stack below it */}
-      {pos.map((v, bi) => v > 0 ? (
+      {pos.map((v, bi) => v > 0 && showPos.has(bi) ? (
         <text key={`p${bi}`} x={xSlot(bi)} y={y(v) - 5} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--fg-2)" style={{ fontVariantNumeric: "tabular-nums" }}>
-          {formatY ? formatY(v) : v.toFixed(0)}
+          {fmtV(v)}
         </text>
       ) : null)}
-      {neg.map((v, bi) => v < 0 ? (
+      {neg.map((v, bi) => v < 0 && showNeg.has(bi) ? (
         <text key={`n${bi}`} x={xSlot(bi)} y={y(v) + 11} textAnchor="middle" fontSize="9" fontWeight="600" fill="var(--ad-danger)" style={{ fontVariantNumeric: "tabular-nums" }}>
-          {formatY ? formatY(v) : v.toFixed(0)}
+          {fmtV(v)}
         </text>
       ) : null)}
 
@@ -332,9 +422,14 @@ function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey
   // bidi marks scramble inside the LTR-forced SVG, so keep them out).
   const fmt = format || ((v) => `${(v * 100).toFixed(1)}%`);
   const fmtBar = formatBar || fmt;
-  const W = 800;
+  const [boxRef, W] = useChartWidth();
   const H = height;
-  const padL = 218, padR = 64, padT = 16, padB = 26;
+  // The name column is as wide as the longest name needs, up to 218px or 40%
+  // of the chart, whichever is less — so short names leave the room to the
+  // bars, and a narrow card does not spend most of itself on a margin.
+  const names = data.map(d => trLabel(d.label));
+  const padL = Math.max(80, Math.min(218, W * 0.4, Math.max(0, ...names.map(s => textW(s, 11))) + 24));
+  const padR = 64, padT = 16, padB = 26;
   const rowH = (H - padT - padB) / Math.max(1, data.length);
   // Centered on base
   const base = data[0]?.[baseKey] ?? 0;
@@ -347,6 +442,7 @@ function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey
   const scaleX = (W - padL - padR) / 2 / maxDelta;
 
   return (
+    <div ref={boxRef} style={{ width: "100%" }}>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
       {/* Center line */}
       <line x1={cx} x2={cx} y1={padT} y2={H - padB} stroke="var(--ad-navy-700)" strokeWidth="1" />
@@ -366,49 +462,56 @@ function Tornado({ data, height = 280, loKey = "irrLo", hiKey = "irrHi", baseKey
         const hiX = Math.min(cx, cx + (vHi - base) * scaleX);
         const loTxt = fmtBar(vLo);
         const hiTxt = fmtBar(vHi);
-        // Labels sit inside the bar when it is wide enough, otherwise just
-        // outside it — this is what stops the two ends colliding on short bars.
-        const charW = 5.6;
-        const wide = (txt, w) => w >= txt.length * charW + 10;
-        const loInside = wide(loTxt, loW);
-        const hiInside = wide(hiTxt, hiW);
-        const truncate = (s, n) => (s && s.length > n ? s.slice(0, n - 1) + "…" : s);
-        // Resolve the case where both shocks land on the same side of base:
-        // one label ends up inside its bar and the other outside, in the
-        // same spot. Nudge the high label clear of the low one.
-        let loX2 = loInside ? loX + 6 : loX - 6;
-        let hiX2 = hiInside ? hiX + hiW - 6 : hiX + hiW + 6;
-        const loBox = loInside ? [loX2, loX2 + loTxt.length * charW] : [loX2 - loTxt.length * charW, loX2];
-        const hiBox = hiInside ? [hiX2 - hiTxt.length * charW, hiX2] : [hiX2, hiX2 + hiTxt.length * charW];
-        if (loBox[0] < hiBox[1] && hiBox[0] < loBox[1]) {
-          hiX2 += (loBox[1] - hiBox[0]) + 6;
+        // Each figure belongs to the far end of its own bar: inside it when
+        // the bar is wide enough, otherwise just beyond it. "Far end" follows
+        // the way the bar actually points — a cost driver's low case is the
+        // one that raises the result, so its bar runs right, not left. Placing
+        // by which shock it was rather than by which way it points is what
+        // used to drop a short bar's figure onto the bar opposite.
+        const place = (v, bx, bw, tw) => {
+          const dir = v >= base ? 1 : -1;
+          const inside = bw >= tw + 12;
+          const end = dir > 0 ? bx + bw : bx;
+          const tx = inside ? end - dir * 6 : end + dir * 6;
+          const leftward = inside ? dir > 0 : dir < 0;   // text runs back from tx
+          return { inside, dir, tx, anchor: leftward ? "end" : "start", box: leftward ? [tx - tw, tx] : [tx, tx + tw] };
+        };
+        const lo = place(vLo, loX, loW, textW(loTxt, 10));
+        const hi = place(vHi, hiX, hiW, textW(hiTxt, 10));
+        // Both shocks on the same side of base: the two figures would share a
+        // spot, so the high one is moved outward past the low one.
+        if (lo.box[0] < hi.box[1] && hi.box[0] < lo.box[1]) {
+          const tw = hi.box[1] - hi.box[0];
+          const tx = hi.dir > 0 ? Math.max(lo.box[1], hiX + hiW) + 6 : Math.min(lo.box[0], hiX) - 6;
+          Object.assign(hi, { inside: false, tx, anchor: hi.dir > 0 ? "start" : "end", box: hi.dir > 0 ? [tx, tx + tw] : [tx - tw, tx] });
         }
         return (
           <g key={i}>
             <title>{`${d.label}: ${fmt(vLo)} → ${fmt(vHi)}`}</title>
-            <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{truncate(d.label, 30)}</text>
+            <text x={padL - 12} y={yC + 3} textAnchor="end" fontSize="11" fill="var(--fg-2)">{fitText(names[i], padL - 16, 11)}</text>
             {/* down side bar */}
             <rect x={loX} y={yC - barH / 2} width={loW} height={barH}
                   fill={vLo < base ? downColor : upColor} opacity={0.85} />
             {/* up side bar */}
             <rect x={hiX} y={yC - barH / 2} width={hiW} height={barH}
                   fill={vHi > base ? upColor : downColor} opacity={0.85} />
-            <text x={loX2} y={yC + 3}
-                  textAnchor={loInside ? "start" : "end"} fontSize="10"
-                  fill={loInside ? "#FFFFFF" : "var(--fg-3)"}>{loTxt}</text>
-            <text x={hiX2} y={yC + 3}
-                  textAnchor={hiInside ? "end" : "start"} fontSize="10"
-                  fill={hiInside ? "#FFFFFF" : "var(--fg-3)"}>{hiTxt}</text>
+            <text x={lo.tx} y={yC + 3}
+                  textAnchor={lo.anchor} fontSize="10"
+                  fill={lo.inside ? "#FFFFFF" : "var(--fg-3)"}>{loTxt}</text>
+            <text x={hi.tx} y={yC + 3}
+                  textAnchor={hi.anchor} fontSize="10"
+                  fill={hi.inside ? "#FFFFFF" : "var(--fg-3)"}>{hiTxt}</text>
           </g>
         );
       })}
     </svg>
+    </div>
   );
 }
 
 /* ---------- Histogram (Monte Carlo) ---------- */
 function Histogram({ values, bins = 28, height = 200, formatX, target, label }) {
-  const W = 800;
+  const [boxRef, W] = useChartWidth();
   const H = height;
   const padL = 36, padR = 16, padT = 14, padB = 30;
   if (!values || values.length === 0) return null;
@@ -437,7 +540,24 @@ function Histogram({ values, bins = 28, height = 200, formatX, target, label }) 
   const p90 = sorted[Math.floor(sorted.length * 0.9)];
   const xVal = (v) => padL + ((v - min) / range) * innerW;
 
+  // P10 / P50 / P90: the marker line stays on its value, but the lettering
+  // under it is moved sideways just far enough that neighbours do not run
+  // together and the outer two stay inside the drawing.
+  const marks = [{ v: p10, lbl: trLabel("P10") }, { v: p50, lbl: trLabel("P50") }, { v: p90, lbl: trLabel("P90") }].map(t => {
+    const txt = formatX ? formatX(t.v) : t.v.toFixed(2);
+    return { ...t, txt, lx: xVal(t.v), half: Math.max(textW(t.lbl, 9), textW(txt, 9)) / 2 + 3 };
+  });
+  for (let i = 1; i < marks.length; i++) {
+    marks[i].lx = Math.max(marks[i].lx, marks[i - 1].lx + marks[i - 1].half + marks[i].half);
+  }
+  marks[marks.length - 1].lx = Math.min(marks[marks.length - 1].lx, W - marks[marks.length - 1].half);
+  for (let i = marks.length - 2; i >= 0; i--) {
+    marks[i].lx = Math.min(marks[i].lx, marks[i + 1].lx - marks[i + 1].half - marks[i].half);
+  }
+  marks[0].lx = Math.max(marks[0].lx, marks[0].half);
+
   return (
+    <div ref={boxRef} style={{ width: "100%" }}>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
       {counts.map((c, i) => (
         <rect key={i} x={x(i) + 1} y={y(c)} width={bw - 2} height={H - padB - y(c)} fill="var(--ad-navy-600)" opacity={0.85} />
@@ -450,21 +570,22 @@ function Histogram({ values, bins = 28, height = 200, formatX, target, label }) 
         </g>
       )}
       {/* p markers */}
-      {[{ v: p10, lbl: "P10" }, { v: p50, lbl: "P50" }, { v: p90, lbl: "P90" }].map((t, i) => (
+      {marks.map((t, i) => (
         <g key={i}>
           <line x1={xVal(t.v)} x2={xVal(t.v)} y1={padT + 4} y2={H - padB} stroke="var(--ad-navy-900)" strokeWidth="0.8" strokeDasharray="2 2" opacity={0.5} />
-          <text x={xVal(t.v)} y={H - 14} textAnchor="middle" fontSize="9" fill="var(--fg-3)">{t.lbl}</text>
-          <text x={xVal(t.v)} y={H - 4} textAnchor="middle" fontSize="9" fill="var(--fg-2)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatX ? formatX(t.v) : t.v.toFixed(2)}</text>
+          <text x={t.lx} y={H - 14} textAnchor="middle" fontSize="9" fill="var(--fg-3)">{t.lbl}</text>
+          <text x={t.lx} y={H - 4} textAnchor="middle" fontSize="9" fill="var(--fg-2)" style={{ fontVariantNumeric: "tabular-nums" }}>{t.txt}</text>
         </g>
       ))}
     </svg>
+    </div>
   );
 }
 
 /* ---------- Waterfall (cost / return breakdown) ---------- */
 function Waterfall({ steps, height = 240, formatY }) {
   // steps: [{ label, value, type: "start" | "delta" | "end" }]
-  const W = 800;
+  const [boxRef, W] = useChartWidth();
   const H = height;
   const padL = 50, padR = 16, padT = 30, padB = 40;
   let cum = 0;
@@ -487,7 +608,15 @@ function Waterfall({ steps, height = 240, formatY }) {
   const x = (i) => padL + i * bw;
   const y = (v) => padT + (1 - (v - yMin) / yRange) * (H - padT - padB);
 
+  // Step names along the bottom. When they are too long for one column each
+  // they go on two alternating lines, which gives every name two columns of
+  // room; only a name too long even for that is shortened.
+  const names = rows.map(r => trLabel(r.label));
+  const stagger = names.some(s => textW(s, 10) > bw - 4);
+  const nameRoom = stagger ? bw * 2 - 6 : bw - 4;
+
   return (
+    <div ref={boxRef} style={{ width: "100%" }}>
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height, display: "block" }}>
       <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke="var(--ad-navy-300)" strokeWidth="0.8" />
       {rows.map((r, i) => {
@@ -499,11 +628,12 @@ function Waterfall({ steps, height = 240, formatY }) {
           <g key={i}>
             <rect x={x(i) + bw * 0.18} y={top} width={bw * 0.64} height={Math.max(1, h)} fill={color} opacity={isStart ? 1 : 0.75} />
             <text x={x(i) + bw / 2} y={top - 6} textAnchor="middle" fontSize="10" fill="var(--fg-2)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatY ? formatY(r.value) : r.value.toFixed(0)}</text>
-            <text x={x(i) + bw / 2} y={H - 22} textAnchor="middle" fontSize="10" fill="var(--fg-2)">{r.label}</text>
+            <text x={x(i) + bw / 2} y={stagger ? (i % 2 ? H - 12 : H - 25) : H - 22} textAnchor="middle" fontSize="10" fill="var(--fg-2)">{fitText(names[i], nameRoom, 10)}</text>
           </g>
         );
       })}
     </svg>
+    </div>
   );
 }
 
@@ -547,4 +677,4 @@ function Sparkline({ values, height = 28, color = "var(--ad-navy-800)" }) {
   );
 }
 
-window.Charts = { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline };
+window.Charts = { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline, useChartWidth, textW, fitText, labelStep };

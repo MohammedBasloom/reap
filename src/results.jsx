@@ -2,7 +2,7 @@
    Results panel — all output views, tabbed.
    ============================================================= */
 const { useState: useStateR, useMemo: useMemoR, useEffect: useEffectR } = React;
-const { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline } = window.Charts;
+const { StackedArea, StackedBars, HBars, Tornado, Histogram, Waterfall, Donut, Sparkline, useChartWidth, textW, labelStep } = window.Charts;
 const { formatCurrency: fc, formatPct: fp, formatNumber: fn } = window.Feas;
 
 /* ---------- KPI tile ---------- */
@@ -1551,8 +1551,10 @@ function UsesYearTable({ cf }) {
 /* ---------- Coverage timeline (sources stack vs uses line) ---------- */
 
 function CoverageChart({ cf, k }) {
-  const W = 900, H = 280;
-  const padL = 70, padR = 18, padT = 14, padB = 36;
+  // Drawn at the width it is given (see useChartWidth), not stretched to it.
+  const [boxRef, W] = useChartWidth(900);
+  const H = 280;
+  const padR = 18, padT = 14, padB = 36;
   const months = cf.months;
   const horizon = months.length - 1;
 
@@ -1567,6 +1569,8 @@ function CoverageChart({ cf, k }) {
 
   // Stacked source totals at each month (eq + debt + revenue) ≡ cumUse.
   const max = Math.max(cumUse[horizon] || 1, 1);
+  // The margin is as wide as the widest axis figure, so none is cut off.
+  const padL = Math.max(70, ...[0, 0.25, 0.5, 0.75, 1].map(p => textW(fc(max * p), 10) + 16));
 
   const x = (i) => padL + (i / Math.max(1, horizon)) * (W - padL - padR);
   const y = (v) => padT + (1 - v / max) * (H - padT - padB);
@@ -1591,9 +1595,10 @@ function CoverageChart({ cf, k }) {
 
   // Find construction-end marker if cumUse jumps in a recognizable way
   // (use the predesign+construction midpoint of usage curve as a heuristic — skip)
+  const tickEvery = labelStep((W - padL - padR) * 12 / Math.max(1, horizon), textW(`M${horizon}`, 9) + 8);
 
   return (
-    <div>
+    <div ref={boxRef}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: H, display: "block" }}>
         {/* Y gridlines */}
         {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
@@ -1622,8 +1627,8 @@ function CoverageChart({ cf, k }) {
         {ticks.map((t, i) => t.m <= horizon && (
           <g key={i}>
             <line x1={x(t.m)} x2={x(t.m)} y1={padT} y2={H - padB} stroke="var(--border-1)" strokeWidth="0.5" strokeDasharray="2 4" />
-            <text x={x(t.m)} y={H - 14} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>
-            <text x={x(t.m)} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 14} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>}
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>}
           </g>
         ))}
       </svg>
@@ -1658,8 +1663,9 @@ function LegendChip({ color, label, value, dashed }) {
 }
 
 function DebtChart({ cf, input }) {
-  const W = 900, H = 340;
-  const padL = 70, padR = 18, padT = 14, padB = 38;
+  const [boxRef, W] = useChartWidth(900);
+  const H = 340;
+  const padR = 18, padT = 14, padB = 38;
   const months = cf.months;
   const horizon = months.length - 1;
 
@@ -1681,6 +1687,7 @@ function DebtChart({ cf, input }) {
   const interest = cf.interest || []; // negative numbers
   const balMax  = Math.max(1, ...balance);
   const flowMax = Math.max(1, ...draw, ...repay.map(v => -v));
+  const padL = Math.max(70, textW(fc(balMax), 10) + 16, textW(`+${fc(flowMax)}`, 10) + 16);
 
   const x = (i) => padL + (i / Math.max(1, horizon)) * (W - padL - padR);
   const yBal = (v) => topPlot.y1 - (v / balMax) * topH;
@@ -1697,9 +1704,10 @@ function DebtChart({ cf, input }) {
 
   // Y tick values for balance
   const balTicks = [0, balMax / 2, balMax];
+  const tickEvery = labelStep(innerW * 12 / Math.max(1, horizon), textW(`M${horizon}`, 9) + 8);
 
   return (
-    <div>
+    <div ref={boxRef}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: H, display: "block" }}>
         {/* ===== TOP ZONE — balance ===== */}
         {balTicks.map((v, i) => (
@@ -1753,8 +1761,8 @@ function DebtChart({ cf, input }) {
         {ticks.map((t, i) => (
           <g key={`x${i}`}>
             <line x1={x(t.m)} x2={x(t.m)} y1={padT} y2={H - padB} stroke="var(--border-1)" strokeWidth="0.4" strokeDasharray="2 4" opacity="0.7" />
-            <text x={x(t.m)} y={H - 18} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>
-            <text x={x(t.m)} y={H - 6} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 18} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>}
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 6} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>}
           </g>
         ))}
       </svg>
@@ -1772,8 +1780,9 @@ function DebtChart({ cf, input }) {
 /* ---------- Uses-by-category cumulative chart (mirror of CoverageChart) ---------- */
 
 function UsesChart({ cf }) {
-  const W = 900, H = 280;
-  const padL = 70, padR = 18, padT = 14, padB = 36;
+  const [boxRef, W] = useChartWidth(900);
+  const H = 280;
+  const padR = 18, padT = 14, padB = 36;
   const months = cf.months;
   const horizon = months.length - 1;
   const ubc = cf.usesByCat || {};
@@ -1800,6 +1809,7 @@ function UsesChart({ cf }) {
   }
   const totalTop = tops[tops.length - 1] || [0];
   const max = Math.max(1, totalTop[horizon] || 1);
+  const padL = Math.max(70, ...[0, 0.25, 0.5, 0.75, 1].map(p => textW(fc(max * p), 10) + 16));
 
   const x = (i) => padL + (i / Math.max(1, horizon)) * (W - padL - padR);
   const y = (v) => padT + (1 - v / max) * (H - padT - padB);
@@ -1815,9 +1825,10 @@ function UsesChart({ cf }) {
   for (let yr = 0; yr <= Math.ceil(horizon / 12); yr++) {
     if (yr * 12 <= horizon) ticks.push({ m: yr * 12, label: `Y${yr}` });
   }
+  const tickEvery = labelStep((W - padL - padR) * 12 / Math.max(1, horizon), textW(`M${horizon}`, 9) + 8);
 
   return (
-    <div>
+    <div ref={boxRef}>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: H, display: "block" }}>
         {[0, 0.25, 0.5, 0.75, 1].map((p, i) => (
           <g key={i}>
@@ -1833,8 +1844,8 @@ function UsesChart({ cf }) {
         {ticks.map((t, i) => (
           <g key={i}>
             <line x1={x(t.m)} x2={x(t.m)} y1={padT} y2={H - padB} stroke="var(--border-1)" strokeWidth="0.5" strokeDasharray="2 4" />
-            <text x={x(t.m)} y={H - 14} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>
-            <text x={x(t.m)} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 14} textAnchor="middle" fontSize="10" fill="var(--fg-3)">{t.label}</text>}
+            {i % tickEvery === 0 && <text x={x(t.m)} y={H - 2} textAnchor="middle" fontSize="9" fill="var(--fg-4)">M{t.m}</text>}
           </g>
         ))}
       </svg>
@@ -2510,7 +2521,8 @@ function ReturnsMetric({ eyebrow, value, sub, tone = "default" }) {
 }
 
 function CumulativeCashflowChart({ months, equityCum, projectCum, equityPayback, projectPayback, horizon }) {
-  const W = 600, H = 220;
+  const [boxRef, W] = useChartWidth(600);
+  const H = 220;
   const padL = 40, padR = 12, padT = 12, padB = 24;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
@@ -2532,8 +2544,11 @@ function CumulativeCashflowChart({ months, equityCum, projectCum, equityPayback,
     return v.toFixed(0);
   };
 
+  const yearEvery = labelStep(innerW * 12 / Math.max(1, len - 1), 26);
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, marginTop: 12 }}>
+    <div ref={boxRef} style={{ width: "100%", marginTop: 12 }}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: H, display: "block" }}>
       {/* Zero baseline */}
       <line x1={padL} x2={W - padR} y1={y(0)} y2={y(0)} stroke="var(--border-2)" strokeWidth="1" />
       {/* Y-axis labels */}
@@ -2544,7 +2559,7 @@ function CumulativeCashflowChart({ months, equityCum, projectCum, equityPayback,
       {Array.from({ length: Math.floor(horizon / 12) + 1 }, (_, i) => i * 12).map((m) => (
         <g key={m}>
           <line x1={x(m)} x2={x(m)} y1={H - padB} y2={H - padB + 3} stroke="var(--border-2)" />
-          <text x={x(m)} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 9, fill: "var(--fg-4)", fontFamily: "var(--font-mono)" }}>{`Y${m/12}`}</text>
+          {(m / 12) % yearEvery === 0 && <text x={x(m)} y={H - padB + 14} textAnchor="middle" style={{ fontSize: 9, fill: "var(--fg-4)", fontFamily: "var(--font-mono)" }}>{`Y${m/12}`}</text>}
         </g>
       ))}
       {/* Project line — light gold, long dashes: clearly distinct from the
@@ -2560,6 +2575,7 @@ function CumulativeCashflowChart({ months, equityCum, projectCum, equityPayback,
         </g>
       )}
     </svg>
+    </div>
   );
 }
 
