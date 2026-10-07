@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261119"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261119" />
+  <script src="assets/i18n.js?v=20261120"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261120" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -60,8 +60,8 @@
     .btn-land.icon { padding: 0; width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
 
     /* ---------- Hero ----------
-       Navy band, two columns, the product tilted in on the side, a static
-       trust row under a rule. The reference layout, but in REAP's navy and
+       Navy band, two columns, the product tilted in on the side.
+       The reference layout, but in REAP's navy and
        gold instead of its purple and yellow, and in REAP's own faces — the
        palette and type are untouched.
 
@@ -77,7 +77,10 @@
        where the page has been scrolled to. */
     .hero {
       background: var(--ad-navy-900); color: var(--fg-onDark);
-      padding: 56px 40px 0; position: relative; overflow: hidden;
+      /* Bottom padding matches the top. It was 0 while a trust strip closed the
+         section and supplied the space under the slider controls; with the
+         strip gone the controls would otherwise sit on the section's edge. */
+      padding: 56px 40px; position: relative; overflow: hidden;
     }
     /* Spotlight cursor. Scoped to the hero rather than pinned over the whole
        viewport: the light is white at 16%, which reads on this navy and is
@@ -393,7 +396,7 @@
     .hdots button:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
 
     @media (max-width: 1000px) {
-      .hero { padding: 44px 24px 0; }
+      .hero { padding: 44px 24px; }
       .heroGrid { grid-template-columns: 1fr; gap: 26px; }
       .heroCopy { text-align: center; }
       .hero .eyebrow { justify-content: center; }
@@ -550,18 +553,6 @@
       .hiw.in .hiw-card, html[dir="rtl"] .hiw.in .hiw-card { transform: none; }
       .hiw.in .hiw-card:hover, html[dir="rtl"] .hiw.in .hiw-card:hover { transform: none; }
     }
-    /* ---------- Trust strip ----------
-       Fixed row at the foot of the hero, under a rule, as in the reference. On
-       a dark ground the rule and the type are white at low alpha rather than
-       the border and fg tokens, which are both meant for sand. */
-    .trust { border-top: 1px solid rgba(255,255,255,0.12); margin-top: 40px; }
-    .trust .inner {
-      max-width: 1180px; margin: 0 auto; padding: 18px 0 26px;
-      display: flex; gap: 14px 36px; flex-wrap: wrap; justify-content: space-between;
-    }
-    .trust .t { display: flex; align-items: center; gap: 9px; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.55); font-weight: 600; }
-    .trust .t::before { content: "◆"; color: var(--ad-gold-500); font-size: 7px; }
-
     /* ---------- Features bento ---------- */
     .features { background: var(--bg-1); color: var(--fg-1); padding: 72px 40px 80px; border-top: 1px solid var(--border-1); }
     .features .inner { max-width: 1180px; margin: 0 auto; }
@@ -1216,7 +1207,7 @@
     @media (max-width: 860px) {
       /* The hero is a single centred column now; its own breakpoints above
          handle the shot, so only the padding is set here. */
-      .hero { padding: 48px 24px 0; }
+      .hero { padding: 48px 24px; }
       .cards { grid-template-columns: 1fr; }
       .topbar { padding: 14px 20px; }
 
@@ -1246,7 +1237,6 @@
       .features .lede { max-width: none; margin-top: 14px; }
       .why-grid { grid-template-columns: 1fr; gap: 12px; }
       .why-card { padding: 22px 20px 24px; }
-      .trust .inner { padding: 14px 24px; justify-content: flex-start; }
     }
 
     /* Phone. Placed after the 860px block so its own .topbar padding wins at
@@ -1263,11 +1253,6 @@
          never reached a phone; these are their mobile equivalent. */
       .hero p.lede { display: none; }
       .heroShot { margin-top: 18px; }
-
-      /* The strip was 138px — four items, each claiming a full row. Two
-         columns keeps all four and gives back about 80px of that. */
-      .trust .inner { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; padding: 10px 16px; }
-      .trust .t { font-size: 9.5px; letter-spacing: 0.07em; }
     }
 
     /* The small-phone and short-viewport rules the pinned hero needed are gone
@@ -1278,7 +1263,7 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261119"></script>
+<script src="assets/mobile-notice.js?v=20261120"></script>
 <div class="shell">
 
   <!-- ============ TOP BAR ============ -->
@@ -1315,9 +1300,9 @@
   </div>
 
   <!-- ============ HERO ============
-       Light section, two columns, the product tilted in on the side, and a
-       static trust row beneath a rule — the reference layout, in REAP's navy
-       and gold rather than its purple and yellow, and in REAP's own faces.
+       Navy section, two columns, the product tilted in on the side — the
+       reference layout, in REAP's navy and gold rather than its purple and
+       yellow, and in REAP's own faces.
 
        The two platforms are SLIDES, not a scroll-driven handover: the reader
        moves between them with the arrows, the dots, a swipe or the arrow keys,
@@ -1524,17 +1509,6 @@
         <button class="hn hn-next" id="heroNext" type="button" aria-label="Next platform" data-ar-title="المنصة التالية">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-      </div>
-
-      <!-- Fixed trust row: one static band under a rule, the same on both
-           slides because it describes the platform rather than either app. -->
-      <div class="trust">
-        <div class="inner">
-          <span class="t" data-ar="منهجية متوافقة مع IVS">IVS-aligned methodology</span>
-          <span class="t" data-ar="عربي وإنجليزي — دعم كامل للاتجاهين">Arabic &amp; English — full RTL</span>
-          <span class="t" data-ar="قيم افتراضية للسوق السعودي">Saudi market defaults</span>
-          <span class="t" data-ar="مجانًا — دون بطاقة ائتمانية">Free — no card required</span>
-        </div>
       </div>
 
     </div>
@@ -2107,8 +2081,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261119"></script>
-<script src="assets/auth.js?v=20261119"></script>
+<script src="assets/config.js?v=20261120"></script>
+<script src="assets/auth.js?v=20261120"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
