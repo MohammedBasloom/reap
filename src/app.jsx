@@ -157,7 +157,46 @@ function compTuned(c) {
   // Without the sidebar's lists loaded there is nothing to check against, and
   // guessing would reopen the step on every component. Treat as answered.
   if (!keys || !preset) return true;
-  return keys.every((k) => preset[k] === undefined || (c[k] !== null && c[k] !== undefined));
+  const shown = compShownFields(c);
+  return keys.every((k) => !shown.has(k) || preset[k] === undefined || (c[k] !== null && c[k] !== undefined));
+}
+
+/* The assumption fields the component editor is actually showing for this
+   component, as it is set right now.
+
+   The test above used to ask for every number the preset carries, and a preset
+   carries more than any one component shows: both massing methods, a basement
+   rate whether or not there is a basement, and — since a building type can be
+   sold or let — both the sale figures and the lease figures. A villa set to
+   sell has no field for rent, occupancy, opex, hold period or exit cap, so
+   those stayed blank however carefully the visible ones were typed, and the
+   step could only ever be closed by "use default inputs". Filling in what is
+   on the screen has to be enough.
+
+   This mirrors the conditions in ComponentEditor (sidebar.jsx). A field the
+   editor adds must be added here under the same condition, or it will not be
+   asked for. */
+function compShownFields(c) {
+  const f = new Set(["siteWorkPct"]);
+  if ((c.massingMode || "far") === "far") f.add("far");
+  else ["landCoveragePct", "maxFloors", "upperFloorCoveragePct", "lastFloorPct"].forEach((k) => f.add(k));
+  if (c.hasBasement) f.add("basementCostPerSqm");
+  // A mixed-use building prices and costs each space on the space itself.
+  if (Array.isArray(c.subs)) return f;
+  f.add("efficiency"); f.add("costPerSqmGFA");
+  const basis = c.revenueBasis || "sqm";
+  if (c.mode === "sale") {
+    if (basis === "sqm") f.add("pricePerSqm");
+    if (basis === "unit") { f.add("avgUnitSize"); f.add("pricePerUnit"); }
+    if (basis === "key") { f.add("keys"); f.add("pricePerKey"); }
+    f.add("salesPeriodMonths");
+  } else if (c.mode === "lease") {
+    if (basis === "sqm") f.add("rentPerSqmYr");
+    if (basis === "unit") { f.add("avgUnitSize"); f.add("rentPerUnitYr"); }
+    if (basis === "key") { f.add("keys"); f.add("adr"); }
+    ["occupancy", "opexPct", "exitCapRate", "operatingPeriodMonths"].forEach((k) => f.add(k));
+  }
+  return f;
 }
 
 /* A step is done when its own evidence says so. Land priced, a component
