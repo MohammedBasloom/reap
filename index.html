@@ -28,8 +28,8 @@
   <meta name="twitter:description" content="Development feasibility modeling and IVS-aligned property valuation — guided, bilingual, decision-ready." />
   <meta name="twitter:image" content="https://www.reapinsights.com/assets/og-card.png" />
   <link rel="icon" type="image/svg+xml" href="assets/reap-favicon.svg" />
-  <script src="assets/i18n.js?v=20261121"></script>
-  <link rel="stylesheet" href="assets/tokens.css?v=20261121" />
+  <script src="assets/i18n.js?v=20261122"></script>
+  <link rel="stylesheet" href="assets/tokens.css?v=20261122" />
   <style>
     body { background: var(--ad-navy-900); color: var(--fg-onDark); overflow-x: hidden; }
 
@@ -96,6 +96,32 @@
     }
     .heroSpot.is-on { opacity: 1; }
     .heroInner { max-width: 1240px; margin: 0 auto; position: relative; z-index: 1; }
+
+    /* On a desktop the top bar and the hero together are exactly one screen.
+       The two sit in one column that is as tall as the viewport; the bar takes
+       its own height and the hero takes whatever is left, with its content in
+       the middle. Without this the hero was as tall as its content and no
+       taller, so on any screen above about 660px the next section showed along
+       the bottom edge before anyone had scrolled.
+
+       Done by layout rather than by subtracting the bar's height: the bar is
+       two pixels taller signed in than signed out, and a number measured once
+       is wrong for one of them.
+
+       A minimum, not a fixed height — on a short window the column is simply
+       as tall as its content and the page scrolls, rather than clipping it.
+       svh where it exists, so a collapsing browser toolbar is not counted. */
+    @media (min-width: 1001px) {
+      .firstScreen {
+        min-height: 100vh; min-height: 100svh;
+        display: flex; flex-direction: column;
+      }
+      .firstScreen > .hero {
+        flex: 1 0 auto;
+        display: flex; flex-direction: column; justify-content: center;
+      }
+      .heroInner { width: 100%; }
+    }
 
     /* Slides are stacked in one grid cell and cross-faded, so the section keeps
        the height of the tallest and never jumps as you move between them. */
@@ -323,6 +349,18 @@
     .hdots button[aria-selected="true"] { background: var(--ad-gold-500); width: 44px; }
     .hdots button:focus-visible { outline: 2px solid var(--ad-gold-400); outline-offset: 3px; }
 
+    /* A full-HD monitor or larger gives the hero over a thousand pixels of
+       height, and content sized for a laptop sat in the middle of it with
+       nearly three hundred empty above and below. There the column, the
+       headline, the paragraph and the product shot all step up one size, so
+       the screen is filled by the content and not by the padding round it.
+       Kept below the rules it adjusts: at equal weight the later one wins. */
+    @media (min-width: 1700px) and (min-height: 900px) {
+      .heroInner { max-width: 1440px; }
+      .hero h1 { font-size: 58px; }
+      .hero p.lede { font-size: 17px; }
+      .heroShot { max-height: 460px; }
+    }
     @media (max-width: 1000px) {
       .hero { padding: 44px 24px; }
       .heroGrid { grid-template-columns: 1fr; gap: 26px; }
@@ -1175,8 +1213,11 @@
   </style>
 </head>
 <body>
-<script src="assets/mobile-notice.js?v=20261121"></script>
+<script src="assets/mobile-notice.js?v=20261122"></script>
 <div class="shell">
+
+  <!-- Top bar and hero share one screen-high column on desktop. -->
+  <div class="firstScreen">
 
   <!-- ============ TOP BAR ============ -->
   <div class="topbar">
@@ -1308,7 +1349,7 @@
           document.querySelectorAll("img[data-shot]").forEach(function (im) {
             var shot = im.getAttribute("data-shot");
             im.alt = alt[shot][lang];
-            im.src = "assets/hero/" + shot + "-" + lang + ".png?v=20261121";
+            im.src = "assets/hero/" + shot + "-" + lang + ".png?v=20261122";
           });
         })();
       </script>
@@ -1327,6 +1368,8 @@
 
     </div>
   </div>
+
+  </div><!-- /.firstScreen -->
 
   <!-- ============ SERVICES ============ -->
   <div class="services">
@@ -1895,8 +1938,8 @@
 </div>
 
 <script src="vendor/supabase.js"></script>
-<script src="assets/config.js?v=20261121"></script>
-<script src="assets/auth.js?v=20261121"></script>
+<script src="assets/config.js?v=20261122"></script>
+<script src="assets/auth.js?v=20261122"></script>
 <script>
 (function () {
   I18N.applyDom(); // swap to Arabic BEFORE wiring events (innerHTML replacements)
